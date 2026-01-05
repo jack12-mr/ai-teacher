@@ -11,13 +11,13 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     const signature = request.headers.get("stripe-signature");
 
-    if (\!signature) {
+    if (!signature) {
       return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
     const event = verifyStripeWebhook(body, signature);
 
-    if (\!event) {
+    if (!event) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 

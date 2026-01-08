@@ -98,7 +98,7 @@ function PaymentSuccessContent() {
   };
 
   const handleStartUsing = () => {
-    router.push("/assessment");
+    router.push("/exam");
   };
 
   // Loading state

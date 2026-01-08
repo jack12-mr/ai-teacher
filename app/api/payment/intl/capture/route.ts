@@ -59,22 +59,47 @@ export async function POST(request: NextRequest) {
 
     const captureData = await captureResponse.json();
     console.log("[PayPal Capture] Capture successful:", captureData.id);
+    console.log("[PayPal Capture] Full capture response:", JSON.stringify(captureData, null, 2));
 
     // 3. Parse user info from custom_id
-    const customId = captureData.purchase_units?.[0]?.custom_id;
+    // PayPal may return custom_id in different locations depending on the response structure
+    let customIdStr = captureData.purchase_units?.[0]?.custom_id;
 
-    if (!customId) {
-      console.error("[PayPal Capture] No custom_id found in order");
+    // If not found at top level, try from captures array
+    if (!customIdStr) {
+      customIdStr = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.custom_id;
+    }
+
+    // Initialize supabase early for fallback lookup
+    const supabase = getSupabaseAdmin();
+
+    // If still not found, try to get from database using the payment_id (token)
+    if (!customIdStr) {
+      console.log("[PayPal Capture] custom_id not in response, checking database for token:", token);
+      const { data: paymentRecord } = await supabase
+        .from("payments")
+        .select("metadata")
+        .eq("payment_id", token)
+        .single();
+
+      if (paymentRecord?.metadata) {
+        customIdStr = JSON.stringify(paymentRecord.metadata);
+        console.log("[PayPal Capture] Found metadata in database:", customIdStr);
+      }
+    }
+
+    if (!customIdStr) {
+      console.error("[PayPal Capture] No custom_id found in order or database");
       return NextResponse.json(
         { error: "Missing user information in order" },
         { status: 500 }
       );
     }
 
-    const { userId, paymentType, days } = JSON.parse(customId);
+    const { userId, paymentType, days } = JSON.parse(customIdStr);
 
     if (!userId || !days) {
-      console.error("[PayPal Capture] Invalid custom_id data:", customId);
+      console.error("[PayPal Capture] Invalid custom_id data:", customIdStr);
       return NextResponse.json(
         { error: "Invalid user information in order" },
         { status: 500 }
@@ -84,7 +109,6 @@ export async function POST(request: NextRequest) {
     console.log("[PayPal Capture] Processing for user:", userId, "days:", days);
 
     // 4. Update Supabase user status
-    const supabase = getSupabaseAdmin();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + days);
 

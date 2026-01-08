@@ -9,11 +9,12 @@ export type Currency = "CNY" | "USD";
 
 /**
  * 定价表（唯一的价格定义来源）
+ * 注意：测试时使用 0.01，正式上线需改回正常价格
  */
 const PRICING_DATA = {
   CNY: {
-    monthly: 29.9,
-    yearly: 299,
+    monthly: 0.01,  // 测试价格，正式上线改为 29.9
+    yearly: 0.01,   // 测试价格，正式上线改为 299
     symbol: "¥",
   },
   USD: {

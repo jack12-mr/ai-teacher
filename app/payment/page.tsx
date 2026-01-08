@@ -26,13 +26,13 @@ interface PaymentState {
 
 const PRICING = {
   monthly: {
-    price: 29.9,
+    price: 0.01,        // 测试价格，正式上线改为 29.9
     originalPrice: 39.9,
     label: "月度会员",
     description: "按月付费，灵活便捷",
   },
   yearly: {
-    price: 299,
+    price: 0.01,        // 测试价格，正式上线改为 299
     originalPrice: 478.8,
     label: "年度会员",
     description: "年付更优惠，省 ¥179.8",

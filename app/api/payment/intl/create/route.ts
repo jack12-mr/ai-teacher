@@ -62,15 +62,26 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
-    await supabase.from("payments").insert({
-      user_id: userId,
-      payment_id: result.paymentId,
-      provider,
-      amount,
-      currency: currency || "USD",
-      status: "pending",
-      metadata: { paymentType, days },
-    });
+    const { data: paymentRecord, error: insertError } = await supabase
+      .from("payments")
+      .insert({
+        user_id: userId,
+        payment_id: result.paymentId,
+        provider,
+        amount,
+        currency: currency || "USD",
+        status: "pending",
+        metadata: { paymentType, days },
+      })
+      .select();
+
+    if (insertError) {
+      console.error("[Create Payment] Failed to insert payment record:", insertError);
+      // Don't fail the whole request if payment record insert fails
+      // The webhook can still process the payment
+    } else {
+      console.log("[Create Payment] Payment record created:", paymentRecord);
+    }
 
     return NextResponse.json({
       success: true,

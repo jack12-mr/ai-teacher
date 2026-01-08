@@ -21,7 +21,7 @@ export interface PayPalPaymentResult {
 /**
  * 获取 PayPal 访问令牌
  */
-async function getPayPalAccessToken(): Promise<string | null> {
+export async function getPayPalAccessToken(): Promise<string | null> {
   const clientId = process.env.PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
 

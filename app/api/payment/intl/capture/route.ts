@@ -1,0 +1,131 @@
+/**
+ * PayPal 订单 Capture API
+ * 用于在用户完成PayPal支付授权后capture订单并激活会员
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { getPayPalAccessToken } from "@/lib/payment/providers/paypal-provider";
+import { getSupabaseAdmin } from "@/lib/integrations/supabase-admin";
+
+export async function POST(request: NextRequest) {
+  try {
+    const { provider, token } = await request.json();
+
+    if (provider !== "paypal" || !token) {
+      return NextResponse.json(
+        { error: "Invalid parameters" },
+        { status: 400 }
+      );
+    }
+
+    console.log("[PayPal Capture] Starting capture for token:", token);
+
+    // 1. Get PayPal access token
+    const accessToken = await getPayPalAccessToken();
+
+    if (!accessToken) {
+      console.error("[PayPal Capture] Failed to get access token");
+      return NextResponse.json(
+        { error: "Failed to get PayPal access token" },
+        { status: 500 }
+      );
+    }
+
+    // 2. Capture the order
+    const baseUrl =
+      process.env.PAYPAL_SANDBOX === "true"
+        ? "https://api-m.sandbox.paypal.com"
+        : "https://api-m.paypal.com";
+
+    const captureResponse = await fetch(
+      `${baseUrl}/v2/checkout/orders/${token}/capture`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!captureResponse.ok) {
+      const errorData = await captureResponse.json();
+      console.error("[PayPal Capture] Capture failed:", errorData);
+      return NextResponse.json(
+        { error: errorData.message || "Failed to capture PayPal order" },
+        { status: 500 }
+      );
+    }
+
+    const captureData = await captureResponse.json();
+    console.log("[PayPal Capture] Capture successful:", captureData.id);
+
+    // 3. Parse user info from custom_id
+    const customId = captureData.purchase_units?.[0]?.custom_id;
+
+    if (!customId) {
+      console.error("[PayPal Capture] No custom_id found in order");
+      return NextResponse.json(
+        { error: "Missing user information in order" },
+        { status: 500 }
+      );
+    }
+
+    const { userId, paymentType, days } = JSON.parse(customId);
+
+    if (!userId || !days) {
+      console.error("[PayPal Capture] Invalid custom_id data:", customId);
+      return NextResponse.json(
+        { error: "Invalid user information in order" },
+        { status: 500 }
+      );
+    }
+
+    console.log("[PayPal Capture] Processing for user:", userId, "days:", days);
+
+    // 4. Update Supabase user status
+    const supabase = getSupabaseAdmin();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + days);
+
+    // Update or create subscription
+    const { error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .upsert({
+        user_id: userId,
+        start_date: new Date().toISOString(),
+        end_date: endDate.toISOString(),
+        is_active: true,
+        plan_type: paymentType || "pro",
+      });
+
+    if (subscriptionError) {
+      console.error("[PayPal Capture] Subscription update failed:", subscriptionError);
+      return NextResponse.json(
+        { error: "Failed to update subscription" },
+        { status: 500 }
+      );
+    }
+
+    // 5. Update payment record
+    const { error: paymentError } = await supabase
+      .from("payments")
+      .update({ status: "completed" })
+      .eq("payment_id", token);
+
+    if (paymentError) {
+      console.error("[PayPal Capture] Payment update failed:", paymentError);
+      // Don't fail the whole request if payment update fails
+    }
+
+    console.log("[PayPal Capture] Successfully completed for user:", userId);
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("[PayPal Capture] Error:", error);
+    return NextResponse.json(
+      { error: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

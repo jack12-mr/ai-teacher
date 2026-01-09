@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -50,9 +50,21 @@ interface SyllabusData {
   rawContent?: string
 }
 
-export default function ExamSetupPage() {
+// 内部组件，处理搜索参数
+function ExamSetupContent() {
   const router = useRouter()
-  const [step, setStep] = useState<Step>('goal')
+  const searchParams = useSearchParams()
+
+  // 从 URL 参数获取初始 step
+  const getInitialStep = (): Step => {
+    const stepParam = searchParams.get('step')
+    if (stepParam && ['goal', 'source', 'config', 'processing', 'ready'].includes(stepParam)) {
+      return stepParam as Step
+    }
+    return 'goal'
+  }
+
+  const [step, setStep] = useState<Step>(getInitialStep())
   const [examName, setExamName] = useState('')
   const [sourceType, setSourceType] = useState<SourceType>(null)
   const [processingProgress, setProcessingProgress] = useState(0)
@@ -880,5 +892,21 @@ export default function ExamSetupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 主导出组件，包装 Suspense
+export default function ExamSetupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 text-blue-400 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">加载中...</p>
+        </div>
+      </div>
+    }>
+      <ExamSetupContent />
+    </Suspense>
   )
 }

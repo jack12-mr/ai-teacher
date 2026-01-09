@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { SkillAssessment } from "@/components/skill-assessment"
+import { DynamicSkillAssessment } from "@/components/dynamic-skill-assessment"
 import { RoleClassification } from "@/components/role-classification"
 import { CompetitivenessReport } from "@/components/competitiveness-report"
 import { LearningPathGenerator } from "@/components/learning-path-generator"
@@ -13,7 +14,7 @@ import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Crown, Share2, TrendingUp, Brain, GraduationCap, Sparkles, ArrowRight, Loader2 } from "lucide-react"
+import { Crown, Share2, TrendingUp, Brain, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AiCoachModal } from "@/components/ai-coach-modal"
 import { useAuth } from "@/components/auth/auth-provider"
@@ -281,37 +282,31 @@ export default function HomePage() {
           {/* Main Content Area */}
           <div className="lg:col-span-3">
             {currentStep === "assessment" && (
-              <>
-                {/* 智能备考入口卡片 */}
-                <Card className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border-purple-500/30 p-5 mb-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-                        <GraduationCap className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                          智能备考系统
-                          <Badge className="bg-purple-600/50 text-purple-200 border-0">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            NEW
-                          </Badge>
-                        </h3>
-                        <p className="text-slate-400 text-sm">AI 精准出题 · 游戏化闯关 · 错题智能讲解</p>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => router.push('/exam')}
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 whitespace-nowrap"
-                    >
-                      开始备考
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </Card>
-
-                <SkillAssessment onComplete={handleAssessmentComplete} />
-              </>
+              <DynamicSkillAssessment
+                onGenerateExam={(subject, ratings) => {
+                  // 将评分转换为 userSkills 格式
+                  const skills: UserSkills = {
+                    [subject]: Object.entries(ratings).reduce((acc, [key, value]) => {
+                      acc[key] = value * 10 // 转换为百分比
+                      return acc
+                    }, {} as Record<string, number>)
+                  }
+                  setUserSkills(skills)
+                  // 计算平均分作为竞争力指数
+                  const avgScore = Object.values(ratings).length > 0
+                    ? Math.round(Object.values(ratings).reduce((a, b) => a + b, 0) / Object.values(ratings).length * 10)
+                    : 60
+                  setUserProfile((prev) => ({
+                    ...prev,
+                    role: "通用开发者",
+                    competitivenessScore: avgScore,
+                    assessmentProgress: 100,
+                    achievements: [...prev.achievements, "技能评估完成者"],
+                    weeklyRank: Math.floor(Math.random() * 100) + 1,
+                  }))
+                  setCurrentStep("results")
+                }}
+              />
             )}
 
             {currentStep === "results" && (

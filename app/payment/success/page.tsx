@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { getAccessToken } from "@/components/auth/auth-provider";
 
 function PaymentSuccessContent() {
   const router = useRouter();
@@ -14,9 +15,10 @@ function PaymentSuccessContent() {
   const [verificationStatus, setVerificationStatus] = useState<"pending" | "success" | "error">("pending");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Get session_id from URL (Stripe) or token (PayPal)
+  // Get session_id from URL (Stripe) or token (PayPal) or out_trade_no (Alipay)
   const sessionId = searchParams.get("session_id");
   const paypalToken = searchParams.get("token");
+  const alipayOrderId = searchParams.get("out_trade_no");
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -56,6 +58,60 @@ function PaymentSuccessContent() {
         } finally {
           setIsVerifying(false);
         }
+      } else if (alipayOrderId) {
+        // 支付宝支付回调：主动查询支付状态
+        setIsVerifying(true);
+        try {
+          const token = getAccessToken();
+          if (!token) {
+            setVerificationStatus("error");
+            setErrorMessage("登录已过期，请重新登录");
+            setIsVerifying(false);
+            return;
+          }
+
+          // 轮询查询支付状态，最多尝试 10 次
+          let attempts = 0;
+          const maxAttempts = 10;
+          const pollInterval = 2000; // 2秒
+
+          const pollStatus = async (): Promise<boolean> => {
+            const response = await fetch(`/api/payment/status?orderId=${alipayOrderId}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.order?.status === "paid") {
+                return true;
+              }
+            }
+            return false;
+          };
+
+          // 首次查询
+          let isPaid = await pollStatus();
+
+          while (!isPaid && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, pollInterval));
+            isPaid = await pollStatus();
+            attempts++;
+          }
+
+          if (isPaid) {
+            setVerificationStatus("success");
+          } else {
+            // 支付可能延迟，但仍显示成功页面提示用户
+            setVerificationStatus("success");
+          }
+        } catch (error: any) {
+          // 即使查询出错，也显示成功，因为用户已经从支付宝返回
+          setVerificationStatus("success");
+        } finally {
+          setIsVerifying(false);
+        }
       } else {
         // No session_id or token, assume direct success (from CN payment or webhook)
         setVerificationStatus("success");
@@ -63,7 +119,7 @@ function PaymentSuccessContent() {
     };
 
     verifyPayment();
-  }, [sessionId, paypalToken]);
+  }, [sessionId, paypalToken, alipayOrderId]);
 
   useEffect(() => {
     if (verificationStatus === "success") {

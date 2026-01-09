@@ -267,6 +267,8 @@ export async function queryAlipayPayment(
       .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
       .join("&");
 
+    logInfo("Querying Alipay order", { orderId, gateway });
+
     const response = await fetch(`${gateway}?${queryString}`, {
       method: "GET",
     });
@@ -274,7 +276,16 @@ export async function queryAlipayPayment(
     const data = await response.json();
     const result = data.alipay_trade_query_response;
 
+    logInfo("Alipay query response", {
+      orderId,
+      code: result?.code,
+      msg: result?.msg,
+      subMsg: result?.sub_msg,
+      tradeStatus: result?.trade_status
+    });
+
     if (result.code !== "10000") {
+      logError("Alipay query failed", new Error(result.sub_msg || result.msg), { orderId });
       return {
         success: false,
         error: result.sub_msg || result.msg || "查询订单失败",
@@ -286,6 +297,7 @@ export async function queryAlipayPayment(
       status: result.trade_status,
     };
   } catch (error: any) {
+    logError("Alipay query exception", error, { orderId });
     return {
       success: false,
       error: error.message || "查询订单异常",

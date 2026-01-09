@@ -122,23 +122,46 @@ function ExamSetupContent() {
 
     const examType = getExamType(examName)
 
-    try {
-      // 步骤1: 开始搜索
-      setProcessingSteps(['正在联网搜索考试大纲...'])
-      setProcessingProgress(10)
+    // 模拟搜索过程的动态日志
+    const simulateSearchLogs = async () => {
+      const year = new Date().getFullYear()
+      const searchLogs = [
+        `🔍 正在搜索「${examName}」相关资料...`,
+        `📡 已连接到知识库...`,
+        `✨ 发现「${year}年${examName}考试大纲」`,
+        `📄 找到「${examName}历年真题解析」`,
+        `📚 正在阅读 3 篇相关文档...`,
+      ]
 
-      const searchResponse = await fetch('/api/exam/search-syllabus', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          examType,
-          examName
-        })
-      })
+      for (let i = 0; i < searchLogs.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 600))
+        setProcessingSteps(prev => [...prev, searchLogs[i]])
+        setProcessingProgress(prev => Math.min(prev + 4, 25))
+      }
+    }
+
+    try {
+      // 步骤1: 开始搜索（同时显示模拟日志）
+      setProcessingSteps([`🌐 正在联网搜索「${examName}」考试大纲...`])
+      setProcessingProgress(5)
+
+      // 并行执行：真实搜索 + 模拟日志动画
+      const [searchResponse] = await Promise.all([
+        fetch('/api/exam/search-syllabus', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            examType,
+            examName
+          })
+        }),
+        simulateSearchLogs()
+      ])
 
       // 步骤2: 解析搜索结果
-      setProcessingSteps(prev => [...prev, '正在解析搜索结果...'])
-      setProcessingProgress(25)
+      setProcessingSteps(prev => [...prev, '🔎 正在解析搜索结果...'])
+      setProcessingProgress(30)
+      await new Promise(resolve => setTimeout(resolve, 300))
 
       let syllabusInfo = null
       if (searchResponse.ok) {
@@ -146,11 +169,36 @@ function ExamSetupContent() {
         syllabusInfo = searchData.data
         setSyllabusData(syllabusInfo)
         localStorage.setItem('examSyllabus', JSON.stringify(syllabusInfo))
+
+        // 显示搜索到的章节信息
+        if (syllabusInfo?.syllabus?.length > 0) {
+          const chapterCount = syllabusInfo.syllabus.length
+          setProcessingSteps(prev => [...prev, `📖 已获取 ${chapterCount} 个考纲章节`])
+          await new Promise(resolve => setTimeout(resolve, 400))
+        }
+
+        if (syllabusInfo?.examInfo?.name) {
+          setProcessingSteps(prev => [...prev, `✅ 成功解析「${syllabusInfo.examInfo.name}」`])
+          await new Promise(resolve => setTimeout(resolve, 300))
+        }
       }
 
-      // 步骤3: 调用 AI 生成题目（核心步骤）
-      setProcessingSteps(prev => [...prev, '正在 AI 生成题目...'])
       setProcessingProgress(40)
+
+      // 步骤3: 调用 AI 生成题目（核心步骤）
+      setProcessingSteps(prev => [...prev, `🤖 AI 正在生成 ${questionCount} 道精选题目...`])
+      setProcessingProgress(45)
+
+      // 模拟出题进度
+      const questionProgressInterval = setInterval(() => {
+        setProcessingProgress(prev => {
+          if (prev >= 70) {
+            clearInterval(questionProgressInterval)
+            return prev
+          }
+          return prev + 2
+        })
+      }, 500)
 
       const generateResponse = await fetch('/api/exam/generate-questions', {
         method: 'POST',
@@ -163,6 +211,7 @@ function ExamSetupContent() {
         })
       })
 
+      clearInterval(questionProgressInterval)
       setProcessingProgress(70)
 
       if (!generateResponse.ok) {
@@ -176,8 +225,11 @@ function ExamSetupContent() {
         throw new Error('AI 返回的题目为空')
       }
 
+      setProcessingSteps(prev => [...prev, `📝 已生成 ${generateData.questions.length} 道题目`])
+      await new Promise(resolve => setTimeout(resolve, 300))
+
       // 步骤4: 格式化并保存题目
-      setProcessingSteps(prev => [...prev, '正在优化题目质量...'])
+      setProcessingSteps(prev => [...prev, '⚡ 正在优化题目质量...'])
       setProcessingProgress(85)
 
       // 转换题目格式
@@ -211,10 +263,10 @@ function ExamSetupContent() {
       localStorage.setItem('generatedExamName', examName)
 
       // 步骤5: 完成
-      setProcessingSteps(prev => [...prev, `题库生成完成！共 ${formattedQuestions.length} 题`])
+      setProcessingSteps(prev => [...prev, `🎉 题库生成完成！共 ${formattedQuestions.length} 道精选题目`])
       setProcessingProgress(100)
 
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise(resolve => setTimeout(resolve, 500))
       setStep('ready')
 
     } catch (error) {
@@ -248,8 +300,9 @@ function ExamSetupContent() {
 
     try {
       // 步骤1: 解析文件
-      setProcessingSteps(['正在解析文档内容...'])
-      setProcessingProgress(20)
+      setProcessingSteps([`📄 正在解析「${uploadedFile.name}」...`])
+      setProcessingProgress(10)
+      await new Promise(resolve => setTimeout(resolve, 300))
 
       const parseResult = await parseFile(uploadedFile)
 
@@ -257,15 +310,34 @@ function ExamSetupContent() {
         throw new Error(parseResult.error || '文件解析失败')
       }
 
-      // 步骤2: 提取知识点
-      setProcessingSteps(prev => [...prev, '正在提取核心知识点...'])
-      setProcessingProgress(40)
+      setProcessingSteps(prev => [...prev, `✅ 文档解析成功`])
+      setProcessingProgress(25)
+      await new Promise(resolve => setTimeout(resolve, 300))
 
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // 步骤2: 提取知识点
+      setProcessingSteps(prev => [...prev, '🔍 正在提取核心知识点...'])
+      setProcessingProgress(35)
+
+      // 显示文档内容摘要
+      const textLength = parseResult.text?.length || 0
+      const wordCount = Math.floor(textLength / 2)
+      setProcessingSteps(prev => [...prev, `📊 已提取 ${wordCount > 1000 ? Math.floor(wordCount / 1000) + 'k+' : wordCount} 字内容`])
+      await new Promise(resolve => setTimeout(resolve, 400))
 
       // 步骤3: 调用 AI 生成题目
-      setProcessingSteps(prev => [...prev, '正在生成题库...'])
-      setProcessingProgress(60)
+      setProcessingSteps(prev => [...prev, `🤖 AI 正在生成 ${questionCount} 道精选题目...`])
+      setProcessingProgress(50)
+
+      // 模拟出题进度
+      const progressInterval = setInterval(() => {
+        setProcessingProgress(prev => {
+          if (prev >= 75) {
+            clearInterval(progressInterval)
+            return prev
+          }
+          return prev + 2
+        })
+      }, 400)
 
       const response = await fetch('/api/exam/generate-from-document', {
         method: 'POST',
@@ -276,6 +348,8 @@ function ExamSetupContent() {
           count: questionCount
         })
       })
+
+      clearInterval(progressInterval)
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -297,22 +371,26 @@ function ExamSetupContent() {
         throw new Error(data.error || 'AI 返回的题目为空，请检查 API 配置')
       }
 
-      // 步骤4: 保存题目
-      setProcessingSteps(prev => [...prev, '正在优化题目质量...'])
+      setProcessingSteps(prev => [...prev, `📝 已生成 ${data.questions.length} 道题目`])
       setProcessingProgress(80)
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      // 步骤4: 保存题目
+      setProcessingSteps(prev => [...prev, '⚡ 正在优化题目质量...'])
+      setProcessingProgress(90)
 
       // 保存生成的题目到 localStorage
       console.log('保存题目到 localStorage:', data.questions.length, '题')
       localStorage.setItem('generatedQuestions', JSON.stringify(data.questions))
       localStorage.setItem('generatedExamName', examName)
 
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise(resolve => setTimeout(resolve, 400))
 
       // 步骤5: 完成
-      setProcessingSteps(prev => [...prev, '题库生成完成！'])
+      setProcessingSteps(prev => [...prev, `🎉 题库生成完成！共 ${data.questions.length} 道精选题目`])
       setProcessingProgress(100)
 
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise(resolve => setTimeout(resolve, 500))
       setStep('ready')
 
     } catch (error) {

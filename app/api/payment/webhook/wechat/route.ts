@@ -161,6 +161,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // 更新用户的 pro 状态
+    await db
+      .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
+      .doc(order.user_id)
+      .update({
+        pro: true,
+        subscription_plan: order.billing_cycle === "yearly" ? "yearly" : "monthly",
+        subscription_status: "active",
+        updated_at: now,
+      });
+
     logSecurityEvent("payment_completed", order.user_id, clientIP, {
       orderId,
       transactionId,

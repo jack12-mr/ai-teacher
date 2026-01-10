@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Crown, Share2, TrendingUp, Brain, Loader2 } from "lucide-react"
+import { Crown, Share2, TrendingUp, Brain, Loader2, Home } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AiCoachModal } from "@/components/ai-coach-modal"
 import { useAuth } from "@/components/auth/auth-provider"
@@ -72,8 +72,8 @@ export default function HomePage() {
       setUserProfile((prev) => ({
         ...prev,
         id: user.id || prev.id,
-        name: user.displayName || user.email?.split("@")[0] || prev.name,
-        isPremium: user.pro || false,
+        name: user.name || user.email?.split("@")[0] || prev.name,
+        isPremium: user.pro === true,
       }))
     }
   }, [user])
@@ -310,7 +310,30 @@ export default function HomePage() {
             )}
 
             {currentStep === "results" && (
-              <Tabs defaultValue="classification" className="w-full">
+              <div className="space-y-6">
+                {/* 返回按钮 */}
+                <div className="flex items-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setCurrentStep("assessment")
+                      setUserProfile(prev => ({
+                        ...prev,
+                        role: "",
+                        competitivenessScore: 0,
+                        assessmentProgress: 0,
+                        weeklyRank: 0,
+                      }))
+                      setUserSkills({})
+                    }}
+                    className="border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-slate-200"
+                  >
+                    <Home className="w-4 h-4 mr-2" />
+                    返回主页
+                  </Button>
+                </div>
+
+                <Tabs defaultValue="classification" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-slate-800 border-slate-700">
                   <TabsTrigger value="classification" className="data-[state=active]:bg-blue-600">
                     角色分析
@@ -338,6 +361,7 @@ export default function HomePage() {
                   />
                 </TabsContent>
               </Tabs>
+              </div>
             )}
 
             {currentStep === "paths" && userProfile.isPremium && (

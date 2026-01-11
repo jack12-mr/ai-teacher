@@ -364,12 +364,12 @@ export default function TargetedQuizPage() {
   // 错误状态
   if (error && !assessmentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="bg-slate-800/50 border-slate-700 p-8 max-w-md text-center">
-          <p className="text-orange-400 mb-4">{error}</p>
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
+        <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 max-w-md text-center">
+          <p className="text-amber-600 dark:text-amber-400 mb-4">{error}</p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer"
+            className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-colors cursor-pointer"
           >
             返回首页
           </button>
@@ -381,26 +381,26 @@ export default function TargetedQuizPage() {
   // 加载中
   if (!assessmentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* 顶部导航 */}
       {phase !== 'results' && (
-        <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-sm sticky top-0 z-40">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <button
               onClick={handleGoHome}
-              className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
               <span>返回</span>
             </button>
-            <h1 className="text-lg font-semibold text-white">
+            <h1 className="text-lg font-semibold text-neutral-950 dark:text-white">
               {phase === 'analysis' && '能力分析'}
               {phase === 'intro' && '针对性练习'}
               {phase === 'loading' && '生成题目中'}
@@ -409,7 +409,7 @@ export default function TargetedQuizPage() {
             </h1>
             <button
               onClick={handleGoHome}
-              className="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer"
             >
               <Home className="w-5 h-5" />
             </button>
@@ -441,10 +441,10 @@ export default function TargetedQuizPage() {
 
         {/* 加载阶段 */}
         {phase === 'loading' && (
-          <Card className="bg-slate-800/50 border-slate-700 p-12 text-center">
-            <Loader2 className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
-            <p className="text-lg text-white mb-2">正在生成题目</p>
-            <p className="text-slate-400">{loadingMessage}</p>
+          <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-12 text-center">
+            <Loader2 className="w-12 h-12 text-indigo-600 dark:text-indigo-400 animate-spin mx-auto mb-4" />
+            <p className="text-lg text-neutral-950 dark:text-white mb-2">正在生成题目</p>
+            <p className="text-neutral-500 dark:text-neutral-400">{loadingMessage}</p>
           </Card>
         )}
 
@@ -452,9 +452,9 @@ export default function TargetedQuizPage() {
         {phase === 'quiz' && currentQuestion && (
           <div className="space-y-6">
             {/* 进度条 */}
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                className="h-full bg-indigo-600 transition-all duration-300"
                 style={{ width: `${((quizState.currentIndex) / quizState.questions.length) * 100}%` }}
               />
             </div>
@@ -483,9 +483,9 @@ export default function TargetedQuizPage() {
         {phase === 'feedback' && currentQuestion && quizState.currentAnswer && (
           <div className="space-y-6">
             {/* 进度条 */}
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                className="h-full bg-indigo-600 transition-all duration-300"
                 style={{ width: `${((quizState.currentIndex + 1) / quizState.questions.length) * 100}%` }}
               />
             </div>

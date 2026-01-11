@@ -72,9 +72,9 @@ export function DemotionWarning({
         }
       default:
         return {
-          borderColor: 'border-slate-600',
-          bgColor: 'bg-slate-700/50',
-          iconColor: 'text-slate-400',
+          borderColor: 'border-neutral-200 dark:border-neutral-700',
+          bgColor: 'bg-neutral-50 dark:bg-neutral-800',
+          iconColor: 'text-neutral-500 dark:text-neutral-400',
           title: '提示',
           message: ''
         }
@@ -84,8 +84,8 @@ export function DemotionWarning({
   const style = getWarningStyle()
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className={`w-full max-w-md border-2 ${style.borderColor} bg-slate-800 animate-in zoom-in-95 duration-300 ${
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <Card className={`w-full max-w-md border-2 ${style.borderColor} bg-white dark:bg-neutral-950 animate-in zoom-in-95 duration-300 ${
         warningLevel >= 2 || cheatDetected ? 'animate-shake' : ''
       }`}>
         {/* 头部 */}
@@ -103,7 +103,7 @@ export function DemotionWarning({
           {warningLevel < 3 && !cheatDetected && (
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white transition"
+              className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -126,15 +126,15 @@ export function DemotionWarning({
           )}
 
           {/* 消息 */}
-          <p className="text-slate-300 text-center mb-6 leading-relaxed">
+          <p className="text-neutral-600 dark:text-neutral-300 text-center mb-6 leading-relaxed">
             {style.message}
           </p>
 
           {/* 提示 */}
           {(warningLevel >= 2 || cheatDetected) && (
-            <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
-              <p className="text-sm text-slate-400 text-center">
-                💡 <span className="text-slate-300">建议:</span> 不要着急，静下心来认真审题，或者先去错题本复习薄弱知识点。
+            <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-4 mb-6">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
+                💡 <span className="text-neutral-700 dark:text-neutral-300">建议:</span> 不要着急，静下心来认真审题，或者先去错题本复习薄弱知识点。
               </p>
             </div>
           )}
@@ -145,7 +145,7 @@ export function DemotionWarning({
               <Button
                 variant="outline"
                 onClick={onGoReview}
-                className="flex-1 border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                className="flex-1 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
               >
                 <BookOpen className="w-4 h-4 mr-2" />
                 去复习错题
@@ -155,11 +155,11 @@ export function DemotionWarning({
               onClick={onClose}
               className={`flex-1 ${
                 warningLevel === 3
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                  ? 'bg-indigo-600 hover:bg-indigo-700'
                   : warningLevel === 2 || cheatDetected
                   ? 'bg-orange-600 hover:bg-orange-700'
                   : 'bg-yellow-600 hover:bg-yellow-700'
-              }`}
+              } text-white`}
             >
               {warningLevel === 3 ? (
                 <>

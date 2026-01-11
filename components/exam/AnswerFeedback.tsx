@@ -76,8 +76,8 @@ export function AnswerFeedback({
         <div className="space-y-1">
           {answers.map((ans, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-slate-500">填空{i + 1}:</span>
-              <span className={isCorrect ? 'text-green-400' : 'text-red-400'}>
+              <span className="text-neutral-500">填空{i + 1}:</span>
+              <span className={isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
                 {ans || '(未填写)'}
               </span>
             </div>
@@ -88,14 +88,14 @@ export function AnswerFeedback({
       const indices = userAnswer as number[]
       if (!question.options) return null
       return (
-        <span className={isCorrect ? 'text-green-400' : 'text-red-400'}>
+        <span className={isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
           {indices.map(idx => question.options![idx]).join(', ')}
         </span>
       )
     } else {
       if (!question.options) return null
       return (
-        <span className={isCorrect ? 'text-green-400' : 'text-red-400'}>
+        <span className={isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
           {question.options[userAnswer as number]}
         </span>
       )
@@ -110,8 +110,8 @@ export function AnswerFeedback({
         <div className="space-y-1">
           {answers.map((ans, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="text-slate-500">填空{i + 1}:</span>
-              <span className="text-green-400">{ans}</span>
+              <span className="text-neutral-500">填空{i + 1}:</span>
+              <span className="text-emerald-600 dark:text-emerald-400">{ans}</span>
             </div>
           ))}
         </div>
@@ -120,14 +120,14 @@ export function AnswerFeedback({
       const indices = question.correctAnswer as number[]
       if (!question.options) return null
       return (
-        <span className="text-green-400">
+        <span className="text-emerald-600 dark:text-emerald-400">
           {indices.map(idx => question.options![idx]).join(', ')}
         </span>
       )
     } else {
       if (!question.options) return null
       return (
-        <span className="text-green-400">
+        <span className="text-emerald-600 dark:text-emerald-400">
           {question.options[question.correctAnswer as number]}
         </span>
       )
@@ -137,32 +137,32 @@ export function AnswerFeedback({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
       <Card className={`w-full max-w-lg border-2 ${
         isCorrect
-          ? 'bg-slate-800 border-green-500/50'
-          : 'bg-slate-800 border-red-500/50'
+          ? 'bg-white dark:bg-neutral-950 border-emerald-500/50'
+          : 'bg-white dark:bg-neutral-950 border-red-500/50'
       } animate-in zoom-in-95 slide-in-from-bottom-4 duration-300`}>
         {/* 头部 */}
         <div className={`px-6 py-4 flex items-center justify-between ${
-          isCorrect ? 'bg-green-500/20' : 'bg-red-500/20'
+          isCorrect ? 'bg-emerald-50 dark:bg-emerald-950/30' : 'bg-red-50 dark:bg-red-950/30'
         }`}>
           <div className="flex items-center gap-3">
             {isCorrect ? (
               <>
-                <CheckCircle className="w-6 h-6 text-green-400" />
-                <span className="text-lg font-bold text-green-400">回答正确！</span>
+                <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">回答正确！</span>
               </>
             ) : (
               <>
-                <XCircle className="w-6 h-6 text-red-400" />
-                <span className="text-lg font-bold text-red-400">回答错误</span>
+                <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                <span className="text-lg font-bold text-red-600 dark:text-red-400">回答错误</span>
               </>
             )}
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition"
+            className="text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -173,12 +173,12 @@ export function AnswerFeedback({
           {/* 答案对比 */}
           <div className="space-y-2">
             <div className={questionType === 'fill' ? 'space-y-2' : 'flex items-center gap-2'}>
-              <span className="text-slate-400">你的{questionType === 'fill' ? '答案' : '选择'}:</span>
+              <span className="text-neutral-500 dark:text-neutral-400">你的{questionType === 'fill' ? '答案' : '选择'}:</span>
               {renderUserAnswer()}
             </div>
             {!isCorrect && (
               <div className={questionType === 'fill' ? 'space-y-2' : 'flex items-center gap-2'}>
-                <span className="text-slate-400">正确答案:</span>
+                <span className="text-neutral-500 dark:text-neutral-400">正确答案:</span>
                 {renderCorrectAnswer()}
               </div>
             )}
@@ -186,8 +186,8 @@ export function AnswerFeedback({
 
           {/* 部分得分提示（填空题） */}
           {questionType === 'fill' && !isCorrect && partialScore !== undefined && partialScore > 0 && (
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3">
-              <div className="flex items-center gap-2 text-yellow-400">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                 <Trophy className="w-4 h-4" />
                 <span className="font-medium">
                   部分正确：{Math.round(partialScore * 100)}% 得分
@@ -197,26 +197,26 @@ export function AnswerFeedback({
           )}
 
           {/* 分隔线 */}
-          <div className="border-t border-slate-700" />
+          <div className="border-t border-neutral-200 dark:border-neutral-800" />
 
           {/* 解析 */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-medium text-blue-400">解析</span>
+              <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">解析</span>
             </div>
-            <div className="bg-slate-700/50 rounded-xl p-4">
-              <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">
+            <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4">
+              <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
                 {question.explanation}
               </p>
             </div>
           </div>
 
           {/* 知识点提示 */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 flex items-center gap-2">
-            <span className="text-blue-400">💡</span>
-            <span className="text-sm text-slate-300">
-              知识点: <span className="text-blue-400">{question.knowledgePoint}</span>
+          <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl p-3 flex items-center gap-2">
+            <span className="text-indigo-600 dark:text-indigo-400">💡</span>
+            <span className="text-sm text-neutral-700 dark:text-neutral-300">
+              知识点: <span className="text-indigo-600 dark:text-indigo-400">{question.knowledgePoint}</span>
             </span>
           </div>
 
@@ -226,7 +226,7 @@ export function AnswerFeedback({
               <Button
                 variant="outline"
                 onClick={onFollowUp}
-                className="flex-1 border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                className="flex-1 border-violet-300 dark:border-violet-800 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 追问模式
@@ -237,8 +237,8 @@ export function AnswerFeedback({
                 disabled={isAddedToWrongBook}
                 className={`flex-1 ${
                   isAddedToWrongBook
-                    ? 'border-green-500/50 text-green-400 bg-green-500/10'
-                    : 'border-orange-500/50 text-orange-400 hover:bg-orange-500/10'
+                    ? 'border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30'
+                    : 'border-orange-300 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/30'
                 }`}
               >
                 {isAddedToWrongBook ? (
@@ -261,10 +261,10 @@ export function AnswerFeedback({
             onClick={onNext}
             className={`w-full ${
               isLastQuestion
-                ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'
+                ? 'bg-amber-600 hover:bg-amber-700 text-white'
                 : isCorrect
-                ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
-                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
             }`}
           >
             {isLastQuestion ? (
@@ -283,30 +283,30 @@ export function AnswerFeedback({
 
         {/* 底部积分变化 */}
         <div className={`px-6 py-3 border-t flex items-center justify-between text-sm ${
-          isCorrect ? 'border-green-500/30 bg-green-500/10' : 'border-red-500/30 bg-red-500/10'
+          isCorrect ? 'border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30' : 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30'
         }`}>
           <div className="flex items-center gap-4">
             {/* 积分变化 */}
             <div className="flex items-center gap-1">
               {pointsChange > 0 ? (
-                <TrendingUp className="w-4 h-4 text-green-400" />
+                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-red-400" />
+                <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" />
               )}
-              <span className={pointsChange > 0 ? 'text-green-400' : 'text-red-400'}>
+              <span className={pointsChange > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
                 {pointsChange > 0 ? '+' : ''}{pointsChange} 积分
               </span>
             </div>
 
             {/* 当前积分 */}
-            <div className="text-slate-400">
-              当前: <span className="text-white font-bold">{currentPoints}</span>
+            <div className="text-neutral-500 dark:text-neutral-400">
+              当前: <span className="text-neutral-950 dark:text-white font-bold">{currentPoints}</span>
             </div>
           </div>
 
           {/* 连击状态 */}
           {isCorrect && comboCount > 0 ? (
-            <div className="flex items-center gap-1 text-orange-400">
+            <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
               <Flame className="w-4 h-4 animate-pulse" />
               <span className="font-bold">连击 x{comboCount}</span>
               {comboCount >= 3 && comboCount < 5 && <span className="text-xs">+5</span>}
@@ -314,7 +314,7 @@ export function AnswerFeedback({
               {comboCount >= 10 && <span className="text-xs">+20</span>}
             </div>
           ) : !isCorrect ? (
-            <div className="flex items-center gap-1 text-slate-500">
+            <div className="flex items-center gap-1 text-neutral-500">
               <span>💔</span>
               <span>连击中断</span>
             </div>

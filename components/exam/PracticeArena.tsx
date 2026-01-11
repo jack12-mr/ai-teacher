@@ -513,27 +513,27 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
   const progressPercent = ((currentIndex + 1) / questions.length) * 100
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setShowExitConfirm(true)}
-              className="flex items-center text-slate-400 hover:text-white transition"
+              className="flex items-center text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               返回
             </button>
 
-            <h1 className="text-xl font-bold text-white">{examName}</h1>
+            <h1 className="text-xl font-bold text-neutral-950 dark:text-white">{examName}</h1>
 
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsPaused(!isPaused)}
-                className="border-slate-600 text-slate-300"
+                className="border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300"
               >
                 {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
               </Button>
@@ -541,7 +541,7 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
                 variant="outline"
                 size="sm"
                 onClick={() => router.push('/exam/review')}
-                className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
+                className="border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-500/10"
               >
                 <BookMarked className="w-4 h-4 mr-2" />
                 错题本 ({wrongQuestions.length})
@@ -555,31 +555,31 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
       <main className="container mx-auto px-4 py-6">
         {/* 加载状态 */}
         {isLoadingQuestions && (
-          <Card className="bg-slate-800/50 border-slate-700 p-8 max-w-2xl mx-auto">
+          <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 max-w-2xl mx-auto">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
                 <Loader2 className="w-8 h-8 text-white animate-spin" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">正在生成题目...</h2>
-              <p className="text-slate-400 mb-4">AI 正在根据考试大纲为你准备专属题库</p>
+              <h2 className="text-xl font-bold text-neutral-950 dark:text-white mb-2">正在生成题目...</h2>
+              <p className="text-neutral-500 dark:text-neutral-400 mb-4">AI 正在根据考试大纲为你准备专属题库</p>
               <Progress value={loadingProgress} className="h-2 mb-2" />
-              <p className="text-sm text-slate-500">{loadingProgress}%</p>
+              <p className="text-sm text-neutral-500">{loadingProgress}%</p>
             </div>
           </Card>
         )}
 
         {/* 加载错误 */}
         {!isLoadingQuestions && loadingError && !usingFallback && (
-          <Card className="bg-slate-800/50 border-slate-700 p-8 max-w-2xl mx-auto">
+          <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 max-w-2xl mx-auto">
             <div className="text-center">
               <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-red-400" />
+                <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">题目加载失败</h2>
-              <p className="text-slate-400 mb-4">{loadingError}</p>
+              <h2 className="text-xl font-bold text-neutral-950 dark:text-white mb-2">题目加载失败</h2>
+              <p className="text-neutral-500 dark:text-neutral-400 mb-4">{loadingError}</p>
               <Button
                 onClick={() => window.location.reload()}
-                className="bg-gradient-to-r from-blue-600 to-purple-600"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 重新加载
@@ -590,8 +590,8 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
 
         {/* 使用备用题库提示 */}
         {!isLoadingQuestions && usingFallback && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 mb-4 max-w-4xl mx-auto">
-            <div className="flex items-center gap-2 text-yellow-400 text-sm">
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 mb-4 max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>AI 出题暂时不可用，已切换为备用题库</span>
             </div>
@@ -618,10 +618,10 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
               />
 
               {/* 进度条 */}
-              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+              <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-slate-400">答题进度</span>
-                  <span className="text-sm text-white">
+                  <span className="text-sm text-neutral-500 dark:text-neutral-400">答题进度</span>
+                  <span className="text-sm text-neutral-950 dark:text-white">
                     {currentIndex + 1} / {questions.length}
                   </span>
                 </div>
@@ -704,15 +704,15 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
 
       {/* 退出确认弹窗 */}
       {showExitConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-yellow-400" />
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-950/30 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </div>
-              <h3 className="text-lg font-bold text-white">确认退出？</h3>
+              <h3 className="text-lg font-bold text-neutral-950 dark:text-white">确认退出？</h3>
             </div>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-6">
               你当前在第 {currentIndex + 1} 题，进度已自动保存。<br />
               下次回来可以继续答题哦~
             </p>
@@ -720,7 +720,7 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
               <Button
                 variant="outline"
                 onClick={() => setShowExitConfirm(false)}
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                className="flex-1 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               >
                 继续答题
               </Button>
@@ -729,7 +729,7 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
                   setShowExitConfirm(false)
                   router.push('/')
                 }}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 确认退出
               </Button>

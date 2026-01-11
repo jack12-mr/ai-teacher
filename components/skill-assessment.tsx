@@ -209,40 +209,40 @@ export function SkillAssessment({ onComplete }: SkillAssessmentProps) {
   return (
     <div className="space-y-6">
       {/* Category Progress */}
-      <Card className="bg-slate-800/50 border-slate-700 p-6">
+      <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-600/20 rounded-lg text-blue-400">{currentCat.icon}</div>
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">{currentCat.icon}</div>
             <div>
-              <h2 className="text-xl font-bold text-white">{currentCat.name}</h2>
-              <p className="text-sm text-slate-400">{currentCat.description}</p>
+              <h2 className="text-xl font-bold text-neutral-950 dark:text-white">{currentCat.name}</h2>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">{currentCat.description}</p>
             </div>
           </div>
-          <Badge className="bg-blue-600/20 text-blue-300 border-blue-500/30">
+          <Badge className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700">
             {currentCategory + 1}/{skillCategories.length}
           </Badge>
         </div>
 
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-slate-400">当前分类进度</span>
-            <span className="text-white">{Math.round(getCurrentCategoryProgress())}%</span>
+            <span className="text-neutral-500 dark:text-neutral-400">当前分类进度</span>
+            <span className="text-neutral-950 dark:text-white">{Math.round(getCurrentCategoryProgress())}%</span>
           </div>
           <Progress value={getCurrentCategoryProgress()} className="h-2" />
         </div>
 
         <div className="mb-6">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-slate-400">总体评估进度</span>
-            <span className="text-white">{Math.round(getTotalProgress())}%</span>
+            <span className="text-neutral-500 dark:text-neutral-400">总体评估进度</span>
+            <span className="text-neutral-950 dark:text-white">{Math.round(getTotalProgress())}%</span>
           </div>
           <Progress value={getTotalProgress()} className="h-2" />
         </div>
       </Card>
 
       {/* Skill Rating */}
-      <Card className="bg-slate-800/50 border-slate-700 p-6">
-        <h3 className="text-lg font-semibold text-white mb-6">请评估你在以下技能的熟练程度 (1-10分)</h3>
+      <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
+        <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-6">请评估你在以下技能的熟练程度 (1-10分)</h3>
 
         <div className="space-y-6">
           {currentCat.skills.map((skill) => {
@@ -251,10 +251,10 @@ export function SkillAssessment({ onComplete }: SkillAssessmentProps) {
             return (
               <div key={skill} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-white font-medium">{skill}</span>
+                  <span className="text-neutral-950 dark:text-white font-medium">{skill}</span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-slate-400">评分:</span>
-                    <span className="text-lg font-bold text-blue-400 min-w-[2rem] text-center">{currentRating}</span>
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400">评分:</span>
+                    <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400 min-w-[2rem] text-center">{currentRating}</span>
                   </div>
                 </div>
 
@@ -264,10 +264,10 @@ export function SkillAssessment({ onComplete }: SkillAssessmentProps) {
                     <button
                       key={rating}
                       onClick={() => handleSkillRating(currentCat.id, skill, rating)}
-                      className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${
+                      className={`w-8 h-8 rounded-full text-sm font-medium transition-all cursor-pointer ${
                         currentRating === rating
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-700 text-slate-400 hover:bg-slate-600"
+                          ? "bg-indigo-600 text-white"
+                          : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                       }`}
                     >
                       {rating}
@@ -276,11 +276,11 @@ export function SkillAssessment({ onComplete }: SkillAssessmentProps) {
                 </div>
 
                 {/* Skill Level Description */}
-                <div className="text-sm text-slate-400">
-                  {currentRating <= 3 && "🌱 初学阶段 - 基础概念了解"}
-                  {currentRating > 3 && currentRating <= 6 && "⚡ 进阶阶段 - 能够独立完成基本任务"}
-                  {currentRating > 6 && currentRating <= 8 && "🚀 熟练阶段 - 能够解决复杂问题"}
-                  {currentRating > 8 && "👑 专家阶段 - 能够指导他人并优化系统"}
+                <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                  {currentRating <= 3 && "初学阶段 - 基础概念了解"}
+                  {currentRating > 3 && currentRating <= 6 && "进阶阶段 - 能够独立完成基本任务"}
+                  {currentRating > 6 && currentRating <= 8 && "熟练阶段 - 能够解决复杂问题"}
+                  {currentRating > 8 && "专家阶段 - 能够指导他人并优化系统"}
                 </div>
               </div>
             )
@@ -292,14 +292,14 @@ export function SkillAssessment({ onComplete }: SkillAssessmentProps) {
             variant="outline"
             onClick={() => setCurrentCategory(Math.max(0, currentCategory - 1))}
             disabled={currentCategory === 0 || isSaving}
-            className="border-slate-600 text-slate-400 hover:bg-slate-700"
+            className="border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
           >
             上一步
           </Button>
           <Button
             onClick={handleNext}
             disabled={!canProceed() || isSaving}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
           >
             {isSaving ? (
               <>
@@ -317,7 +317,7 @@ export function SkillAssessment({ onComplete }: SkillAssessmentProps) {
       </Card>
 
       {/* Category Navigation */}
-      <Card className="bg-slate-800/50 border-slate-700 p-4">
+      <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-4">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {skillCategories.map((category, index) => {
             const isCompleted =
@@ -328,31 +328,31 @@ export function SkillAssessment({ onComplete }: SkillAssessmentProps) {
               <button
                 key={category.id}
                 onClick={() => setCurrentCategory(index)}
-                className={`p-3 rounded-lg border transition-all text-left ${
+                className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
                   isCurrent
-                    ? "border-blue-500 bg-blue-500/10"
+                    ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
                     : isCompleted
-                      ? "border-green-500 bg-green-500/10"
-                      : "border-slate-600 bg-slate-700/50 hover:border-slate-500"
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                      : "border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-600"
                 }`}
               >
                 <div className="flex items-center space-x-2 mb-1">
                   <div
                     className={`p-1 rounded ${
-                      isCurrent ? "text-blue-400" : isCompleted ? "text-green-400" : "text-slate-400"
+                      isCurrent ? "text-indigo-600 dark:text-indigo-400" : isCompleted ? "text-emerald-600 dark:text-emerald-400" : "text-neutral-500 dark:text-neutral-400"
                     }`}
                   >
                     {category.icon}
                   </div>
                   <span
                     className={`text-sm font-medium ${
-                      isCurrent ? "text-blue-300" : isCompleted ? "text-green-300" : "text-slate-300"
+                      isCurrent ? "text-indigo-600 dark:text-indigo-300" : isCompleted ? "text-emerald-600 dark:text-emerald-300" : "text-neutral-600 dark:text-neutral-300"
                     }`}
                   >
                     {category.name}
                   </span>
                 </div>
-                <div className="text-xs text-slate-400">
+                <div className="text-xs text-neutral-500 dark:text-neutral-400">
                   {userSkills[category.id] ? Object.keys(userSkills[category.id]).length : 0}/{category.skills.length}
                 </div>
               </button>

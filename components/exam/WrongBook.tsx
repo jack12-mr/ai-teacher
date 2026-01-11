@@ -58,12 +58,12 @@ export function WrongBook({
 
   if (wrongQuestions.length === 0) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-green-400" />
+      <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 text-center">
+        <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">太棒了！</h3>
-        <p className="text-slate-400">你还没有错题，继续保持！</p>
+        <h3 className="text-xl font-bold text-neutral-950 dark:text-white mb-2">太棒了！</h3>
+        <p className="text-neutral-500 dark:text-neutral-400">你还没有错题，继续保持！</p>
       </Card>
     )
   }
@@ -72,17 +72,17 @@ export function WrongBook({
     <div className="space-y-6">
       {/* 统计卡片 */}
       <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-slate-800/50 border-slate-700 p-4 text-center">
-          <div className="text-2xl font-bold text-white">{stats.total}</div>
-          <div className="text-sm text-slate-400">总错题</div>
+        <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-4 text-center">
+          <div className="text-2xl font-bold text-neutral-950 dark:text-white">{stats.total}</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">总错题</div>
         </Card>
-        <Card className="bg-red-500/10 border-red-500/30 p-4 text-center">
-          <div className="text-2xl font-bold text-red-400">{stats.unmastered}</div>
-          <div className="text-sm text-slate-400">未掌握</div>
+        <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 p-4 text-center">
+          <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.unmastered}</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">未掌握</div>
         </Card>
-        <Card className="bg-green-500/10 border-green-500/30 p-4 text-center">
-          <div className="text-2xl font-bold text-green-400">{stats.mastered}</div>
-          <div className="text-sm text-slate-400">已掌握</div>
+        <Card className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 p-4 text-center">
+          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.mastered}</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">已掌握</div>
         </Card>
       </div>
 
@@ -96,10 +96,10 @@ export function WrongBook({
           <button
             key={f.value}
             onClick={() => setFilter(f.value as typeof filter)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${
               filter === f.value
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
             }`}
           >
             {f.label}
@@ -112,9 +112,9 @@ export function WrongBook({
         <div key={knowledge} className="space-y-3">
           {/* 知识点标题 */}
           <div className="flex items-center gap-2">
-            <Tag className="w-4 h-4 text-blue-400" />
-            <span className="text-sm font-medium text-blue-400">{knowledge}</span>
-            <Badge className="bg-slate-700 text-slate-300">
+            <Tag className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{knowledge}</span>
+            <Badge className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
               {questions.length} 题
             </Badge>
           </div>
@@ -125,22 +125,22 @@ export function WrongBook({
               key={wq.questionId}
               className={`border transition-all ${
                 wq.mastered
-                  ? 'bg-green-500/5 border-green-500/30'
-                  : 'bg-slate-800/50 border-slate-700'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800'
+                  : 'bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800'
               }`}
             >
               {/* 折叠头部 */}
               <button
                 onClick={() => setExpandedId(expandedId === wq.questionId ? null : wq.questionId)}
-                className="w-full px-4 py-3 flex items-center justify-between text-left"
+                className="w-full px-4 py-3 flex items-center justify-between text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {wq.mastered ? (
-                    <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-red-400 shrink-0" />
+                    <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
                   )}
-                  <span className="text-white truncate">
+                  <span className="text-neutral-950 dark:text-white truncate">
                     {wq.question.content.slice(0, 50)}...
                   </span>
                 </div>
@@ -148,26 +148,26 @@ export function WrongBook({
                   <Badge
                     className={`${
                       wq.wrongCount >= 3
-                        ? 'bg-red-500/20 text-red-400'
-                        : 'bg-slate-700 text-slate-400'
+                        ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
                     }`}
                   >
                     错 {wq.wrongCount} 次
                   </Badge>
                   {expandedId === wq.questionId ? (
-                    <ChevronUp className="w-4 h-4 text-slate-400" />
+                    <ChevronUp className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                    <ChevronDown className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   )}
                 </div>
               </button>
 
               {/* 展开内容 */}
               {expandedId === wq.questionId && (
-                <div className="px-4 pb-4 border-t border-slate-700 pt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                <div className="px-4 pb-4 border-t border-neutral-200 dark:border-neutral-800 pt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
                   {/* 题目内容 */}
                   <div>
-                    <p className="text-slate-300 whitespace-pre-wrap">
+                    <p className="text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
                       {wq.question.content}
                     </p>
                   </div>
@@ -179,10 +179,10 @@ export function WrongBook({
                         key={i}
                         className={`px-3 py-2 rounded-lg text-sm ${
                           i === wq.question.correctAnswer
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
                             : wq.userAnswers.includes(i)
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                            : 'bg-slate-700/50 text-slate-400'
+                            ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
+                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
                         }`}
                       >
                         {opt}
@@ -197,16 +197,16 @@ export function WrongBook({
                   </div>
 
                   {/* 解析 */}
-                  <div className="bg-slate-700/50 rounded-xl p-4">
-                    <div className="text-sm text-blue-400 mb-2">📖 解析</div>
-                    <p className="text-slate-300 text-sm whitespace-pre-wrap">
+                  <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl p-4">
+                    <div className="text-sm text-indigo-600 dark:text-indigo-400 mb-2">📖 解析</div>
+                    <p className="text-neutral-600 dark:text-neutral-300 text-sm whitespace-pre-wrap">
                       {wq.question.explanation}
                     </p>
                   </div>
 
                   {/* 错误历史 */}
                   {wq.wrongCount >= 2 && (
-                    <div className="flex items-center gap-2 text-sm text-yellow-400">
+                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
                       <AlertTriangle className="w-4 h-4" />
                       <span>这道题你已经错了 {wq.wrongCount} 次，建议重点复习！</span>
                     </div>
@@ -217,7 +217,7 @@ export function WrongBook({
                     <Button
                       size="sm"
                       onClick={() => onPractice(wq.question)}
-                      className="bg-blue-600 hover:bg-blue-700"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white"
                     >
                       <RotateCcw className="w-4 h-4 mr-2" />
                       重新练习
@@ -228,8 +228,8 @@ export function WrongBook({
                       onClick={() => onMarkMastered(wq.questionId)}
                       className={
                         wq.mastered
-                          ? 'border-slate-600 text-slate-400'
-                          : 'border-green-500/50 text-green-400 hover:bg-green-500/10'
+                          ? 'border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400'
+                          : 'border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
                       }
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
@@ -239,7 +239,7 @@ export function WrongBook({
                       size="sm"
                       variant="outline"
                       onClick={() => onRemove(wq.questionId)}
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                      className="border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

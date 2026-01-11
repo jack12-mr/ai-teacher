@@ -98,7 +98,7 @@ export function UserAvatarMenu() {
     >
       {/* 头像按钮 */}
       <button
-        className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-slate-500 transition-all duration-200 focus:outline-none focus:ring-slate-500"
+        className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-indigo-500 dark:hover:ring-indigo-400 transition-all duration-200 focus:outline-none focus:ring-indigo-500 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="用户菜单"
       >
@@ -115,9 +115,9 @@ export function UserAvatarMenu() {
 
       {/* 下拉菜单 */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800 rounded-lg shadow-xl border border-slate-700 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-neutral-950 rounded-lg shadow-xl border border-neutral-200 dark:border-neutral-800 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           {/* 用户信息头部 */}
-          <div className="px-4 py-3 border-b border-slate-700">
+          <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center gap-3">
               <Avatar className="w-12 h-12">
                 <AvatarImage
@@ -129,10 +129,10 @@ export function UserAvatarMenu() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
+                <p className="text-sm font-medium text-neutral-950 dark:text-white truncate">
                   {user?.name || "用户"}
                 </p>
-                <p className="text-xs text-slate-400 truncate">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
                   {user?.email}
                 </p>
                 {user?.pro && (
@@ -150,7 +150,7 @@ export function UserAvatarMenu() {
               <button
                 key={item.href}
                 onClick={() => handleMenuItemClick(item.href)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer"
               >
                 <item.icon className="w-4 h-4" />
                 {item.title}
@@ -159,10 +159,10 @@ export function UserAvatarMenu() {
           </div>
 
           {/* 退出登录 */}
-          <div className="border-t border-slate-700 pt-1">
+          <div className="border-t border-neutral-200 dark:border-neutral-800 pt-1">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               退出登录

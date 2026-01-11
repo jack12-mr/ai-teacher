@@ -223,15 +223,15 @@ export function SkillTree({ onSkillComplete, userProgress }: SkillTreeProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">技能树</h2>
-        <p className="text-slate-400">解锁技能，成为全栈开发者</p>
+        <h2 className="text-2xl font-bold text-neutral-950 dark:text-white mb-2">技能树</h2>
+        <p className="text-neutral-500 dark:text-neutral-400">解锁技能，成为全栈开发者</p>
       </div>
 
       {/* Legend */}
       <div className="flex flex-wrap gap-4 justify-center">
-        <Badge className="bg-green-500/20 text-green-300 border-green-500/30">🌱 初级</Badge>
-        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">⚡ 中级</Badge>
-        <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">🔥 高级</Badge>
+        <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700">初级</Badge>
+        <Badge className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700">中级</Badge>
+        <Badge className="bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-300 border-orange-200 dark:border-orange-700">高级</Badge>
       </div>
 
       {/* Skill Tree Grid */}
@@ -255,18 +255,18 @@ export function SkillTree({ onSkillComplete, userProgress }: SkillTreeProps) {
                 {/* Status Icon */}
                 <div className="absolute -top-2 -right-2">
                   {isCompleted ? (
-                    <CheckCircle className="w-6 h-6 text-green-400 bg-slate-800 rounded-full" />
+                    <CheckCircle className="w-6 h-6 text-emerald-500 bg-white dark:bg-neutral-900 rounded-full" />
                   ) : isUnlocked ? (
-                    <Circle className="w-6 h-6 text-slate-400 bg-slate-800 rounded-full" />
+                    <Circle className="w-6 h-6 text-neutral-400 dark:text-neutral-500 bg-white dark:bg-neutral-900 rounded-full" />
                   ) : (
-                    <Lock className="w-6 h-6 text-slate-600 bg-slate-800 rounded-full" />
+                    <Lock className="w-6 h-6 text-neutral-400 dark:text-neutral-600 bg-white dark:bg-neutral-900 rounded-full" />
                   )}
                 </div>
 
                 {/* Skill Content */}
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-white text-sm">{skill.name}</h3>
-                  <p className="text-xs text-slate-300 line-clamp-2">{skill.description}</p>
+                  <h3 className="font-semibold text-neutral-950 dark:text-white text-sm">{skill.name}</h3>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-300 line-clamp-2">{skill.description}</p>
 
                   {/* Difficulty Badge */}
                   <div
@@ -280,8 +280,8 @@ export function SkillTree({ onSkillComplete, userProgress }: SkillTreeProps) {
 
                 {/* Completion Effect */}
                 {isCompleted && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg flex items-center justify-center">
-                    <Star className="w-8 h-8 text-yellow-400" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-emerald-500/20 rounded-lg flex items-center justify-center">
+                    <Star className="w-8 h-8 text-amber-500" />
                   </div>
                 )}
               </div>
@@ -291,16 +291,16 @@ export function SkillTree({ onSkillComplete, userProgress }: SkillTreeProps) {
       </div>
 
       {/* Progress Stats */}
-      <div className="bg-slate-700/50 rounded-lg p-4">
+      <div className="bg-neutral-100 dark:bg-neutral-800 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-slate-300">技能树完成度</span>
-          <span className="text-white font-semibold">
+          <span className="text-neutral-600 dark:text-neutral-300">技能树完成度</span>
+          <span className="text-neutral-950 dark:text-white font-semibold">
             {completedSkills.size}/{skillNodes.length} ({Math.round((completedSkills.size / skillNodes.length) * 100)}%)
           </span>
         </div>
-        <div className="w-full bg-slate-600 rounded-full h-2">
+        <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
           <div
-            className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${(completedSkills.size / skillNodes.length) * 100}%` }}
           />
         </div>

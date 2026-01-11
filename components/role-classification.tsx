@@ -111,44 +111,44 @@ export function RoleClassification({ userSkills, role, score, onUpgrade }: RoleC
   return (
     <div className="space-y-6">
       {/* Role Header */}
-      <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-blue-500/30 p-6">
+      <Card className="bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-2xl font-bold text-white">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-2xl font-bold text-white">
               {role.charAt(0)}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">{role}</h2>
-              <p className="text-blue-200">{insights.description}</p>
+              <h2 className="text-2xl font-bold text-neutral-950 dark:text-white">{role}</h2>
+              <p className="text-indigo-600 dark:text-indigo-300">{insights.description}</p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold text-white">{score}</div>
-            <div className="text-sm text-blue-200">竞争力指数</div>
+            <div className="text-3xl font-bold text-neutral-950 dark:text-white">{score}</div>
+            <div className="text-sm text-indigo-600 dark:text-indigo-300">竞争力指数</div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <div className="flex items-center text-green-400 mb-1">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center text-emerald-600 dark:text-emerald-400 mb-1">
               <TrendingUp className="w-4 h-4 mr-1" />
               <span className="text-sm font-medium">市场需求</span>
             </div>
-            <div className="text-white font-semibold">{insights.marketDemand}</div>
+            <div className="text-neutral-950 dark:text-white font-semibold">{insights.marketDemand}</div>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <div className="flex items-center text-yellow-400 mb-1">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center text-amber-600 dark:text-amber-400 mb-1">
               <Target className="w-4 h-4 mr-1" />
               <span className="text-sm font-medium">薪资范围</span>
             </div>
-            <div className="text-white font-semibold">{insights.salaryRange}</div>
+            <div className="text-neutral-950 dark:text-white font-semibold">{insights.salaryRange}</div>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <div className="flex items-center text-purple-400 mb-1">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center text-purple-600 dark:text-purple-400 mb-1">
               <Users className="w-4 h-4 mr-1" />
               <span className="text-sm font-medium">超越用户</span>
             </div>
-            <div className="text-white font-semibold">{score}%</div>
+            <div className="text-neutral-950 dark:text-white font-semibold">{score}%</div>
           </div>
         </div>
       </Card>
@@ -156,9 +156,9 @@ export function RoleClassification({ userSkills, role, score, onUpgrade }: RoleC
       {/* Skill Analysis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Strengths */}
-        <Card className="bg-slate-800/50 border-slate-700 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <Star className="w-5 h-5 mr-2 text-yellow-400" />
+        <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
+          <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-4 flex items-center">
+            <Star className="w-5 h-5 mr-2 text-amber-500" />
             技能优势
           </h3>
           <div className="space-y-3">
@@ -166,25 +166,25 @@ export function RoleClassification({ userSkills, role, score, onUpgrade }: RoleC
               strengths.map((strength, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div>
-                    <div className="text-white font-medium">{strength.skill}</div>
-                    <div className="text-sm text-slate-400">{strength.category}</div>
+                    <div className="text-neutral-950 dark:text-white font-medium">{strength.skill}</div>
+                    <div className="text-sm text-neutral-500 dark:text-neutral-400">{strength.category}</div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Progress value={strength.score * 10} className="w-16 h-2" />
-                    <span className="text-sm font-bold text-green-400">{strength.score}/10</span>
+                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{strength.score}/10</span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-slate-400 text-center py-4">继续提升技能以发现你的优势领域</div>
+              <div className="text-neutral-500 dark:text-neutral-400 text-center py-4">继续提升技能以发现你的优势领域</div>
             )}
           </div>
         </Card>
 
         {/* Skill Gaps */}
-        <Card className="bg-slate-800/50 border-slate-700 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <Target className="w-5 h-5 mr-2 text-orange-400" />
+        <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
+          <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-4 flex items-center">
+            <Target className="w-5 h-5 mr-2 text-orange-500" />
             提升空间
           </h3>
           <div className="space-y-3">
@@ -192,41 +192,41 @@ export function RoleClassification({ userSkills, role, score, onUpgrade }: RoleC
               gaps.map((gap, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div>
-                    <div className="text-white font-medium">{gap.skill}</div>
-                    <div className="text-sm text-slate-400">{gap.category}</div>
+                    <div className="text-neutral-950 dark:text-white font-medium">{gap.skill}</div>
+                    <div className="text-sm text-neutral-500 dark:text-neutral-400">{gap.category}</div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Progress value={gap.score * 10} className="w-16 h-2" />
-                    <span className="text-sm font-bold text-orange-400">{gap.score}/10</span>
+                    <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{gap.score}/10</span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-slate-400 text-center py-4">你的技能水平很均衡！</div>
+              <div className="text-neutral-500 dark:text-neutral-400 text-center py-4">你的技能水平很均衡！</div>
             )}
           </div>
         </Card>
       </div>
 
       {/* Career Path */}
-      <Card className="bg-slate-800/50 border-slate-700 p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">职业发展路径</h3>
+      <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
+        <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-4">职业发展路径</h3>
         <div className="flex items-center space-x-4 mb-6 overflow-x-auto">
           {insights.careerPath.map((step, index) => (
             <div key={index} className="flex items-center flex-shrink-0">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap">
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap">
                 {step}
               </div>
-              {index < insights.careerPath.length - 1 && <ArrowRight className="w-4 h-4 text-slate-400 mx-2" />}
+              {index < insights.careerPath.length - 1 && <ArrowRight className="w-4 h-4 text-neutral-400 dark:text-neutral-500 mx-2" />}
             </div>
           ))}
         </div>
 
-        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg p-4">
-          <h4 className="text-white font-semibold mb-2">🚀 下一步建议</h4>
+        <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+          <h4 className="text-neutral-950 dark:text-white font-semibold mb-2">下一步建议</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {insights.nextSteps.map((step, index) => (
-              <Badge key={index} className="bg-purple-600/30 text-purple-200 justify-center py-2">
+              <Badge key={index} className="bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 border-purple-200 dark:border-purple-700 justify-center py-2">
                 {step}
               </Badge>
             ))}
@@ -235,7 +235,7 @@ export function RoleClassification({ userSkills, role, score, onUpgrade }: RoleC
       </Card>
 
       {/* Upgrade CTA */}
-      <Card className="bg-gradient-to-r from-amber-600 to-orange-600 border-amber-500/50 p-6">
+      <Card className="bg-gradient-to-r from-amber-500 to-orange-500 border-0 p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold text-white mb-2 flex items-center">
@@ -244,15 +244,15 @@ export function RoleClassification({ userSkills, role, score, onUpgrade }: RoleC
             </h3>
             <p className="text-white/90 mb-4">基于你的技能评估结果，AI将为你生成专属的学习计划和职业发展建议</p>
             <div className="flex flex-wrap gap-2">
-              <Badge className="bg-white/20 text-white border-white/30">🧠 AI路径规划</Badge>
-              <Badge className="bg-white/20 text-white border-white/30">📅 每日学习计划</Badge>
-              <Badge className="bg-white/20 text-white border-white/30">📊 进度追踪</Badge>
-              <Badge className="bg-white/20 text-white border-white/30">🎯 目标导向</Badge>
+              <Badge className="bg-white/20 text-white border-white/30">AI路径规划</Badge>
+              <Badge className="bg-white/20 text-white border-white/30">每日学习计划</Badge>
+              <Badge className="bg-white/20 text-white border-white/30">进度追踪</Badge>
+              <Badge className="bg-white/20 text-white border-white/30">目标导向</Badge>
             </div>
           </div>
           <Button
             onClick={onUpgrade}
-            className="bg-white text-amber-700 hover:bg-white/90 font-semibold px-8 shadow-lg"
+            className="bg-white text-amber-700 hover:bg-white/90 font-semibold px-8 shadow-lg cursor-pointer"
           >
             立即升级
           </Button>

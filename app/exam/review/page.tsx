@@ -86,22 +86,22 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="flex items-center text-slate-400 hover:text-white transition"
+              className="flex items-center text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               返回
             </button>
-            <h1 className="text-xl font-bold text-white">错题本</h1>
+            <h1 className="text-xl font-bold text-neutral-950 dark:text-white">错题本</h1>
             <Button
               onClick={() => router.push('/exam/practice')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               <Play className="w-4 h-4 mr-2" />
               继续刷题
@@ -113,23 +113,23 @@ export default function ReviewPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         {/* 考试信息 */}
-        <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-blue-500/30 p-6 mb-6">
+        <Card className="bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-blue-600/30 flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-blue-400" />
+              <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">{examName} - 错题本</h2>
-                <p className="text-slate-400 text-sm">系统化复习，攻克薄弱知识点</p>
+                <h2 className="text-xl font-bold text-neutral-950 dark:text-white">{examName} - 错题本</h2>
+                <p className="text-neutral-500 dark:text-neutral-400 text-sm">系统化复习，攻克薄弱知识点</p>
               </div>
             </div>
 
             {stats.highFrequency > 0 && (
-              <div className="bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-2">
+              <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2">
                 <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-red-400" />
-                  <span className="text-red-400 font-medium">
+                  <Target className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  <span className="text-red-600 dark:text-red-400 font-medium">
                     {stats.highFrequency} 道高频错题需重点关注
                   </span>
                 </div>
@@ -140,12 +140,12 @@ export default function ReviewPage() {
 
         {/* 学习建议 */}
         {stats.unmastered > 0 && (
-          <Card className="bg-yellow-500/10 border-yellow-500/30 p-4 mb-6">
+          <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 p-4 mb-6">
             <div className="flex items-start gap-3">
-              <TrendingUp className="w-5 h-5 text-yellow-400 mt-0.5" />
+              <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
               <div>
-                <p className="text-yellow-400 font-medium">学习建议</p>
-                <p className="text-slate-300 text-sm mt-1">
+                <p className="text-amber-600 dark:text-amber-400 font-medium">学习建议</p>
+                <p className="text-neutral-600 dark:text-neutral-300 text-sm mt-1">
                   你还有 {stats.unmastered} 道错题未掌握。建议每天复习 3-5 道错题，
                   重点关注错 3 次以上的题目。坚持复习，错题本会越来越薄！
                 </p>

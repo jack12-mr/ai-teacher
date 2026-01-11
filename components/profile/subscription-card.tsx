@@ -162,17 +162,17 @@ export function SubscriptionCard() {
         {!isPro || !isActive ? (
           <Button
             onClick={handleUpgrade}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
           >
             <Crown className="mr-2 h-4 w-4" />
             升级到专业版
           </Button>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={handleRenew}>
+            <Button variant="outline" onClick={handleRenew} className="cursor-pointer">
               续费订阅
             </Button>
-            <Button variant="ghost" className="text-muted-foreground">
+            <Button variant="ghost" className="text-muted-foreground cursor-pointer">
               取消订阅
             </Button>
           </div>

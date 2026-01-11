@@ -108,7 +108,7 @@ export function PracticeComplete({
   }, [showContent, accuracy])
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 overflow-y-auto">
       <div className="min-h-screen flex items-center justify-center p-4 py-8">
         <div className={`w-full max-w-2xl transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           {/* 头部 - 评级展示 */}
@@ -116,12 +116,12 @@ export function PracticeComplete({
             <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br ${gradeInfo.color} shadow-2xl mb-4 animate-pulse`}>
               <span className="text-6xl font-black text-white drop-shadow-lg">{gradeInfo.grade}</span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">{gradeInfo.text}</h1>
-            <p className="text-slate-400">《{examName}》练习完成</p>
+            <h1 className="text-3xl font-bold text-neutral-950 dark:text-white mb-2">{gradeInfo.text}</h1>
+            <p className="text-neutral-500 dark:text-neutral-400">《{examName}》练习完成</p>
           </div>
 
           {/* 主卡片 */}
-          <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-700 p-6 mb-6">
+          <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6 mb-6">
             {/* 正确率环形图 */}
             <div className="flex items-center justify-center mb-8">
               <div className="relative">
@@ -133,7 +133,7 @@ export function PracticeComplete({
                     stroke="currentColor"
                     strokeWidth="12"
                     fill="none"
-                    className="text-slate-700"
+                    className="text-neutral-200 dark:text-neutral-700"
                   />
                   <circle
                     cx="80"
@@ -148,52 +148,52 @@ export function PracticeComplete({
                   />
                   <defs>
                     <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#3b82f6" />
-                      <stop offset="100%" stopColor="#8b5cf6" />
+                      <stop offset="0%" stopColor="#4f46e5" />
+                      <stop offset="100%" stopColor="#6366f1" />
                     </linearGradient>
                   </defs>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-bold text-white">{animatedScore}%</span>
-                  <span className="text-sm text-slate-400">正确率</span>
+                  <span className="text-4xl font-bold text-neutral-950 dark:text-white">{animatedScore}%</span>
+                  <span className="text-sm text-neutral-500 dark:text-neutral-400">正确率</span>
                 </div>
               </div>
             </div>
 
             {/* 统计数据 */}
             <div className="grid grid-cols-4 gap-3 mb-6">
-              <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+              <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl p-4 text-center">
                 <div className="flex items-center justify-center mb-2">
-                  <Target className="w-5 h-5 text-blue-400" />
+                  <Target className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
-                <div className="text-2xl font-bold text-white">{totalQuestions}</div>
-                <div className="text-xs text-slate-400">总题数</div>
+                <div className="text-2xl font-bold text-neutral-950 dark:text-white">{totalQuestions}</div>
+                <div className="text-xs text-neutral-500 dark:text-neutral-400">总题数</div>
               </div>
-              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-center">
                 <div className="flex items-center justify-center mb-2">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
+                  <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <div className="text-2xl font-bold text-green-400">{correctCount}</div>
-                <div className="text-xs text-slate-400">答对</div>
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{correctCount}</div>
+                <div className="text-xs text-neutral-500 dark:text-neutral-400">答对</div>
               </div>
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+              <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-4 text-center">
                 <div className="flex items-center justify-center mb-2">
-                  <XCircle className="w-5 h-5 text-red-400" />
+                  <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </div>
-                <div className="text-2xl font-bold text-red-400">{wrongCount}</div>
-                <div className="text-xs text-slate-400">答错</div>
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">{wrongCount}</div>
+                <div className="text-xs text-neutral-500 dark:text-neutral-400">答错</div>
               </div>
-              <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
+              <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-xl p-4 text-center">
                 <div className="flex items-center justify-center mb-2">
-                  <Flame className="w-5 h-5 text-orange-400" />
+                  <Flame className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                 </div>
-                <div className="text-2xl font-bold text-orange-400">{rankState.maxCombo}</div>
-                <div className="text-xs text-slate-400">最高连击</div>
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{rankState.maxCombo}</div>
+                <div className="text-xs text-neutral-500 dark:text-neutral-400">最高连击</div>
               </div>
             </div>
 
             {/* 等级信息 */}
-            <div className={`${rankConfig.bgColor} border border-slate-600 rounded-xl p-4 mb-6`}>
+            <div className={`${rankConfig.bgColor} border border-neutral-200 dark:border-neutral-700 rounded-xl p-4 mb-6`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${rankConfig.color} flex items-center justify-center text-2xl`}>
@@ -201,55 +201,55 @@ export function PracticeComplete({
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-white">{rankConfig.name}</span>
-                      <Award className="w-4 h-4 text-yellow-400" />
+                      <span className="text-lg font-bold text-neutral-950 dark:text-white">{rankConfig.name}</span>
+                      <Award className="w-4 h-4 text-yellow-500" />
                     </div>
-                    <p className="text-sm text-slate-400">当前等级</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">当前等级</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-1 text-yellow-400">
+                  <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
                     <Zap className="w-4 h-4" />
                     <span className="text-xl font-bold">{rankState.points}</span>
                   </div>
-                  <p className="text-xs text-slate-400">总积分</p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">总积分</p>
                 </div>
               </div>
             </div>
 
             {/* 今日成就 */}
-            <div className="bg-slate-700/30 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-yellow-400" />
+            <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4">
+              <h3 className="text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-3 flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-yellow-500" />
                 本次练习成就
               </h3>
               <div className="flex flex-wrap gap-2">
                 {correctCount >= 5 && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-full text-green-400 text-sm">
+                  <div className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-full text-emerald-600 dark:text-emerald-400 text-sm">
                     <Star className="w-3 h-3" />
                     答对5题+
                   </div>
                 )}
                 {rankState.maxCombo >= 3 && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-full text-orange-400 text-sm">
+                  <div className="flex items-center gap-1 px-3 py-1.5 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-full text-orange-600 dark:text-orange-400 text-sm">
                     <Flame className="w-3 h-3" />
                     连击达人
                   </div>
                 )}
                 {accuracy >= 80 && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-400 text-sm">
+                  <div className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-full text-indigo-600 dark:text-indigo-400 text-sm">
                     <TrendingUp className="w-3 h-3" />
                     高正确率
                   </div>
                 )}
                 {totalQuestions >= 20 && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-400 text-sm">
+                  <div className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-full text-purple-600 dark:text-purple-400 text-sm">
                     <Sparkles className="w-3 h-3" />
                     全部完成
                   </div>
                 )}
                 {correctCount === 0 && wrongCount === 0 && (
-                  <span className="text-slate-500 text-sm">暂无成就</span>
+                  <span className="text-neutral-500 text-sm">暂无成就</span>
                 )}
               </div>
             </div>
@@ -259,7 +259,7 @@ export function PracticeComplete({
           <div className="grid grid-cols-2 gap-4 mb-4">
             <Button
               onClick={onRestart}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white py-6"
             >
               <RotateCcw className="w-5 h-5 mr-2" />
               再来一轮
@@ -268,7 +268,7 @@ export function PracticeComplete({
               <Button
                 onClick={onGoReview}
                 variant="outline"
-                className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 py-6"
+                className="border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/30 py-6"
               >
                 <BookMarked className="w-5 h-5 mr-2" />
                 复习错题 ({wrongQuestionsCount})
@@ -278,7 +278,7 @@ export function PracticeComplete({
               <Button
                 onClick={onGoHome}
                 variant="outline"
-                className="border-slate-600 text-slate-300 hover:bg-slate-700 py-6"
+                className="border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-6"
               >
                 <Home className="w-5 h-5 mr-2" />
                 返回首页
@@ -289,7 +289,7 @@ export function PracticeComplete({
           <Button
             onClick={onViewDetails}
             variant="outline"
-            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+            className="w-full border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
             <ClipboardList className="w-4 h-4 mr-2" />
             查看答题详情

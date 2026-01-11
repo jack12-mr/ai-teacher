@@ -120,7 +120,7 @@ export function QuestionCard({
             className={`w-4 h-4 ${
               level <= difficulty
                 ? 'text-yellow-400 fill-yellow-400'
-                : 'text-slate-600'
+                : 'text-neutral-300 dark:text-neutral-600'
             }`}
           />
         ))}
@@ -147,8 +147,8 @@ export function QuestionCard({
   // 防止 question 为 undefined 的情况 - 放在所有 hooks 之后
   if (!question) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 p-6">
-        <div className="text-center text-slate-400">
+      <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
+        <div className="text-center text-neutral-500 dark:text-neutral-400">
           加载题目中...
         </div>
       </Card>
@@ -156,24 +156,24 @@ export function QuestionCard({
   }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
+    <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 overflow-hidden">
       {/* 题目头部 */}
-      <div className="bg-slate-700/50 px-6 py-4 flex items-center justify-between">
+      <div className="bg-neutral-50 dark:bg-neutral-900 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           {/* 题号 */}
-          <span className="text-slate-400">
-            第 <span className="text-white font-bold">{questionNumber}</span> / {totalQuestions} 题
+          <span className="text-neutral-500 dark:text-neutral-400">
+            第 <span className="text-neutral-950 dark:text-white font-bold">{questionNumber}</span> / {totalQuestions} 题
           </span>
 
           {/* 难度 */}
           <div className="flex items-center gap-2">
-            <span className="text-slate-500 text-sm">难度:</span>
+            <span className="text-neutral-500 text-sm">难度:</span>
             {renderDifficulty()}
           </div>
         </div>
 
         {/* 计时器 */}
-        <div className="flex items-center gap-2 text-slate-400">
+        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400">
           <Clock className="w-4 h-4" />
           <span className="font-mono">{formatTime(timeSpent)}</span>
         </div>
@@ -181,12 +181,12 @@ export function QuestionCard({
 
       {/* 知识点标签 */}
       <div className="px-6 pt-4 flex items-center gap-2">
-        <Tag className="w-4 h-4 text-blue-400" />
-        <span className="text-sm text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded">
+        <Tag className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+        <span className="text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2 py-0.5 rounded">
           {question.knowledgePoint}
         </span>
         {question.category && (
-          <span className="text-sm text-slate-500 bg-slate-700 px-2 py-0.5 rounded">
+          <span className="text-sm text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded">
             {question.category}
           </span>
         )}
@@ -194,10 +194,10 @@ export function QuestionCard({
 
       {/* 题目内容 */}
       <div className="px-6 py-6">
-        <p className="text-lg text-white leading-relaxed whitespace-pre-wrap">
+        <p className="text-lg text-neutral-950 dark:text-white leading-relaxed whitespace-pre-wrap">
           {/* 多选题标记 */}
           {questionType === 'multiple' && (
-            <span className="inline-block bg-orange-500/20 text-orange-400 px-2 py-1 rounded text-sm font-medium mr-2">
+            <span className="inline-block bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 px-2 py-1 rounded text-sm font-medium mr-2">
               【多选题】
             </span>
           )}
@@ -215,12 +215,12 @@ export function QuestionCard({
                 key={index}
                 onClick={() => handleSelectAnswer(index)}
                 disabled={disabled || (questionType === 'single' && selectedAnswer !== null)}
-                className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200 ${
+                className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
                   isSelected
-                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-300'
                     : disabled
-                    ? 'border-slate-700 bg-slate-800/50 text-slate-500 cursor-not-allowed'
-                    : 'border-slate-600 hover:border-slate-500 hover:bg-slate-700/50 text-slate-300'
+                    ? 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-400 dark:text-neutral-500 cursor-not-allowed'
+                    : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300'
                 }`}
               >
                 <span className="flex items-center gap-3">
@@ -231,8 +231,8 @@ export function QuestionCard({
                         : 'rounded-full' // 单选题：圆形
                     } ${
                       isSelected
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-slate-700 text-slate-400'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
                     }`}
                   >
                     {questionType === 'multiple' ? (
@@ -254,14 +254,14 @@ export function QuestionCard({
         <div className="px-6 pb-6 space-y-3">
           {Array.from({ length: question.blanksCount || 1 }).map((_, index) => (
             <div key={index} className="space-y-2">
-              <label className="text-sm text-slate-400">填空 {index + 1}</label>
+              <label className="text-sm text-neutral-500 dark:text-neutral-400">填空 {index + 1}</label>
               <Input
                 type="text"
                 value={(selectedAnswer as string[])?.[index] || ''}
                 onChange={(e) => handleFillBlankChange(index, e.target.value)}
                 placeholder={`请输入填空 ${index + 1} 的答案`}
                 disabled={disabled}
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                className="bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
               />
             </div>
           ))}
@@ -274,7 +274,7 @@ export function QuestionCard({
           <Button
             onClick={handleSubmit}
             disabled={disabled || !canSubmit()}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             提交答案
           </Button>

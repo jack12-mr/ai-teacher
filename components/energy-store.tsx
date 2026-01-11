@@ -97,11 +97,11 @@ export function EnergyStore({ userEnergy, onPurchase }: EnergyStoreProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">能量商店</h2>
-        <div className="flex items-center bg-slate-700/50 rounded-lg px-3 py-2">
-          <Zap className="w-4 h-4 text-yellow-400 mr-2" />
-          <span className="text-white font-semibold">{userEnergy}</span>
-          <span className="text-slate-400 ml-1">能量石</span>
+        <h2 className="text-2xl font-bold text-neutral-950 dark:text-white">能量商店</h2>
+        <div className="flex items-center bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2">
+          <Zap className="w-4 h-4 text-amber-500 mr-2" />
+          <span className="text-neutral-950 dark:text-white font-semibold">{userEnergy}</span>
+          <span className="text-neutral-500 dark:text-neutral-400 ml-1">能量石</span>
         </div>
       </div>
 
@@ -109,7 +109,7 @@ export function EnergyStore({ userEnergy, onPurchase }: EnergyStoreProps) {
         {storeItems.map((item) => (
           <Card
             key={item.id}
-            className={`bg-slate-800/50 ${getRarityBorder(item.rarity)} p-4 hover:scale-105 transition-all duration-300`}
+            className={`bg-white dark:bg-neutral-950 ${getRarityBorder(item.rarity)} p-4 hover:scale-105 transition-all duration-300 cursor-pointer`}
           >
             <div className="space-y-4">
               {/* Item Header */}
@@ -119,7 +119,7 @@ export function EnergyStore({ userEnergy, onPurchase }: EnergyStoreProps) {
                     {item.icon}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">{item.name}</h3>
+                    <h3 className="font-semibold text-neutral-950 dark:text-white">{item.name}</h3>
                     <Badge className={`text-xs bg-gradient-to-r ${getRarityColor(item.rarity)} text-white border-0`}>
                       {item.rarity === "common" && "普通"}
                       {item.rarity === "rare" && "稀有"}
@@ -131,11 +131,11 @@ export function EnergyStore({ userEnergy, onPurchase }: EnergyStoreProps) {
               </div>
 
               {/* Description */}
-              <p className="text-sm text-slate-300">{item.description}</p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-300">{item.description}</p>
 
               {/* Purchase Section */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center text-yellow-400">
+                <div className="flex items-center text-amber-600 dark:text-amber-400">
                   <Zap className="w-4 h-4 mr-1" />
                   <span className="font-semibold">{item.cost}</span>
                 </div>
@@ -145,9 +145,9 @@ export function EnergyStore({ userEnergy, onPurchase }: EnergyStoreProps) {
                   onClick={() => onPurchase(item.cost)}
                   className={`${
                     canAfford(item.cost)
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                      : "bg-slate-600 cursor-not-allowed"
-                  } text-white border-0`}
+                      ? "bg-indigo-600 hover:bg-indigo-700"
+                      : "bg-neutral-300 dark:bg-neutral-700 cursor-not-allowed"
+                  } text-white border-0 cursor-pointer`}
                 >
                   {canAfford(item.cost) ? "购买" : "能量不足"}
                 </Button>
@@ -158,19 +158,19 @@ export function EnergyStore({ userEnergy, onPurchase }: EnergyStoreProps) {
       </div>
 
       {/* Energy Earning Tips */}
-      <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-blue-500/30 p-4">
-        <h3 className="text-lg font-semibold text-white mb-3">💡 获取能量石的方法</h3>
+      <Card className="bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 p-4">
+        <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-3">获取能量石的方法</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-          <div className="flex items-center text-slate-300">
-            <Sparkles className="w-4 h-4 mr-2 text-blue-400" />
+          <div className="flex items-center text-neutral-600 dark:text-neutral-300">
+            <Sparkles className="w-4 h-4 mr-2 text-indigo-600 dark:text-indigo-400" />
             完成技能节点 +5
           </div>
-          <div className="flex items-center text-slate-300">
-            <Gift className="w-4 h-4 mr-2 text-green-400" />
+          <div className="flex items-center text-neutral-600 dark:text-neutral-300">
+            <Gift className="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" />
             完成每日任务 +5-15
           </div>
-          <div className="flex items-center text-slate-300">
-            <Crown className="w-4 h-4 mr-2 text-yellow-400" />
+          <div className="flex items-center text-neutral-600 dark:text-neutral-300">
+            <Crown className="w-4 h-4 mr-2 text-amber-600 dark:text-amber-400" />
             邀请好友 +10
           </div>
         </div>

@@ -25,28 +25,28 @@ function getProbabilityColor(score: number): {
 } {
   if (score >= 80) {
     return {
-      gradient: 'from-green-500 to-emerald-500',
-      text: 'text-green-400',
-      glow: 'shadow-green-500/30'
+      gradient: 'from-emerald-500 to-emerald-600',
+      text: 'text-emerald-600 dark:text-emerald-400',
+      glow: 'shadow-emerald-500/30'
     }
   }
   if (score >= 60) {
     return {
-      gradient: 'from-blue-500 to-cyan-500',
-      text: 'text-blue-400',
-      glow: 'shadow-blue-500/30'
+      gradient: 'from-indigo-500 to-indigo-600',
+      text: 'text-indigo-600 dark:text-indigo-400',
+      glow: 'shadow-indigo-500/30'
     }
   }
   if (score >= 40) {
     return {
-      gradient: 'from-yellow-500 to-amber-500',
-      text: 'text-yellow-400',
-      glow: 'shadow-yellow-500/30'
+      gradient: 'from-amber-500 to-amber-600',
+      text: 'text-amber-600 dark:text-amber-400',
+      glow: 'shadow-amber-500/30'
     }
   }
   return {
     gradient: 'from-orange-500 to-red-500',
-    text: 'text-orange-400',
+    text: 'text-orange-600 dark:text-orange-400',
     glow: 'shadow-orange-500/30'
   }
 }
@@ -68,7 +68,7 @@ function CircularProgress({ score }: { score: number }) {
           fill="none"
           stroke="currentColor"
           strokeWidth="8"
-          className="text-slate-700/50"
+          className="text-neutral-200 dark:text-neutral-700"
         />
         {/* 进度圆 */}
         <circle
@@ -97,7 +97,7 @@ function CircularProgress({ score }: { score: number }) {
         <span className={`text-4xl font-bold ${colors.text}`}>
           {score}%
         </span>
-        <span className="text-sm text-slate-400">通过概率</span>
+        <span className="text-sm text-neutral-500 dark:text-neutral-400">通过概率</span>
       </div>
     </div>
   )
@@ -110,19 +110,19 @@ export function PassProbabilityCard({ passProbability, subjectName }: PassProbab
 
   return (
     <Card className={`
-      bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700 p-6
+      bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6
       animate-in fade-in slide-in-from-bottom-4 duration-500
     `}>
       {/* 标题 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-            <Target className="w-5 h-5 text-blue-400" />
+          <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/30 flex items-center justify-center">
+            <Target className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h3 className="font-semibold text-white">考试通过预测</h3>
+            <h3 className="font-semibold text-neutral-950 dark:text-white">考试通过预测</h3>
             {subjectName && (
-              <p className="text-xs text-slate-400">{subjectName}</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">{subjectName}</p>
             )}
           </div>
         </div>
@@ -144,17 +144,17 @@ export function PassProbabilityCard({ passProbability, subjectName }: PassProbab
           {factors.positive.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-green-400" />
-                <span className="text-sm font-medium text-green-400">有利因素</span>
+                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">有利因素</span>
               </div>
               <div className="space-y-2">
                 {factors.positive.map((factor, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/20"
+                    className="flex items-start gap-2 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800"
                   >
-                    <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-green-300">{factor}</span>
+                    <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-emerald-700 dark:text-emerald-300">{factor}</span>
                   </div>
                 ))}
               </div>
@@ -165,17 +165,17 @@ export function PassProbabilityCard({ passProbability, subjectName }: PassProbab
           {factors.negative.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="w-4 h-4 text-orange-400" />
-                <span className="text-sm font-medium text-orange-400">需要改进</span>
+                <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                <span className="text-sm font-medium text-orange-600 dark:text-orange-400">需要改进</span>
               </div>
               <div className="space-y-2">
                 {factors.negative.map((factor, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-2 p-2 rounded-lg bg-orange-500/10 border border-orange-500/20"
+                    className="flex items-start gap-2 p-2 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800"
                   >
-                    <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-orange-300">{factor}</span>
+                    <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-orange-700 dark:text-orange-300">{factor}</span>
                   </div>
                 ))}
               </div>
@@ -185,12 +185,12 @@ export function PassProbabilityCard({ passProbability, subjectName }: PassProbab
       </div>
 
       {/* 底部建议 */}
-      <div className="mt-6 pt-4 border-t border-slate-700/50">
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-          <Award className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+      <div className="mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800">
+          <Award className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-sm font-medium text-blue-300 mb-1">AI 建议</p>
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-1">AI 建议</p>
+            <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
               {score >= 80 ? (
                 '你的准备状态很好！保持当前的学习节奏，重点复习错题，考试通过概率很高。'
               ) : score >= 60 ? (

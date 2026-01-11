@@ -98,24 +98,24 @@ export function AiCoachModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl h-[600px] bg-slate-800 border-slate-700 flex flex-col">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl h-[600px] bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-700">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center">
               <Brain className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">AI 教练</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-lg font-bold text-neutral-950 dark:text-white">AI 教练</h2>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 {sessionsLeft === -1 ? '无限次数' : `剩余 ${sessionsLeft} 次体验`}
               </p>
             </div>
           </div>
           <button
             onClick={handleComplete}
-            className="text-slate-400 hover:text-white transition"
+            className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -131,8 +131,8 @@ export function AiCoachModal({
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                   message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-700 text-slate-200'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-200'
                 }`}
               >
                 {message.content}
@@ -141,7 +141,7 @@ export function AiCoachModal({
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-slate-700 rounded-2xl px-4 py-3 text-slate-400">
+              <div className="bg-neutral-100 dark:bg-neutral-800 rounded-2xl px-4 py-3 text-neutral-500 dark:text-neutral-400">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 animate-pulse" />
                   正在思考...
@@ -152,14 +152,14 @@ export function AiCoachModal({
         </div>
 
         {/* Suggested Questions */}
-        <div className="px-4 py-2 border-t border-slate-700">
-          <p className="text-xs text-slate-500 mb-2">快速提问：</p>
+        <div className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-800">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">快速提问：</p>
           <div className="flex flex-wrap gap-2">
             {suggestedQuestions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => handleQuickQuestion(question)}
-                className="text-xs px-3 py-1.5 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 transition"
+                className="text-xs px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition cursor-pointer"
               >
                 {question}
               </button>
@@ -168,19 +168,19 @@ export function AiCoachModal({
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-slate-700">
+        <div className="p-4 border-t border-neutral-200 dark:border-neutral-800">
           <div className="flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="输入你的问题..."
-              className="flex-1 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+              className="flex-1 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
             />
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </Button>

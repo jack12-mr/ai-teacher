@@ -50,37 +50,37 @@ export function InviteModal({ isOpen, onClose, onInviteSuccess }: InviteModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
+      <DialogContent className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 text-neutral-950 dark:text-white max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <Users className="w-5 h-5 mr-2 text-blue-400" />
+          <DialogTitle className="flex items-center text-neutral-950 dark:text-white">
+            <Users className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
             邀请好友
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Invite Benefits */}
-          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-lg p-4">
-            <h3 className="font-semibold text-white mb-3">🎁 邀请奖励</h3>
+          <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+            <h3 className="font-semibold text-neutral-950 dark:text-white mb-3">邀请奖励</h3>
             <div className="space-y-2">
               {rewards.map((reward, index) => (
                 <div
                   key={index}
                   className={`flex items-center justify-between p-2 rounded ${
-                    reward.unlocked ? "bg-green-500/20 border border-green-500/30" : "bg-slate-700/50"
+                    reward.unlocked ? "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800" : "bg-neutral-100 dark:bg-neutral-900"
                   }`}
                 >
                   <div className="flex items-center space-x-2">
-                    <div className={`p-1 rounded ${reward.unlocked ? "text-green-400" : "text-slate-400"}`}>
+                    <div className={`p-1 rounded ${reward.unlocked ? "text-emerald-600 dark:text-emerald-400" : "text-neutral-500 dark:text-neutral-400"}`}>
                       {reward.icon}
                     </div>
-                    <span className="text-sm">{reward.reward}</span>
+                    <span className="text-sm text-neutral-950 dark:text-white">{reward.reward}</span>
                   </div>
                   <Badge
                     className={`text-xs ${
                       reward.unlocked
-                        ? "bg-green-600/20 text-green-300 border-green-500/30"
-                        : "bg-slate-600/20 text-slate-400 border-slate-500/30"
+                        ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700"
+                        : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700"
                     }`}
                   >
                     {reward.count}人
@@ -92,30 +92,30 @@ export function InviteModal({ isOpen, onClose, onInviteSuccess }: InviteModalPro
 
           {/* Invite Code */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-white">专属邀请码</h3>
+            <h3 className="font-semibold text-neutral-950 dark:text-white">专属邀请码</h3>
             <div className="flex space-x-2">
-              <Input value={inviteCode} readOnly className="bg-slate-700 border-slate-600 text-white" />
+              <Input value={inviteCode} readOnly className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-white" />
               <Button
                 onClick={handleCopy}
                 variant="outline"
-                className="border-purple-500 text-purple-400 hover:bg-purple-500/10 bg-transparent"
+                className="border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 bg-transparent cursor-pointer"
               >
                 <Copy className="w-4 h-4" />
               </Button>
             </div>
-            {copied && <p className="text-sm text-green-400">✅ 邀请码已复制！</p>}
+            {copied && <p className="text-sm text-emerald-600 dark:text-emerald-400">邀请码已复制！</p>}
           </div>
 
           {/* Invite Link */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-white">邀请链接</h3>
-            <div className="bg-slate-700/50 rounded-lg p-3">
-              <p className="text-sm text-slate-300 break-all">{inviteLink}</p>
+            <h3 className="font-semibold text-neutral-950 dark:text-white">邀请链接</h3>
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-lg p-3">
+              <p className="text-sm text-neutral-600 dark:text-neutral-300 break-all">{inviteLink}</p>
             </div>
             <Button
               onClick={handleCopy}
               variant="outline"
-              className="w-full border-blue-500 text-blue-400 hover:bg-blue-500/10 bg-transparent"
+              className="w-full border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 bg-transparent cursor-pointer"
             >
               <Copy className="w-4 h-4 mr-2" />
               {copied ? "已复制链接！" : "复制邀请链接"}
@@ -124,19 +124,19 @@ export function InviteModal({ isOpen, onClose, onInviteSuccess }: InviteModalPro
 
           {/* Email Invite */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-white">邮箱邀请</h3>
+            <h3 className="font-semibold text-neutral-950 dark:text-white">邮箱邀请</h3>
             <div className="flex space-x-2">
               <Input
                 type="email"
                 placeholder="输入好友邮箱"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+                className="bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
               />
               <Button
                 onClick={handleEmailInvite}
                 disabled={!email}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
               >
                 发送
               </Button>
@@ -144,9 +144,9 @@ export function InviteModal({ isOpen, onClose, onInviteSuccess }: InviteModalPro
           </div>
 
           {/* Growth Tip */}
-          <div className="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 border border-yellow-500/30 rounded-lg p-3">
-            <p className="text-sm text-yellow-200">
-              💡 <strong>增长秘诀：</strong>邀请的好友越活跃，你获得的奖励越丰厚！一起学习，共同成长。
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              <strong>增长秘诀：</strong>邀请的好友越活跃，你获得的奖励越丰厚！一起学习，共同成长。
             </p>
           </div>
         </div>

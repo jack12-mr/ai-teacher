@@ -522,19 +522,19 @@ function ExamSetupContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="flex items-center text-slate-400 hover:text-white transition"
+              className="flex items-center text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               返回
             </button>
-            <div className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
               智能备考系统
             </div>
             <div className="w-20" />
@@ -550,10 +550,10 @@ function ExamSetupContent() {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                   step === s
-                    ? 'bg-blue-600 text-white scale-110'
+                    ? 'bg-indigo-600 text-white scale-110'
                     : ['goal', 'source', 'processing', 'ready'].indexOf(step) > i
-                    ? 'bg-green-600 text-white'
-                    : 'bg-slate-700 text-slate-400'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400'
                 }`}
               >
                 {['goal', 'source', 'processing', 'ready'].indexOf(step) > i ? (
@@ -566,8 +566,8 @@ function ExamSetupContent() {
                 <div
                   className={`w-16 h-1 mx-2 rounded ${
                     ['goal', 'source', 'processing', 'ready'].indexOf(step) > i
-                      ? 'bg-green-600'
-                      : 'bg-slate-700'
+                      ? 'bg-emerald-600'
+                      : 'bg-neutral-300 dark:bg-neutral-700'
                   }`}
                 />
               )}
@@ -579,24 +579,24 @@ function ExamSetupContent() {
         <div className="max-w-2xl mx-auto">
           {/* Step 1: 设置考试目标 */}
           {step === 'goal' && (
-            <Card className="bg-slate-800/50 border-slate-700 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Target className="w-8 h-8 text-blue-400" />
+                <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-950/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">设置你的考试目标</h2>
-                <p className="text-slate-400">告诉 AI 你要准备什么考试，我们会为你量身定制学习计划</p>
+                <h2 className="text-2xl font-bold text-neutral-950 dark:text-white mb-2">设置你的考试目标</h2>
+                <p className="text-neutral-500 dark:text-neutral-400">告诉 AI 你要准备什么考试，我们会为你量身定制学习计划</p>
               </div>
 
               <div className="space-y-6">
                 {/* 考试名称 */}
                 <div>
-                  <Label className="text-slate-300 mb-2 block">考试名称</Label>
+                  <Label className="text-neutral-600 dark:text-neutral-300 mb-2 block">考试名称</Label>
                   <Input
                     value={examName}
                     onChange={(e) => setExamName(e.target.value)}
                     placeholder="例如：考研数学、大学英语四级..."
-                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                    className="bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
                   />
 
                   {/* 快速选择 */}
@@ -607,8 +607,8 @@ function ExamSetupContent() {
                         onClick={() => setExamName(preset.name)}
                         className={`px-3 py-1 text-sm rounded-full transition ${
                           examName === preset.name
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                         }`}
                       >
                         {preset.name}
@@ -622,7 +622,7 @@ function ExamSetupContent() {
                 <Button
                   onClick={handleNext}
                   disabled={!examName}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
                   下一步
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -635,7 +635,7 @@ function ExamSetupContent() {
                     setStep('source')
                   }}
                   variant="outline"
-                  className="w-full border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                  className="w-full border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   跳过，直接上传题库
@@ -646,13 +646,13 @@ function ExamSetupContent() {
 
           {/* Step 2: 选择资料来源 */}
           {step === 'source' && (
-            <Card className="bg-slate-800/50 border-slate-700 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpen className="w-8 h-8 text-purple-400" />
+                <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-950/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">你有备考资料吗？</h2>
-                <p className="text-slate-400">选择资料来源，AI 将基于此生成精准题库</p>
+                <h2 className="text-2xl font-bold text-neutral-950 dark:text-white mb-2">你有备考资料吗？</h2>
+                <p className="text-neutral-500 dark:text-neutral-400">选择资料来源，AI 将基于此生成精准题库</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -661,21 +661,21 @@ function ExamSetupContent() {
                   onClick={() => setSourceType('upload')}
                   className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all ${
                     sourceType === 'upload'
-                      ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-slate-600 hover:border-slate-500 bg-slate-700/30'
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
+                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 bg-neutral-50 dark:bg-neutral-900'
                   }`}
                 >
                   <div className="flex flex-col items-center text-center">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-                      sourceType === 'upload' ? 'bg-blue-600' : 'bg-slate-600'
+                      sourceType === 'upload' ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-700'
                     }`}>
-                      <Upload className="w-6 h-6 text-white" />
+                      <Upload className={`w-6 h-6 ${sourceType === 'upload' ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`} />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">上传我的资料</h3>
-                    <p className="text-sm text-slate-400">上传 PDF/Word 文档，AI 解析生成题库</p>
+                    <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-1">上传我的资料</h3>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">上传 PDF/Word 文档，AI 解析生成题库</p>
                   </div>
                   {sourceType === 'upload' && (
-                    <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-blue-400" />
+                    <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   )}
                 </div>
 
@@ -684,21 +684,21 @@ function ExamSetupContent() {
                   onClick={() => setSourceType('search')}
                   className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all ${
                     sourceType === 'search'
-                      ? 'border-purple-500 bg-purple-500/10'
-                      : 'border-slate-600 hover:border-slate-500 bg-slate-700/30'
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
+                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 bg-neutral-50 dark:bg-neutral-900'
                   }`}
                 >
                   <div className="flex flex-col items-center text-center">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-                      sourceType === 'search' ? 'bg-purple-600' : 'bg-slate-600'
+                      sourceType === 'search' ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-700'
                     }`}>
-                      <Globe className="w-6 h-6 text-white" />
+                      <Globe className={`w-6 h-6 ${sourceType === 'search' ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`} />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">AI 联网搜索</h3>
-                    <p className="text-sm text-slate-400">AI 自动搜索考试大纲，生成题库</p>
+                    <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-1">AI 联网搜索</h3>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">AI 自动搜索考试大纲，生成题库</p>
                   </div>
                   {sourceType === 'search' && (
-                    <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-purple-400" />
+                    <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   )}
                 </div>
               </div>
@@ -712,10 +712,10 @@ function ExamSetupContent() {
                   onDrop={handleDrop}
                   className={`border-2 border-dashed rounded-xl p-8 text-center mb-6 animate-in fade-in duration-300 transition-all ${
                     isDragOver
-                      ? 'border-green-400 bg-green-500/20 scale-[1.02]'
+                      ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 scale-[1.02]'
                       : !uploadedFile
-                        ? 'border-blue-500 bg-blue-500/10 animate-pulse'
-                        : 'border-slate-600'
+                        ? 'border-indigo-400 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-950/20 animate-pulse'
+                        : 'border-neutral-200 dark:border-neutral-700'
                   }`}
                 >
                   <input
@@ -728,26 +728,26 @@ function ExamSetupContent() {
                   <label htmlFor="file-upload" className="cursor-pointer block">
                     {isDragOver ? (
                       <>
-                        <Upload className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                        <p className="text-green-300 font-medium">松开鼠标上传文件</p>
-                        <p className="text-sm text-green-400/70">支持 PDF、Word 格式</p>
+                        <Upload className="w-12 h-12 text-emerald-600 dark:text-emerald-400 mx-auto mb-3" />
+                        <p className="text-emerald-700 dark:text-emerald-300 font-medium">松开鼠标上传文件</p>
+                        <p className="text-sm text-emerald-600 dark:text-emerald-400/70">支持 PDF、Word 格式</p>
                       </>
                     ) : uploadedFile ? (
                       <div className="flex items-center justify-center gap-3">
-                        <FileText className="w-8 h-8 text-blue-400" />
+                        <FileText className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                         <div className="text-left">
-                          <p className="text-white font-medium">{uploadedFile.name}</p>
-                          <p className="text-sm text-slate-400">
+                          <p className="text-neutral-950 dark:text-white font-medium">{uploadedFile.name}</p>
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">
                             {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
                           </p>
                         </div>
                       </div>
                     ) : (
                       <>
-                        <Upload className="w-12 h-12 text-blue-400 mx-auto mb-3 animate-bounce" />
-                        <p className="text-blue-300 font-medium">点击或拖拽上传文件</p>
-                        <p className="text-sm text-blue-400/70">支持 PDF、Word 格式（最大 10MB）</p>
-                        <p className="text-xs text-slate-500 mt-2">可从文件夹、QQ、微信直接拖入</p>
+                        <Upload className="w-12 h-12 text-indigo-600 dark:text-indigo-400 mx-auto mb-3 animate-bounce" />
+                        <p className="text-indigo-700 dark:text-indigo-300 font-medium">点击或拖拽上传文件</p>
+                        <p className="text-sm text-indigo-600 dark:text-indigo-400/70">支持 PDF、Word 格式（最大 10MB）</p>
+                        <p className="text-xs text-neutral-500 mt-2">可从文件夹、QQ、微信直接拖入</p>
                       </>
                     )}
                   </label>
@@ -756,12 +756,12 @@ function ExamSetupContent() {
 
               {/* AI 搜索提示 */}
               {sourceType === 'search' && (
-                <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-6 animate-in fade-in duration-300">
+                <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4 mb-6 animate-in fade-in duration-300">
                   <div className="flex items-start gap-3">
-                    <Search className="w-5 h-5 text-purple-400 mt-0.5" />
+                    <Search className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
                     <div>
-                      <p className="text-purple-300 font-medium">AI 将为你搜索以下内容：</p>
-                      <ul className="text-sm text-slate-400 mt-2 space-y-1">
+                      <p className="text-indigo-700 dark:text-indigo-300 font-medium">AI 将为你搜索以下内容：</p>
+                      <ul className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 space-y-1">
                         <li>• {examName} 官方考试大纲</li>
                         <li>• 历年真题及解析</li>
                         <li>• 高频考点汇总</li>
@@ -774,8 +774,8 @@ function ExamSetupContent() {
 
               {/* 文件错误提示 */}
               {fileError && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 animate-in fade-in duration-300">
-                  <div className="flex items-center gap-2 text-red-400">
+                <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
                     <AlertCircle className="w-5 h-5" />
                     <span className="font-medium">{fileError}</span>
                   </div>
@@ -785,7 +785,7 @@ function ExamSetupContent() {
               {/* 出题数量选择器 */}
               {sourceType && (
                 <div className="mb-6 animate-in fade-in duration-300">
-                  <Label className="text-slate-300 mb-3 block">出题数量</Label>
+                  <Label className="text-neutral-600 dark:text-neutral-300 mb-3 block">出题数量</Label>
                   <div className="grid grid-cols-4 gap-2">
                     {[5, 10, 15, 20].map(num => (
                       <button
@@ -793,15 +793,15 @@ function ExamSetupContent() {
                         onClick={() => setQuestionCount(num)}
                         className={`py-3 rounded-lg font-medium transition-all ${
                           questionCount === num
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                         }`}
                       >
                         {num} 题
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">最多支持 20 题</p>
+                  <p className="text-xs text-neutral-500 mt-2">最多支持 20 题</p>
                 </div>
               )}
 
@@ -809,7 +809,7 @@ function ExamSetupContent() {
                 <Button
                   variant="outline"
                   onClick={() => setStep('goal')}
-                  className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                  className="flex-1 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   上一步
@@ -818,13 +818,13 @@ function ExamSetupContent() {
                   <Button
                     onClick={handleNext}
                     disabled={!sourceType || (sourceType === 'upload' && !uploadedFile)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     开始生成题库
                     <Sparkles className="w-4 h-4 ml-2" />
                   </Button>
                   {sourceType === 'upload' && !uploadedFile && (
-                    <p className="text-xs text-yellow-400 mt-1 text-center">
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 text-center">
                       ⚠️ 请先上传文件
                     </p>
                   )}
@@ -835,19 +835,19 @@ function ExamSetupContent() {
 
           {/* Step 3: 处理中 */}
           {step === 'processing' && (
-            <Card className="bg-slate-800/50 border-slate-700 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <div className="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
                   {sourceType === 'search' ? (
                     <Globe className="w-10 h-10 text-white animate-pulse" />
                   ) : (
                     <Loader2 className="w-10 h-10 text-white animate-spin" />
                   )}
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
+                <h2 className="text-2xl font-bold text-neutral-950 dark:text-white mb-2">
                   {sourceType === 'upload' ? '正在解析你的文档...' : '🌐 正在联网搜索考试资料...'}
                 </h2>
-                <p className="text-slate-400 mb-8">
+                <p className="text-neutral-500 dark:text-neutral-400 mb-8">
                   {sourceType === 'search'
                     ? 'AI 正在联网获取最新考试大纲和题型信息'
                     : 'AI 正在努力为你准备精准题库，请稍候'}
@@ -855,7 +855,7 @@ function ExamSetupContent() {
 
                 <div className="max-w-md mx-auto">
                   <Progress value={processingProgress} className="h-2 mb-2" />
-                  <p className="text-sm text-slate-500">{Math.min(100, Math.floor(processingProgress))}%</p>
+                  <p className="text-sm text-neutral-500">{Math.min(100, Math.floor(processingProgress))}%</p>
                 </div>
 
                 {/* 显示实时处理步骤 */}
@@ -865,13 +865,13 @@ function ExamSetupContent() {
                     processingSteps.map((stepText, i) => (
                       <div key={i} className="flex items-center gap-3">
                         {stepText.includes('⚠️') ? (
-                          <AlertCircle className="w-5 h-5 text-yellow-400" />
+                          <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                         ) : i === processingSteps.length - 1 && processingProgress < 100 ? (
-                          <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                          <Loader2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" />
                         ) : (
-                          <CheckCircle className="w-5 h-5 text-green-400" />
+                          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                         )}
-                        <span className={stepText.includes('⚠️') ? 'text-yellow-400' : 'text-green-400'}>
+                        <span className={stepText.includes('⚠️') ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
                           {stepText}
                         </span>
                       </div>
@@ -886,13 +886,13 @@ function ExamSetupContent() {
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">
                         {item.done ? (
-                          <CheckCircle className="w-5 h-5 text-green-400" />
+                          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                         ) : processingProgress > i * 20 ? (
-                          <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                          <Loader2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" />
                         ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-slate-600" />
+                          <div className="w-5 h-5 rounded-full border-2 border-neutral-300 dark:border-neutral-600" />
                         )}
-                        <span className={item.done ? 'text-green-400' : 'text-slate-400'}>
+                        <span className={item.done ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-500 dark:text-neutral-400'}>
                           {item.text}
                         </span>
                       </div>
@@ -902,13 +902,13 @@ function ExamSetupContent() {
 
                 {/* 搜索错误提示 */}
                 {searchError && (
-                  <div className="mt-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-yellow-400">
+                  <div className="mt-6 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                       <AlertCircle className="w-5 h-5" />
                       <span className="font-medium">搜索遇到问题</span>
                     </div>
-                    <p className="text-sm text-slate-400 mt-2">{searchError}</p>
-                    <p className="text-sm text-slate-500 mt-1">将使用默认题库继续</p>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2">{searchError}</p>
+                    <p className="text-sm text-neutral-500 mt-1">将使用默认题库继续</p>
                   </div>
                 )}
               </div>
@@ -917,37 +917,37 @@ function ExamSetupContent() {
 
           {/* Step 4: 准备完成 */}
           {step === 'ready' && (
-            <Card className="bg-slate-800/50 border-slate-700 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">题库生成完成！</h2>
-                <p className="text-slate-400 mb-6">已为你准备好 {examName} 的专属题库</p>
+                <h2 className="text-2xl font-bold text-neutral-950 dark:text-white mb-2">题库生成完成！</h2>
+                <p className="text-neutral-500 dark:text-neutral-400 mb-6">已为你准备好 {examName} 的专属题库</p>
 
                 {/* 搜索结果摘要（如果有联网搜索数据） */}
                 {syllabusData && syllabusData.examInfo && (
-                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-6 text-left">
+                  <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4 mb-6 text-left">
                     <div className="flex items-center gap-2 mb-3">
-                      <Globe className="w-5 h-5 text-purple-400" />
-                      <span className="text-purple-400 font-medium">联网搜索结果</span>
+                      <Globe className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                      <span className="text-indigo-700 dark:text-indigo-400 font-medium">联网搜索结果</span>
                     </div>
                     <div className="space-y-2 text-sm">
                       {syllabusData.examInfo.name && (
-                        <p className="text-slate-300">
-                          <span className="text-slate-500">考试名称：</span>
+                        <p className="text-neutral-700 dark:text-neutral-300">
+                          <span className="text-neutral-500">考试名称：</span>
                           {syllabusData.examInfo.name}
                         </p>
                       )}
                       {syllabusData.examInfo.examTime && (
-                        <p className="text-slate-300">
-                          <span className="text-slate-500">考试时间：</span>
+                        <p className="text-neutral-700 dark:text-neutral-300">
+                          <span className="text-neutral-500">考试时间：</span>
                           {syllabusData.examInfo.examTime}
                         </p>
                       )}
                       {syllabusData.examInfo.totalScore && (
-                        <p className="text-slate-300">
-                          <span className="text-slate-500">总分：</span>
+                        <p className="text-neutral-700 dark:text-neutral-300">
+                          <span className="text-neutral-500">总分：</span>
                           {syllabusData.examInfo.totalScore}
                         </p>
                       )}
@@ -956,7 +956,7 @@ function ExamSetupContent() {
                           href={syllabusData.examInfo.officialWebsite}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300"
+                          className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
                         >
                           官方网站 <ExternalLink className="w-3 h-3" />
                         </a>
@@ -967,16 +967,16 @@ function ExamSetupContent() {
 
                 {/* 知识点摘要（如果有联网搜索数据） */}
                 {syllabusData && syllabusData.syllabus && syllabusData.syllabus.length > 0 && (
-                  <div className="bg-slate-700/30 rounded-xl p-4 mb-6 text-left">
-                    <p className="text-slate-400 text-sm mb-3">📚 已获取的考纲章节：</p>
+                  <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4 mb-6 text-left">
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-3">📚 已获取的考纲章节：</p>
                     <div className="flex flex-wrap gap-2">
                       {syllabusData.syllabus.slice(0, 5).map((item, i) => (
-                        <span key={i} className="px-2 py-1 bg-slate-600/50 rounded text-xs text-slate-300">
+                        <span key={i} className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded text-xs text-neutral-700 dark:text-neutral-300">
                           {item.chapter}
                         </span>
                       ))}
                       {syllabusData.syllabus.length > 5 && (
-                        <span className="px-2 py-1 bg-slate-600/50 rounded text-xs text-slate-400">
+                        <span className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded text-xs text-neutral-500 dark:text-neutral-400">
                           +{syllabusData.syllabus.length - 5} 更多
                         </span>
                       )}
@@ -986,27 +986,27 @@ function ExamSetupContent() {
 
                 {/* 统计信息 */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-slate-700/50 rounded-xl p-4">
-                    <div className="text-3xl font-bold text-blue-400">
+                  <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4">
+                    <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
                       {syllabusData?.syllabus ? syllabusData.syllabus.length * 4 : 20}+
                     </div>
-                    <div className="text-sm text-slate-400">精选题目</div>
+                    <div className="text-sm text-neutral-500 dark:text-neutral-400">精选题目</div>
                   </div>
-                  <div className="bg-slate-700/50 rounded-xl p-4">
-                    <div className="text-3xl font-bold text-purple-400">
+                  <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4">
+                    <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
                       {syllabusData?.syllabus?.length || 5}
                     </div>
-                    <div className="text-sm text-slate-400">知识模块</div>
+                    <div className="text-sm text-neutral-500 dark:text-neutral-400">知识模块</div>
                   </div>
                 </div>
 
                 {/* 等级提示 */}
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
+                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <span className="text-2xl">🥉</span>
-                    <span className="text-amber-400 font-bold">青铜</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-bold">青铜</span>
                   </div>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     你将从青铜等级开始，答题获得积分升级！<br />
                     连续答对有连击加成，但小心连续答错会降级哦~
                   </p>
@@ -1014,7 +1014,7 @@ function ExamSetupContent() {
 
                 <Button
                   onClick={handleStartPractice}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg py-6"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-lg py-6"
                 >
                   开始刷题闯关
                   <Sparkles className="w-5 h-5 ml-2" />
@@ -1032,10 +1032,10 @@ function ExamSetupContent() {
 export default function ExamSetupPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 text-blue-400 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">加载中...</p>
+          <Loader2 className="w-10 h-10 text-indigo-600 dark:text-indigo-400 animate-spin mx-auto mb-4" />
+          <p className="text-neutral-500 dark:text-neutral-400">加载中...</p>
         </div>
       </div>
     }>

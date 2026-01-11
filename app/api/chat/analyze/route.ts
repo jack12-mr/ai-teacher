@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { db } from '@/lib/cloudbase';
+import { getCloudBaseDatabase } from '@/lib/cloudbase/init';
 
 // 初始化 OpenAI 客户端（兼容阿里云通义千问）
 const openai = new OpenAI({
@@ -10,6 +10,8 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    const db = getCloudBaseDatabase();
+
     // 查询最新的评估记录
     const assessmentResult = await db
       .collection('assessments')

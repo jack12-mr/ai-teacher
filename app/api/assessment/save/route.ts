@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/cloudbase';
+import { getCloudBaseDatabase } from '@/lib/cloudbase/init';
 
 interface AssessmentData {
   userId: string;
@@ -10,6 +10,7 @@ interface AssessmentData {
 
 export async function POST(request: NextRequest) {
   try {
+    const db = getCloudBaseDatabase();
     const body: AssessmentData = await request.json();
     const { userId, skills, role, score } = body;
 

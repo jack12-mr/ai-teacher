@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/cloudbase';
+import { getCloudBaseDatabase } from '@/lib/cloudbase/init';
 
 interface ChatHistoryRecord {
   userId: string;
@@ -11,6 +11,7 @@ interface ChatHistoryRecord {
 
 export async function POST(request: NextRequest) {
   try {
+    const db = getCloudBaseDatabase();
     const body: ChatHistoryRecord = await request.json();
     const { userId, question, userAnswer, isCorrect } = body;
 
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
 // 获取用户练习历史
 export async function GET(request: NextRequest) {
   try {
+    const db = getCloudBaseDatabase();
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

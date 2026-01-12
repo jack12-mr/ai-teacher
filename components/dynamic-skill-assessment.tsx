@@ -138,7 +138,7 @@ export function DynamicSkillAssessment({ onComplete }: DynamicSkillAssessmentPro
       {/* 输入区域 - 极简白色卡片 */}
       <Card className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 p-6 rounded-2xl">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-2xl font-bold text-neutral-950 dark:text-white">今天你想攻克什么考试？</h2>
+          <h2 className="text-3xl font-bold text-neutral-900 dark:text-white">今天你想攻克什么考试？</h2>
           {currentSubject && (
             <button
               onClick={handleChangeSubject}
@@ -148,7 +148,7 @@ export function DynamicSkillAssessment({ onComplete }: DynamicSkillAssessmentPro
             </button>
           )}
         </div>
-        <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-5">AI 将根据你的目标，自动构建能力评估模型。</p>
+        <p className="text-neutral-600 dark:text-neutral-300 text-base mb-5">AI 将根据你的目标，自动构建能力评估模型。</p>
 
         {/* 科目输入框 */}
         <div className="relative">
@@ -157,7 +157,7 @@ export function DynamicSkillAssessment({ onComplete }: DynamicSkillAssessmentPro
             onChange={(e) => setSubjectInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="输入目标，如：考研数学"
-            className="bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 pr-14 h-14 text-base rounded-xl"
+            className="bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder:text-neutral-500 dark:placeholder:text-neutral-400 pr-14 h-14 text-xl font-medium rounded-xl"
             disabled={isAnalyzing}
           />
           <button
@@ -182,7 +182,7 @@ export function DynamicSkillAssessment({ onComplete }: DynamicSkillAssessmentPro
             <button
               key={subject}
               onClick={() => setSubjectInput(subject)}
-              className="px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700
+              className="px-4 py-2 text-base font-medium text-neutral-700 dark:text-neutral-200 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700
                        border border-neutral-200 dark:border-neutral-700 rounded-full transition-all duration-200 cursor-pointer"
             >
               {subject}
@@ -195,19 +195,19 @@ export function DynamicSkillAssessment({ onComplete }: DynamicSkillAssessmentPro
           <Badge
             onClick={handleUploadClick}
             className="cursor-pointer bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700
-                       hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors px-4 py-2.5 text-sm rounded-full
+                       hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors px-4 py-3 text-base font-medium rounded-full
                        flex items-center justify-center"
           >
-            <Upload className="w-3.5 h-3.5 mr-2" />
+            <Upload className="w-4 h-4 mr-2" />
             上传题目
           </Badge>
           <Badge
             onClick={handleSearchClick}
             className="cursor-pointer bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700
-                       hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors px-4 py-2.5 text-sm rounded-full
+                       hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors px-4 py-3 text-base font-medium rounded-full
                        flex items-center justify-center"
           >
-            <Search className="w-3.5 h-3.5 mr-2" />
+            <Search className="w-4 h-4 mr-2" />
             搜题直达
           </Badge>
         </div>

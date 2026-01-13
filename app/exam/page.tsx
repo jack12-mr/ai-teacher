@@ -50,7 +50,7 @@ interface SyllabusData {
   rawContent?: string
 }
 
-// 内部组件，处理搜索参数
+// 内部组件,处理搜索参数
 function ExamSetupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -64,9 +64,20 @@ function ExamSetupContent() {
     return 'goal'
   }
 
+  // 从 URL 参数获取来源类型（用于判断从哪个入口进入）
+  const getInitialSourceType = (): SourceType => {
+    const sourceParam = searchParams.get('source')
+    if (sourceParam === 'upload') return 'upload'
+    if (sourceParam === 'search') return 'search'
+    return null
+  }
+
+  // 判断是否应该只显示单一选项（从主页特定入口进入）
+  const sourceFromMainPage = searchParams.get('source') // 'upload' 或 'search'
+
   const [step, setStep] = useState<Step>(getInitialStep())
   const [examName, setExamName] = useState('')
-  const [sourceType, setSourceType] = useState<SourceType>(null)
+  const [sourceType, setSourceType] = useState<SourceType>(getInitialSourceType())
   const [processingProgress, setProcessingProgress] = useState(0)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
 
@@ -655,52 +666,56 @@ function ExamSetupContent() {
                 <p className="text-neutral-500 dark:text-neutral-400">选择资料来源，AI 将基于此生成精准题库</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {/* 上传资料 */}
-                <div
-                  onClick={() => setSourceType('upload')}
-                  className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                    sourceType === 'upload'
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
-                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 bg-neutral-50 dark:bg-neutral-900'
-                  }`}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-                      sourceType === 'upload' ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-700'
-                    }`}>
-                      <Upload className={`w-6 h-6 ${sourceType === 'upload' ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`} />
+              <div className={`grid gap-4 mb-6 ${sourceFromMainPage ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                {/* 上传资料 - 仅在未指定来源或来源为upload时显示 */}
+                {(!sourceFromMainPage || sourceFromMainPage === 'upload') && (
+                  <div
+                    onClick={() => setSourceType('upload')}
+                    className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all ${
+                      sourceType === 'upload'
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
+                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 bg-neutral-50 dark:bg-neutral-900'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
+                        sourceType === 'upload' ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-700'
+                      }`}>
+                        <Upload className={`w-6 h-6 ${sourceType === 'upload' ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`} />
+                      </div>
+                      <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-1">上传我的资料</h3>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">上传 PDF/Word 文档，AI 解析生成题库</p>
                     </div>
-                    <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-1">上传我的资料</h3>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">上传 PDF/Word 文档，AI 解析生成题库</p>
+                    {sourceType === 'upload' && (
+                      <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    )}
                   </div>
-                  {sourceType === 'upload' && (
-                    <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  )}
-                </div>
+                )}
 
-                {/* AI 联网搜索 */}
-                <div
-                  onClick={() => setSourceType('search')}
-                  className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                    sourceType === 'search'
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
-                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 bg-neutral-50 dark:bg-neutral-900'
-                  }`}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
-                      sourceType === 'search' ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-700'
-                    }`}>
-                      <Globe className={`w-6 h-6 ${sourceType === 'search' ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`} />
+                {/* AI 联网搜索 - 仅在未指定来源或来源为search时显示 */}
+                {(!sourceFromMainPage || sourceFromMainPage === 'search') && (
+                  <div
+                    onClick={() => setSourceType('search')}
+                    className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all ${
+                      sourceType === 'search'
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30'
+                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 bg-neutral-50 dark:bg-neutral-900'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${
+                        sourceType === 'search' ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-700'
+                      }`}>
+                        <Globe className={`w-6 h-6 ${sourceType === 'search' ? 'text-white' : 'text-neutral-600 dark:text-neutral-300'}`} />
+                      </div>
+                      <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-1">AI 联网搜索</h3>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">AI 自动搜索考试大纲，生成题库</p>
                     </div>
-                    <h3 className="text-lg font-semibold text-neutral-950 dark:text-white mb-1">AI 联网搜索</h3>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">AI 自动搜索考试大纲，生成题库</p>
+                    {sourceType === 'search' && (
+                      <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    )}
                   </div>
-                  {sourceType === 'search' && (
-                    <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  )}
-                </div>
+                )}
               </div>
 
               {/* 上传区域 */}

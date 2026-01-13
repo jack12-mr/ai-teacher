@@ -93,8 +93,8 @@ export function DynamicSkillAssessment({ onComplete }: DynamicSkillAssessmentPro
   }
 
   // 快捷按钮跳转
-  const handleUploadClick = () => router.push("/exam?step=source")
-  const handleSearchClick = () => router.push("/exam")
+  const handleUploadClick = () => router.push("/exam?step=source&source=upload")
+  const handleSearchClick = () => router.push("/exam?step=goal&source=search")
 
   // 切换/重新评测科目
   const handleChangeSubject = () => {

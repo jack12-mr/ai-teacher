@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
-import { Loader2, ArrowLeft, Home } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Loader2, ArrowLeft, Home, CheckCircle, AlertCircle } from "lucide-react"
 
 import { AssessmentAnalysis } from "@/components/assessment/AssessmentAnalysis"
 import { PersonalizedQuizIntro } from "@/components/assessment/PersonalizedQuizIntro"
@@ -57,6 +58,8 @@ export default function TargetedQuizPage() {
   // 加载状态
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [processingSteps, setProcessingSteps] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
   // 从 localStorage 加载评估数据
@@ -81,10 +84,16 @@ export default function TargetedQuizPage() {
     if (!assessmentData) return
 
     setIsLoading(true)
-    setLoadingMessage('AI 正在分析您的能力模型...')
+    setLoadingProgress(0)
+    setProcessingSteps([])
     setPhase('loading')
 
     try {
+      // 步骤1: 分析能力模型
+      setProcessingSteps(['🔍 正在分析您的能力模型...'])
+      setLoadingProgress(10)
+      await new Promise(resolve => setTimeout(resolve, 400))
+
       // 分类维度
       const weakDimensions = assessmentData.dimensions
         .filter(d => d.score <= 4)
@@ -113,7 +122,36 @@ export default function TargetedQuizPage() {
           description: d.description
         }))
 
-      setLoadingMessage('正在生成针对性题目...')
+      // 步骤2: 显示分析结果
+      const weakCount = weakDimensions.length
+      const mediumCount = mediumDimensions.length
+      const strongCount = strongDimensions.length
+
+      setProcessingSteps(prev => [...prev, `✅ 已识别 ${weakCount} 个薄弱维度、${mediumCount} 个中等维度、${strongCount} 个优势维度`])
+      setLoadingProgress(25)
+      await new Promise(resolve => setTimeout(resolve, 400))
+
+      // 步骤3: 提取关键知识点
+      if (weakDimensions.length > 0) {
+        setProcessingSteps(prev => [...prev, `📚 正在提取薄弱知识点：${weakDimensions.map(d => d.name).join('、')}`])
+      }
+      setLoadingProgress(35)
+      await new Promise(resolve => setTimeout(resolve, 400))
+
+      // 步骤4: 生成针对性题目
+      setProcessingSteps(prev => [...prev, `🤖 AI 正在生成 10 道针对性题目...`])
+      setLoadingProgress(45)
+
+      // 模拟题目生成进度
+      const progressInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          if (prev >= 75) {
+            clearInterval(progressInterval)
+            return prev
+          }
+          return prev + 2
+        })
+      }, 300)
 
       const response = await fetch('/api/exam/generate-targeted-questions', {
         method: 'POST',
@@ -127,6 +165,9 @@ export default function TargetedQuizPage() {
         })
       })
 
+      clearInterval(progressInterval)
+      setLoadingProgress(75)
+
       if (!response.ok) {
         throw new Error('生成题目失败')
       }
@@ -137,7 +178,14 @@ export default function TargetedQuizPage() {
         throw new Error(data.error || '未能生成题目')
       }
 
-      setLoadingMessage('题目生成完成！')
+      setProcessingSteps(prev => [...prev, `📝 已生成 ${data.questions.length} 道题目`])
+      setLoadingProgress(85)
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      // 步骤5: 优化题目质量
+      setProcessingSteps(prev => [...prev, '⚡ 正在优化题目难度分布...'])
+      setLoadingProgress(95)
+      await new Promise(resolve => setTimeout(resolve, 400))
 
       // 转换题目格式以兼容 QuestionCard
       const formattedQuestions: TargetedQuestion[] = data.questions.map((q: TargetedQuestion) => ({
@@ -155,14 +203,21 @@ export default function TargetedQuizPage() {
         currentAnswer: null
       })
 
-      setTimeout(() => {
-        setPhase('quiz')
-        setIsLoading(false)
-      }, 500)
+      // 步骤6: 完成
+      setProcessingSteps(prev => [...prev, `🎉 题目生成完成！共 ${formattedQuestions.length} 道精选题目`])
+      setLoadingProgress(100)
+
+      await new Promise(resolve => setTimeout(resolve, 500))
+      setPhase('quiz')
+      setIsLoading(false)
 
     } catch (error) {
       console.error('生成题目失败:', error)
+      setProcessingSteps(prev => [...prev, '⚠️ 生成失败，请重试'])
+      setLoadingProgress(100)
       setError(error instanceof Error ? error.message : '生成题目失败，请重试')
+
+      await new Promise(resolve => setTimeout(resolve, 1500))
       setIsLoading(false)
       setPhase('intro')
     }
@@ -441,10 +496,57 @@ export default function TargetedQuizPage() {
 
         {/* 加载阶段 */}
         {phase === 'loading' && (
-          <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-12 text-center">
-            <Loader2 className="w-12 h-12 text-indigo-600 dark:text-indigo-400 animate-spin mx-auto mb-4" />
-            <p className="text-lg text-neutral-950 dark:text-white mb-2">正在生成题目</p>
-            <p className="text-neutral-500 dark:text-neutral-400">{loadingMessage}</p>
+          <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <Loader2 className="w-10 h-10 text-white animate-spin" />
+              </div>
+              <h2 className="text-2xl font-bold text-neutral-950 dark:text-white mb-2">正在生成针对性题目</h2>
+              <p className="text-neutral-500 dark:text-neutral-400 mb-8">
+                AI 正在根据您的弱点生成专属练习题
+              </p>
+
+              <div className="max-w-md mx-auto">
+                <Progress value={loadingProgress} className="h-2 mb-2" />
+                <p className="text-sm text-neutral-500">{Math.min(100, Math.floor(loadingProgress))}%</p>
+              </div>
+
+              {/* 显示实时处理步骤 */}
+              <div className="mt-8 space-y-3 text-left max-w-sm mx-auto">
+                {processingSteps.length > 0 ? (
+                  processingSteps.map((stepText, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      {stepText.includes('⚠️') ? (
+                        <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+                      ) : i === processingSteps.length - 1 && loadingProgress < 100 ? (
+                        <Loader2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      )}
+                      <span className={stepText.includes('⚠️') ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
+                        {stepText}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  // 默认显示（如果没有步骤）
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                    <span className="text-neutral-500 dark:text-neutral-400">正在初始化...</span>
+                  </div>
+                )}
+              </div>
+
+              {/* 错误提示 */}
+              {error && (
+                <div className="mt-6 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                    <AlertCircle className="w-5 h-5" />
+                    <span className="font-medium">{error}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </Card>
         )}
 

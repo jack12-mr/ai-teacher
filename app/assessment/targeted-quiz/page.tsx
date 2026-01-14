@@ -266,7 +266,7 @@ export default function TargetedQuizPage() {
       setIsLoading(false)
       setPhase('intro')
     }
-  }, [assessmentData])
+  }, [assessmentData, questionCount])
 
   // 处理答题
   const handleAnswer = useCallback((answer: number | number[] | string[], timeSpent: number) => {

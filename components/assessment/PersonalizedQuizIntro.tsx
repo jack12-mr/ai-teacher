@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -19,6 +20,7 @@ interface PersonalizedQuizIntroProps {
   isLoading?: boolean
   onStart: () => void
   onBack: () => void
+  onQuestionCountChange?: (count: number) => void
 }
 
 export function PersonalizedQuizIntro({
@@ -27,11 +29,42 @@ export function PersonalizedQuizIntro({
   questionCount = 10,
   isLoading = false,
   onStart,
-  onBack
+  onBack,
+  onQuestionCountChange
 }: PersonalizedQuizIntroProps) {
+  const [customCount, setCustomCount] = useState<string>('')
+  const [showCustomInput, setShowCustomInput] = useState(false)
+
   // 获取要展示的薄弱项（最多显示5个）
   const displayWeaknesses = weaknesses.slice(0, 5)
   const hasMoreWeaknesses = weaknesses.length > 5
+
+  const questionOptions = [
+    { value: 5, label: '5题', description: '快速练习' },
+    { value: 10, label: '10题', description: '标准训练' },
+    { value: 20, label: '20题', description: '深度巩固' },
+    { value: 'custom', label: '自定义', description: '最多40题' }
+  ]
+
+  const handleQuestionCountChange = (value: number | 'custom') => {
+    if (value === 'custom') {
+      setShowCustomInput(true)
+    } else {
+      setShowCustomInput(false)
+      setCustomCount('')
+      onQuestionCountChange?.(value)
+    }
+  }
+
+  const handleCustomCountChange = (value: string) => {
+    const numValue = parseInt(value)
+    if (value === '' || (!isNaN(numValue) && numValue >= 1 && numValue <= 40)) {
+      setCustomCount(value)
+      if (numValue >= 1 && numValue <= 40) {
+        onQuestionCountChange?.(numValue)
+      }
+    }
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -98,6 +131,66 @@ export function PersonalizedQuizIntro({
           </div>
         </Card>
       )}
+
+      {/* 题目数量选择 */}
+      <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
+        <h3 className="font-semibold text-neutral-950 dark:text-white mb-4">选择题目数量</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          {questionOptions.map((option) => {
+            const isSelected = option.value === 'custom'
+              ? showCustomInput
+              : option.value === questionCount && !showCustomInput
+
+            return (
+              <button
+                key={option.value}
+                onClick={() => handleQuestionCountChange(option.value)}
+                disabled={isLoading}
+                className={`p-4 rounded-xl border-2 transition-all duration-200 text-left
+                  ${isSelected
+                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/30'
+                    : 'border-neutral-200 dark:border-neutral-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                  }
+                  disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}
+              >
+                <div className="font-bold text-lg text-neutral-950 dark:text-white mb-1">
+                  {option.label}
+                </div>
+                <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                  {option.description}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* 自定义输入框 */}
+        {showCustomInput && (
+          <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              输入题目数量（1-40题）
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="40"
+              value={customCount}
+              onChange={(e) => handleCustomCountChange(e.target.value)}
+              disabled={isLoading}
+              placeholder="请输入1-40之间的数字"
+              className="w-full px-4 py-2 rounded-lg border border-indigo-300 dark:border-indigo-700
+                         bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white
+                         focus:outline-none focus:ring-2 focus:ring-indigo-600
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            {customCount && (parseInt(customCount) < 1 || parseInt(customCount) > 40) && (
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                请输入1-40之间的数字
+              </p>
+            )}
+          </div>
+        )}
+      </Card>
 
       {/* AI 计划说明 */}
       <Card className="bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 p-6">

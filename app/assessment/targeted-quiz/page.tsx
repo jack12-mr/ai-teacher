@@ -54,6 +54,9 @@ export default function TargetedQuizPage() {
   // 评估数据
   const [assessmentData, setAssessmentData] = useState<AssessmentResult | null>(null)
 
+  // 题目数量状态
+  const [questionCount, setQuestionCount] = useState<number>(10)
+
   // 答题状态
   const [quizState, setQuizState] = useState<QuizState>({
     questions: [],
@@ -181,7 +184,7 @@ export default function TargetedQuizPage() {
       await new Promise(resolve => setTimeout(resolve, 400))
 
       // 步骤4: 生成针对性题目
-      setProcessingSteps(prev => [...prev, `🤖 AI 正在生成 10 道针对性题目...`])
+      setProcessingSteps(prev => [...prev, `🤖 AI 正在生成 ${questionCount} 道针对性题目...`])
       setLoadingProgress(45)
 
       // 模拟题目生成进度
@@ -203,7 +206,7 @@ export default function TargetedQuizPage() {
           weakDimensions,
           mediumDimensions,
           strongDimensions,
-          count: 10
+          count: questionCount
         })
       })
 
@@ -611,10 +614,11 @@ export default function TargetedQuizPage() {
           <PersonalizedQuizIntro
             subjectName={assessmentData.subjectName}
             weaknesses={assessmentData.weaknesses}
-            questionCount={10}
+            questionCount={questionCount}
             isLoading={isLoading}
             onStart={generateQuestions}
             onBack={() => setPhase('analysis')}
+            onQuestionCountChange={setQuestionCount}
           />
         )}
 

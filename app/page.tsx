@@ -179,6 +179,8 @@ export default function HomePage() {
                   {t.home.upgradePro}
                 </Button>
               )}
+              <LanguageSwitcher />
+              <ModeToggle />
               <Button
                 onClick={handleStartAiCoach}
                 variant="outline"
@@ -206,12 +208,8 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Progress Indicator */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <h1 className="text-3xl font-bold tracking-tight text-neutral-950 dark:text-white">{t.home.discoverSkills}</h1>
-            <div className="flex items-center space-x-3">
-              <LanguageSwitcher />
-              <ModeToggle />
-            </div>
           </div>
 
           {/* Step Indicator */}

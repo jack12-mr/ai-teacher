@@ -14,13 +14,14 @@ export function LanguageSwitcher() {
   return (
     <Button
       variant="outline"
+      size="sm"
       onClick={toggleLanguage}
       title={currentLang === "zh-CN" ? "Switch to English" : "切换到中文"}
-      className="cursor-pointer h-10 px-4 border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+      className="cursor-pointer h-9 px-3 border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
     >
-      <Globe className="h-5 w-5 mr-2" />
-      <span className="text-sm font-medium">
-        {currentLang === "zh-CN" ? "English" : "中文"}
+      <Globe className="h-4 w-4 mr-1.5" />
+      <span className="text-sm">
+        {currentLang === "zh-CN" ? "EN" : "中"}
       </span>
     </Button>
   )

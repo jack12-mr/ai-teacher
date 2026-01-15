@@ -12,6 +12,7 @@ import {
   Lightbulb
 } from "lucide-react"
 import type { AssessmentDimension } from "@/lib/types/assessment"
+import { useT } from "@/lib/i18n"
 
 interface PersonalizedQuizIntroProps {
   subjectName: string
@@ -32,6 +33,7 @@ export function PersonalizedQuizIntro({
   onBack,
   onQuestionCountChange
 }: PersonalizedQuizIntroProps) {
+  const t = useT()
   const [customCount, setCustomCount] = useState<string>('')
   const [showCustomInput, setShowCustomInput] = useState(false)
 
@@ -40,10 +42,10 @@ export function PersonalizedQuizIntro({
   const hasMoreWeaknesses = weaknesses.length > 5
 
   const questionOptions = [
-    { value: 5, label: '5题', description: '快速练习' },
-    { value: 10, label: '10题', description: '标准训练' },
-    { value: 20, label: '20题', description: '深度巩固' },
-    { value: 'custom', label: '自定义', description: '最多40题' }
+    { value: 5, label: `5${t.targetedQuiz.questions}`, description: t.targetedQuiz.quickPractice },
+    { value: 10, label: `10${t.targetedQuiz.questions}`, description: t.targetedQuiz.standardTraining },
+    { value: 20, label: `20${t.targetedQuiz.questions}`, description: t.targetedQuiz.deepPractice },
+    { value: 'custom', label: t.targetedQuiz.custom, description: t.targetedQuiz.maxQuestions }
   ]
 
   const handleQuestionCountChange = (value: number | 'custom') => {
@@ -84,16 +86,16 @@ export function PersonalizedQuizIntro({
 
         {/* 标题 */}
         <h2 className="text-2xl font-bold text-neutral-950 dark:text-white mb-3">
-          AI 智能出题助手
+          {t.targetedQuiz.aiAssistant}
         </h2>
         <Badge className="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 mb-6">
-          {subjectName} · 针对性训练
+          {subjectName} · {t.targetedQuiz.targetedTraining}
         </Badge>
 
         {/* 话术 */}
         <div className="max-w-lg mx-auto">
           <p className="text-neutral-600 dark:text-neutral-300 text-lg leading-relaxed mb-4">
-            根据您的能力评估，我发现以下薄弱环节需要加强：
+            {t.targetedQuiz.assessmentFound}
           </p>
         </div>
       </Card>
@@ -103,9 +105,9 @@ export function PersonalizedQuizIntro({
         <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
           <div className="flex items-center gap-2 mb-4">
             <Target className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            <h3 className="font-semibold text-neutral-950 dark:text-white">待突破难点</h3>
+            <h3 className="font-semibold text-neutral-950 dark:text-white">{t.targetedQuiz.weakPoints}</h3>
             <Badge className="ml-auto bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800">
-              {weaknesses.length} 项
+              {weaknesses.length} {t.analysis.items}
             </Badge>
           </div>
 
@@ -125,7 +127,7 @@ export function PersonalizedQuizIntro({
             {hasMoreWeaknesses && (
               <div className="px-4 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700
                              text-neutral-500 dark:text-neutral-400 text-sm">
-                +{weaknesses.length - 5} 更多
+                {t.targetedQuiz.more.replace("{count}", String(weaknesses.length - 5))}
               </div>
             )}
           </div>
@@ -134,7 +136,7 @@ export function PersonalizedQuizIntro({
 
       {/* 题目数量选择 */}
       <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-6">
-        <h3 className="font-semibold text-neutral-950 dark:text-white mb-4">选择题目数量</h3>
+        <h3 className="font-semibold text-neutral-950 dark:text-white mb-4">{t.targetedQuiz.selectQuestionCount}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           {questionOptions.map((option) => {
             const isSelected = option.value === 'custom'
@@ -168,7 +170,7 @@ export function PersonalizedQuizIntro({
         {showCustomInput && (
           <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800">
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              输入题目数量（1-40题）
+              {t.targetedQuiz.enterCount}
             </label>
             <input
               type="number"
@@ -177,7 +179,7 @@ export function PersonalizedQuizIntro({
               value={customCount}
               onChange={(e) => handleCustomCountChange(e.target.value)}
               disabled={isLoading}
-              placeholder="请输入1-40之间的数字"
+              placeholder={t.targetedQuiz.enterPlaceholder}
               className="w-full px-4 py-2 rounded-lg border border-indigo-300 dark:border-indigo-700
                          bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white
                          focus:outline-none focus:ring-2 focus:ring-indigo-600
@@ -185,7 +187,7 @@ export function PersonalizedQuizIntro({
             />
             {customCount && (parseInt(customCount) < 1 || parseInt(customCount) > 40) && (
               <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                请输入1-40之间的数字
+                {t.targetedQuiz.invalidRange}
               </p>
             )}
           </div>
@@ -199,11 +201,11 @@ export function PersonalizedQuizIntro({
             <Lightbulb className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-neutral-950 dark:text-white mb-2">我的训练计划</h3>
+            <h3 className="font-semibold text-neutral-950 dark:text-white mb-2">{t.targetedQuiz.myPlan}</h3>
             <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed">
-              我将为您生成 <span className="text-indigo-600 dark:text-indigo-400 font-bold">{questionCount}</span> 道针对性练习题，
-              题目将重点覆盖您的薄弱环节，帮助您快速突破难点。
-              答题完成后，我会给出详细的分析报告，并预测您的考试通过概率。
+              {t.targetedQuiz.willGenerate} <span className="text-indigo-600 dark:text-indigo-400 font-bold">{questionCount}</span> {t.targetedQuiz.questionsWill}
+              {t.targetedQuiz.focusOnWeak}
+              {t.targetedQuiz.detailedReport}
             </p>
           </div>
         </div>
@@ -213,15 +215,15 @@ export function PersonalizedQuizIntro({
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="p-3 rounded-lg bg-white dark:bg-neutral-900">
               <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">60%</p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">薄弱环节</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{t.targetedQuiz.weakAreas}</p>
             </div>
             <div className="p-3 rounded-lg bg-white dark:bg-neutral-900">
               <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">30%</p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">巩固提升</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{t.targetedQuiz.consolidate}</p>
             </div>
             <div className="p-3 rounded-lg bg-white dark:bg-neutral-900">
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">10%</p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">优势保持</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{t.targetedQuiz.maintainStrength}</p>
             </div>
           </div>
         </div>
@@ -238,7 +240,7 @@ export function PersonalizedQuizIntro({
                      disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>返回</span>
+          <span>{t.targetedQuiz.back}</span>
         </button>
 
         <button
@@ -254,12 +256,12 @@ export function PersonalizedQuizIntro({
           {isLoading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-lg">AI 正在生成题目...</span>
+              <span className="text-lg">{t.targetedQuiz.aiGenerating}</span>
             </>
           ) : (
             <>
               <Sparkles className="w-5 h-5" />
-              <span className="text-lg">开始针对练习</span>
+              <span className="text-lg">{t.targetedQuiz.startQuiz}</span>
             </>
           )}
         </button>
@@ -267,7 +269,7 @@ export function PersonalizedQuizIntro({
 
       {/* 提示文字 */}
       <p className="text-center text-sm text-neutral-500 dark:text-neutral-500">
-        预计用时 {Math.ceil(questionCount * 1.5)} - {questionCount * 2} 分钟 · 随时可暂停
+        {t.targetedQuiz.estimatedTime.replace("{min}", String(Math.ceil(questionCount * 1.5))).replace("{max}", String(questionCount * 2))}
       </p>
     </div>
   )

@@ -11,6 +11,7 @@ import {
   ChevronRight
 } from "lucide-react"
 import type { AssessmentResult, AssessmentDimension } from "@/lib/types/assessment"
+import { useT } from "@/lib/i18n"
 
 interface AssessmentAnalysisProps {
   assessmentData: AssessmentResult
@@ -68,6 +69,7 @@ function DimensionCard({
 
 export function AssessmentAnalysis({ assessmentData, onContinue }: AssessmentAnalysisProps) {
   const { subjectName, dimensions, strengths, weaknesses } = assessmentData
+  const t = useT()
 
   // 计算平均分
   const avgScore = dimensions.reduce((acc, d) => acc + d.score, 0) / dimensions.length
@@ -85,17 +87,17 @@ export function AssessmentAnalysis({ assessmentData, onContinue }: AssessmentAna
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-2xl font-bold text-white">你的能力分析报告</h2>
+              <h2 className="text-2xl font-bold text-white">{t.analysis.reportTitle}</h2>
               <Badge className="bg-white/20 text-white border-0">
                 {subjectName}
               </Badge>
             </div>
             <p className="text-indigo-100">
-              AI 已完成对你 <span className="font-bold text-white">{dimensions.length}</span> 项技能的深度分析
+              {t.analysis.aiCompleted} <span className="font-bold text-white">{dimensions.length}</span> {t.analysis.skillsAnalysis}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-indigo-100">综合评分</p>
+            <p className="text-sm text-indigo-100">{t.analysis.overallScore}</p>
             <p className="text-4xl font-bold text-white">{avgScore.toFixed(1)}</p>
           </div>
         </div>
@@ -110,11 +112,11 @@ export function AssessmentAnalysis({ assessmentData, onContinue }: AssessmentAna
               <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-neutral-950 dark:text-white">你的优势</h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">得分 ≥ 7 的技能</p>
+              <h3 className="font-semibold text-neutral-950 dark:text-white">{t.analysis.yourStrengths}</h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.analysis.strengthsDesc}</p>
             </div>
             <Badge className="ml-auto bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
-              {strengths.length} 项
+              {strengths.length} {t.analysis.items}
             </Badge>
           </div>
 
@@ -125,13 +127,13 @@ export function AssessmentAnalysis({ assessmentData, onContinue }: AssessmentAna
               ))}
               {strengths.length > 3 && (
                 <p className="text-center text-sm text-neutral-500 dark:text-neutral-500">
-                  还有 {strengths.length - 3} 项优势技能
+                  {t.analysis.moreStrengths.replace("{count}", String(strengths.length - 3))}
                 </p>
               )}
             </div>
           ) : (
             <div className="py-8 text-center">
-              <p className="text-neutral-500 dark:text-neutral-400">暂无明显优势，继续加油！</p>
+              <p className="text-neutral-500 dark:text-neutral-400">{t.analysis.noStrengths}</p>
             </div>
           )}
         </Card>
@@ -143,11 +145,11 @@ export function AssessmentAnalysis({ assessmentData, onContinue }: AssessmentAna
               <TrendingDown className="w-4 h-4 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-neutral-950 dark:text-white">待提升领域</h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">得分 ≤ 4 的技能</p>
+              <h3 className="font-semibold text-neutral-950 dark:text-white">{t.analysis.areasToImprove}</h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">{t.analysis.areasToImproveDesc}</p>
             </div>
             <Badge className="ml-auto bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800">
-              {weaknesses.length} 项
+              {weaknesses.length} {t.analysis.items}
             </Badge>
           </div>
 
@@ -158,13 +160,13 @@ export function AssessmentAnalysis({ assessmentData, onContinue }: AssessmentAna
               ))}
               {weaknesses.length > 3 && (
                 <p className="text-center text-sm text-neutral-500 dark:text-neutral-500">
-                  还有 {weaknesses.length - 3} 项待提升技能
+                  {t.analysis.moreWeaknesses.replace("{count}", String(weaknesses.length - 3))}
                 </p>
               )}
             </div>
           ) : (
             <div className="py-8 text-center">
-              <p className="text-neutral-500 dark:text-neutral-400">太棒了！没有明显短板</p>
+              <p className="text-neutral-500 dark:text-neutral-400">{t.analysis.noWeaknesses}</p>
             </div>
           )}
         </Card>
@@ -177,29 +179,29 @@ export function AssessmentAnalysis({ assessmentData, onContinue }: AssessmentAna
             <Target className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-2">针对性训练建议</h3>
+            <h3 className="text-lg font-bold text-neutral-800 dark:text-neutral-100 mb-2">{t.analysis.trainingAdvice}</h3>
             <p className="text-neutral-700 dark:text-neutral-300 text-sm leading-relaxed">
               {weaknesses.length > 0 ? (
                 <>
-                  根据分析，你在
+                  {t.analysis.basedOnAnalysis}
                   <span className="font-bold text-rose-600 dark:text-rose-400 mx-1">
                     {weaknesses.slice(0, 3).map(w => w.name).join('、')}
                   </span>
-                  {weaknesses.length > 3 && `等 ${weaknesses.length} 个`}
-                  方面需要重点加强。
-                  AI 将为你生成针对这些薄弱环节的专项练习题，帮助你快速突破难点！
+                  {weaknesses.length > 3 && ` (${weaknesses.length})`}
+                  {t.analysis.needsImprovement}
+                  {t.analysis.aiWillGenerate}
                 </>
               ) : mediumDimensions.length > 0 ? (
                 <>
-                  你的基础不错！AI 将针对
+                  {t.analysis.goodFoundation}
                   <span className="font-bold text-indigo-600 dark:text-indigo-400 mx-1">
                     {mediumDimensions.slice(0, 3).map(m => m.name).join('、')}
                   </span>
-                  等中等水平的技能进行巩固训练。
+                  {t.analysis.mediumSkills}
                 </>
               ) : (
                 <>
-                  你的整体水平很高！AI 将为你生成综合性的进阶题目，帮助你更上一层楼。
+                  {t.analysis.excellentLevel}
                 </>
               )}
             </p>
@@ -214,7 +216,7 @@ export function AssessmentAnalysis({ assessmentData, onContinue }: AssessmentAna
                      transition-all duration-200 hover:shadow-xl
                      flex items-center justify-center gap-2 cursor-pointer"
         >
-          <span>继续，开始针对性练习</span>
+          <span>{t.analysis.continueToQuiz}</span>
           <ChevronRight className="w-5 h-5" />
         </button>
       </Card>

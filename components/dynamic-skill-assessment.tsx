@@ -415,10 +415,10 @@ export function DynamicSkillAssessment({ onComplete }: DynamicSkillAssessmentPro
           )}
           <p className="text-center text-xs text-neutral-500 dark:text-neutral-400 mt-3">
             {currentPage < totalPages
-              ? `请完成当前页所有评估后进入下一步 (${Object.keys(ratings).filter(id => getCurrentPageDimensions().some(d => d.id === id)).length}/${currentPageDimensions.length})`
+              ? `${t.assessment.completeCurrentPage} (${Object.keys(ratings).filter(id => getCurrentPageDimensions().some(d => d.id === id)).length}/${currentPageDimensions.length})`
               : isAllComplete()
-                ? "AI 将根据评分侧重训练薄弱环节"
-                : `请完成所有评估 (${Object.keys(ratings).length}/${dimensions.length})`
+                ? t.assessment.aiWillFocus
+                : `${t.assessment.completeAll} (${Object.keys(ratings).length}/${dimensions.length})`
             }
           </p>
         </Card>

@@ -172,29 +172,63 @@ export function WrongBook({
                     </p>
                   </div>
 
-                  {/* 选项 */}
-                  <div className="space-y-2">
-                    {wq.question.options.map((opt, i) => (
-                      <div
-                        key={i}
-                        className={`px-3 py-2 rounded-lg text-sm ${
-                          i === wq.question.correctAnswer
-                            ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-                            : wq.userAnswers.includes(i)
-                            ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
-                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
-                        }`}
-                      >
-                        {opt}
-                        {i === wq.question.correctAnswer && (
-                          <span className="ml-2">✓ 正确答案</span>
-                        )}
-                        {wq.userAnswers.includes(i) && i !== wq.question.correctAnswer && (
-                          <span className="ml-2">✗ 你的选择</span>
-                        )}
+                  {/* 选项（仅选择题有） */}
+                  {wq.question.options && wq.question.options.length > 0 && (
+                    <div className="space-y-2">
+                      {wq.question.options.map((opt, i) => {
+                        const questionType = wq.question.type || 'single'
+                        const isCorrectAnswer = questionType === 'multiple'
+                          ? (wq.question.correctAnswer as number[]).includes(i)
+                          : i === wq.question.correctAnswer
+                        const isUserAnswer = questionType === 'multiple'
+                          ? wq.userAnswers.some(ans => Array.isArray(ans) && ans.includes(i))
+                          : wq.userAnswers.includes(i)
+
+                        return (
+                          <div
+                            key={i}
+                            className={`px-3 py-2 rounded-lg text-sm ${
+                              isCorrectAnswer
+                                ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                                : isUserAnswer
+                                ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
+                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                            }`}
+                          >
+                            {opt}
+                            {isCorrectAnswer && (
+                              <span className="ml-2">✓ 正确答案</span>
+                            )}
+                            {isUserAnswer && !isCorrectAnswer && (
+                              <span className="ml-2">✗ 你的选择</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* 填空题答案展示 */}
+                  {wq.question.type === 'fill' && (
+                    <div className="space-y-2">
+                      <div className="text-sm text-neutral-500 dark:text-neutral-400">正确答案：</div>
+                      <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg px-3 py-2">
+                        {(wq.question.correctAnswer as string[]).map((ans, i) => (
+                          <span key={i} className="text-emerald-600 dark:text-emerald-400">
+                            {i > 0 && '、'}{ans}
+                          </span>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                      <div className="text-sm text-neutral-500 dark:text-neutral-400">你的答案：</div>
+                      <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
+                        {wq.userAnswers.map((ans, i) => (
+                          <div key={i} className="text-red-600 dark:text-red-400">
+                            {Array.isArray(ans) ? ans.join('、') : String(ans)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* 解析 */}
                   <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl p-4">

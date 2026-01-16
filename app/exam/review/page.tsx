@@ -15,8 +15,9 @@ export default function ReviewPage() {
   const [wrongQuestions, setWrongQuestions] = useState<WrongQuestion[]>([])
   const [examName, setExamName] = useState(t.wrongBook.defaultExam)
 
-  // 追踪是否已从 localStorage 加载完成
+  // 追踪是否已从 localStorage 加载完成，以及是否是用户操作触发的变化
   const isLoaded = useRef(false)
+  const isUserAction = useRef(false)
 
   // 从 localStorage 加载
   useEffect(() => {
@@ -42,16 +43,19 @@ export default function ReviewPage() {
       }
     }
 
-    // 标记加载完成
-    isLoaded.current = true
+    // 标记加载完成，延迟设置以确保状态更新完成
+    setTimeout(() => {
+      isLoaded.current = true
+    }, 100)
   }, [])
 
-  // 保存到 localStorage - 仅在加载完成后且由用户操作触发时保存
+  // 保存到 localStorage - 仅在用户操作触发时保存
   useEffect(() => {
-    // 只有在初始加载完成后才保存，避免空数组覆盖已有数据
-    if (isLoaded.current) {
+    // 只有在初始加载完成后且是用户操作触发时才保存
+    if (isLoaded.current && isUserAction.current) {
       localStorage.setItem('examWrongQuestions', JSON.stringify(wrongQuestions))
       console.log('Review page saved wrongQuestions:', wrongQuestions.length, 'items')
+      isUserAction.current = false
     }
   }, [wrongQuestions])
 
@@ -63,6 +67,7 @@ export default function ReviewPage() {
 
   // 标记已掌握
   const handleMarkMastered = (questionId: string) => {
+    isUserAction.current = true
     setWrongQuestions(prev =>
       prev.map(wq =>
         wq.questionId === questionId
@@ -74,6 +79,7 @@ export default function ReviewPage() {
 
   // 移除错题
   const handleRemove = (questionId: string) => {
+    isUserAction.current = true
     setWrongQuestions(prev =>
       prev.filter(wq => wq.questionId !== questionId)
     )

@@ -287,12 +287,12 @@ export function PracticeComplete({
           </div>
 
           <Button
-            onClick={onViewDetails}
+            onClick={onGoHome}
             variant="outline"
             className="w-full border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
-            <ClipboardList className="w-4 h-4 mr-2" />
-            查看答题详情
+            <Home className="w-4 h-4 mr-2" />
+            返回主页
           </Button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { MathText } from "@/components/ui/MathText"
 import { Clock, Star, Tag, CheckCircle2 } from "lucide-react"
 import type { Question } from "@/lib/exam-mock-data"
 
@@ -194,15 +195,15 @@ export function QuestionCard({
 
       {/* 题目内容 */}
       <div className="px-6 py-6">
-        <p className="text-lg text-neutral-950 dark:text-white leading-relaxed whitespace-pre-wrap">
+        <div className="text-lg text-neutral-950 dark:text-white leading-relaxed">
           {/* 多选题标记 */}
           {questionType === 'multiple' && (
             <span className="inline-block bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 px-2 py-1 rounded text-sm font-medium mr-2">
               【多选题】
             </span>
           )}
-          {question.content}
-        </p>
+          <MathText>{question.content}</MathText>
+        </div>
       </div>
 
       {/* 选项列表（单选题和多选题） */}
@@ -241,7 +242,7 @@ export function QuestionCard({
                       String.fromCharCode(65 + index)
                     )}
                   </span>
-                  <span>{option.replace(/^[A-D]\.\s*/, '')}</span>
+                  <span><MathText>{option.replace(/^[A-D]\.\s*/, '')}</MathText></span>
                 </span>
               </button>
             )

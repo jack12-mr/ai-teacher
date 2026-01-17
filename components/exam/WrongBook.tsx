@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { MathText, MathBlock } from "@/components/ui/MathText"
 import {
   BookOpen,
   CheckCircle,
@@ -167,9 +168,9 @@ export function WrongBook({
                 <div className="px-4 pb-4 border-t border-neutral-200 dark:border-neutral-800 pt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
                   {/* 题目内容 */}
                   <div>
-                    <p className="text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
-                      {wq.question.content}
-                    </p>
+                    <div className="text-neutral-600 dark:text-neutral-300">
+                      <MathBlock>{wq.question.content}</MathBlock>
+                    </div>
                   </div>
 
                   {/* 选项（仅选择题有） */}
@@ -195,7 +196,7 @@ export function WrongBook({
                                 : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
                             }`}
                           >
-                            {opt}
+                            <MathText>{opt}</MathText>
                             {isCorrectAnswer && (
                               <span className="ml-2">✓ 正确答案</span>
                             )}
@@ -215,7 +216,7 @@ export function WrongBook({
                       <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg px-3 py-2">
                         {(wq.question.correctAnswer as string[]).map((ans, i) => (
                           <span key={i} className="text-emerald-600 dark:text-emerald-400">
-                            {i > 0 && '、'}{ans}
+                            {i > 0 && '、'}<MathText>{ans}</MathText>
                           </span>
                         ))}
                       </div>
@@ -223,7 +224,7 @@ export function WrongBook({
                       <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
                         {wq.userAnswers.map((ans, i) => (
                           <div key={i} className="text-red-600 dark:text-red-400">
-                            {Array.isArray(ans) ? ans.join('、') : String(ans)}
+                            <MathText>{Array.isArray(ans) ? ans.join('、') : String(ans)}</MathText>
                           </div>
                         ))}
                       </div>
@@ -233,9 +234,9 @@ export function WrongBook({
                   {/* 解析 */}
                   <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl p-4">
                     <div className="text-sm text-indigo-600 dark:text-indigo-400 mb-2">📖 解析</div>
-                    <p className="text-neutral-600 dark:text-neutral-300 text-sm whitespace-pre-wrap">
-                      {wq.question.explanation}
-                    </p>
+                    <div className="text-neutral-600 dark:text-neutral-300 text-sm">
+                      <MathBlock>{wq.question.explanation}</MathBlock>
+                    </div>
                   </div>
 
                   {/* 错误历史 */}

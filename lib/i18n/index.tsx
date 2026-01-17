@@ -12,6 +12,7 @@ import { zhCN, type Translations } from "./translations/zh-CN"
 import { enUS } from "./translations/en-US"
 
 const LANGUAGE_KEY = "app_language"
+const LANGUAGE_SET_BY_USER_KEY = "app_language_user_set" // 标记用户是否手动设置过语言
 
 type Language = "zh-CN" | "en-US"
 
@@ -32,13 +33,16 @@ function getDefaultLanguage(): Language {
 
 /**
  * 获取当前语言
- * 优先读取用户设置，否则根据区域返回默认语言
+ * 只有用户明确手动设置过语言时才读取 localStorage，否则根据区域返回默认语言
  */
 export function getCurrentLanguage(): Language {
-  // 优先读取用户设置
   if (typeof window !== "undefined") {
-    const saved = localStorage.getItem(LANGUAGE_KEY)
-    if (saved === "zh-CN" || saved === "en-US") return saved
+    // 只有用户手动设置过语言时才读取
+    const userSet = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
+    if (userSet === "true") {
+      const saved = localStorage.getItem(LANGUAGE_KEY)
+      if (saved === "zh-CN" || saved === "en-US") return saved
+    }
   }
   // 默认：国内版中文，国际版英文
   return getDefaultLanguage()
@@ -61,14 +65,19 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>(defaultLang)
 
   useEffect(() => {
-    const saved = localStorage.getItem(LANGUAGE_KEY)
-    if (saved === "zh-CN" || saved === "en-US") {
-      setLangState(saved)
+    // 只有用户手动设置过语言时才读取
+    const userSet = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
+    if (userSet === "true") {
+      const saved = localStorage.getItem(LANGUAGE_KEY)
+      if (saved === "zh-CN" || saved === "en-US") {
+        setLangState(saved)
+      }
     }
   }, [])
 
   const setLanguage = useCallback((newLang: Language) => {
     localStorage.setItem(LANGUAGE_KEY, newLang)
+    localStorage.setItem(LANGUAGE_SET_BY_USER_KEY, "true") // 标记用户手动设置了语言
     setLangState(newLang)
   }, [])
 
@@ -98,9 +107,13 @@ export function useT(): Translations {
   const [lang, setLang] = useState<Language>(defaultLang)
 
   useEffect(() => {
-    const saved = localStorage.getItem(LANGUAGE_KEY)
-    if (saved === "zh-CN" || saved === "en-US") {
-      setLang(saved)
+    // 只有用户手动设置过语言时才读取
+    const userSet = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
+    if (userSet === "true") {
+      const saved = localStorage.getItem(LANGUAGE_KEY)
+      if (saved === "zh-CN" || saved === "en-US") {
+        setLang(saved)
+      }
     }
   }, [])
 
@@ -127,6 +140,7 @@ export function useI18n() {
 export function setLanguage(lang: Language) {
   if (typeof window !== "undefined") {
     localStorage.setItem(LANGUAGE_KEY, lang)
+    localStorage.setItem(LANGUAGE_SET_BY_USER_KEY, "true") // 标记用户手动设置了语言
     // 触发自定义事件通知语言变化
     window.dispatchEvent(new CustomEvent("languageChange", { detail: lang }))
   }

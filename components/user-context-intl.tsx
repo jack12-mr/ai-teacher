@@ -37,6 +37,11 @@ interface UserContextType {
   isAuthenticated: boolean; // 兼容字段，user !== null
   isAuthInitialized: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
+  verifyOtp: (email: string, token: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   logout: () => Promise<void>; // 兼容字段，与 signOut 相同
   refreshUser: () => Promise<void>;
@@ -48,6 +53,50 @@ export function UserProviderIntl({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthInitialized, setIsAuthInitialized] = useState(false);
+
+  // 邮箱密码登录
+  const signInWithPassword = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error("❌ [Auth INTL] 邮箱密码登录失败:", error);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        const userProfile: UserProfile = {
+          id: data.user.id,
+          email: data.user.email || "",
+          name:
+            data.user.user_metadata?.displayName ||
+            data.user.user_metadata?.full_name ||
+            data.user.user_metadata?.name ||
+            "",
+          avatar:
+            data.user.user_metadata?.avatar ||
+            data.user.user_metadata?.avatar_url ||
+            data.user.user_metadata?.picture ||
+            "",
+        };
+        setUser(userProfile);
+        saveSupabaseUserCache(userProfile);
+        console.log("✅ [Auth INTL] 邮箱密码登录成功");
+        return { success: true };
+      }
+
+      return { success: false, error: "登录失败，请重试" };
+    } catch (error: any) {
+      console.error("❌ [Auth INTL] login 异常:", error);
+      return { success: false, error: error.message || "登录失败" };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // 登录 - 触发 Google OAuth 流程
   const signInWithGoogle = useCallback(async () => {
@@ -67,6 +116,126 @@ export function UserProviderIntl({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("❌ [Auth INTL] signInWithGoogle 异常:", error);
       throw error;
+    }
+  }, []);
+
+  // 发送 OTP 验证码
+  const signInWithOtp = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+      });
+
+      if (error) {
+        console.error("❌ [Auth INTL] 发送 OTP 失败:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("✅ [Auth INTL] OTP 验证码已发送");
+      return { success: true };
+    } catch (error: any) {
+      console.error("❌ [Auth INTL] signInWithOtp 异常:", error);
+      return { success: false, error: error.message || "发送验证码失败" };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 验证 OTP
+  const verifyOtp = useCallback(async (email: string, token: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "email",
+      });
+
+      if (error) {
+        console.error("❌ [Auth INTL] 验证 OTP 失败:", error);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        const userProfile: UserProfile = {
+          id: data.user.id,
+          email: data.user.email || "",
+          name:
+            data.user.user_metadata?.displayName ||
+            data.user.user_metadata?.full_name ||
+            data.user.user_metadata?.name ||
+            "",
+          avatar:
+            data.user.user_metadata?.avatar ||
+            data.user.user_metadata?.avatar_url ||
+            data.user.user_metadata?.picture ||
+            "",
+        };
+        setUser(userProfile);
+        saveSupabaseUserCache(userProfile);
+        console.log("✅ [Auth INTL] OTP 验证成功");
+        return { success: true };
+      }
+
+      return { success: false, error: "验证失败，请重试" };
+    } catch (error: any) {
+      console.error("❌ [Auth INTL] verifyOtp 异常:", error);
+      return { success: false, error: error.message || "验证失败" };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 邮箱密码注册
+  const signUp = useCallback(async (email: string, password: string, name?: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name || email.split("@")[0],
+          },
+        },
+      });
+
+      if (error) {
+        console.error("❌ [Auth INTL] 注册失败:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("✅ [Auth INTL] 注册成功，请检查邮箱确认");
+      return { success: true };
+    } catch (error: any) {
+      console.error("❌ [Auth INTL] signUp 异常:", error);
+      return { success: false, error: error.message || "注册失败" };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 更新密码 (忘记密码用)
+  const updatePassword = useCallback(async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        console.error("❌ [Auth INTL] 更新密码失败:", error);
+        return { success: false, error: error.message };
+      }
+
+      console.log("✅ [Auth INTL] 密码更新成功");
+      return { success: true };
+    } catch (error: any) {
+      console.error("❌ [Auth INTL] updatePassword 异常:", error);
+      return { success: false, error: error.message || "更新密码失败" };
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -283,11 +452,16 @@ export function UserProviderIntl({ children }: { children: ReactNode }) {
       isAuthenticated: user !== null, // 兼容字段
       isAuthInitialized,
       signInWithGoogle,
+      signInWithPassword,
+      signInWithOtp,
+      verifyOtp,
+      signUp,
+      updatePassword,
       signOut,
       logout: signOut, // 兼容字段，与 signOut 相同
       refreshUser,
     }),
-    [user, loading, isAuthInitialized, signInWithGoogle, signOut, refreshUser]
+    [user, loading, isAuthInitialized, signInWithGoogle, signInWithPassword, signInWithOtp, verifyOtp, signUp, updatePassword, signOut, refreshUser]
   );
 
   return (

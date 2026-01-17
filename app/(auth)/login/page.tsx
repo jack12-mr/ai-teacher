@@ -3,7 +3,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { UnifiedAuthForm } from "@/components/auth/unified-auth-form"
 import { WechatLoginButton } from "@/components/auth/wechat-login-button"
-import { GoogleLoginButton } from "@/components/auth/google-login-button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useState, Suspense } from "react"
 import { AlertCircle, Loader2 } from "lucide-react"
@@ -109,25 +108,6 @@ function LoginContent() {
                   <AlertDescription>{wechatError}</AlertDescription>
                 </Alert>
               )}
-
-              {/* 分隔线 */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200 dark:border-gray-700" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white dark:bg-slate-900 px-2 text-muted-foreground">
-                    {t.auth.orContinueWithEmail}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Google 登录（仅国际版显示） */}
-          {!isCN && (
-            <div className="space-y-4">
-              <GoogleLoginButton />
 
               {/* 分隔线 */}
               <div className="relative">

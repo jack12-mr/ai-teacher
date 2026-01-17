@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { MathText, MathBlock } from "@/components/ui/MathText"
 import {
   CheckCircle,
   XCircle,
@@ -78,7 +79,7 @@ export function AnswerFeedback({
             <div key={i} className="flex items-center gap-2">
               <span className="text-neutral-500">填空{i + 1}:</span>
               <span className={isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
-                {ans || '(未填写)'}
+                <MathText>{ans || '(未填写)'}</MathText>
               </span>
             </div>
           ))}
@@ -89,14 +90,14 @@ export function AnswerFeedback({
       if (!question.options) return null
       return (
         <span className={isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
-          {indices.map(idx => question.options![idx]).join(', ')}
+          <MathText>{indices.map(idx => question.options![idx]).join(', ')}</MathText>
         </span>
       )
     } else {
       if (!question.options) return null
       return (
         <span className={isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
-          {question.options[userAnswer as number]}
+          <MathText>{question.options[userAnswer as number]}</MathText>
         </span>
       )
     }
@@ -111,7 +112,7 @@ export function AnswerFeedback({
           {answers.map((ans, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-neutral-500">填空{i + 1}:</span>
-              <span className="text-emerald-600 dark:text-emerald-400">{ans}</span>
+              <span className="text-emerald-600 dark:text-emerald-400"><MathText>{ans}</MathText></span>
             </div>
           ))}
         </div>
@@ -121,14 +122,14 @@ export function AnswerFeedback({
       if (!question.options) return null
       return (
         <span className="text-emerald-600 dark:text-emerald-400">
-          {indices.map(idx => question.options![idx]).join(', ')}
+          <MathText>{indices.map(idx => question.options![idx]).join(', ')}</MathText>
         </span>
       )
     } else {
       if (!question.options) return null
       return (
         <span className="text-emerald-600 dark:text-emerald-400">
-          {question.options[question.correctAnswer as number]}
+          <MathText>{question.options[question.correctAnswer as number]}</MathText>
         </span>
       )
     }
@@ -206,9 +207,9 @@ export function AnswerFeedback({
               <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">解析</span>
             </div>
             <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4">
-              <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
-                {question.explanation}
-              </p>
+              <div className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <MathBlock>{question.explanation}</MathBlock>
+              </div>
             </div>
           </div>
 

@@ -115,6 +115,7 @@ export function useT(): Translations {
         setLang(saved)
       }
     }
+    
   }, [])
 
   return lang === "zh-CN" ? zhCN : enUS

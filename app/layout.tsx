@@ -1,13 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { Toaster } from '@/components/ui/sonner'
-import { AuthProvider } from '@/components/auth/auth-provider'
-import { UserProviderIntl } from '@/components/user-context-intl'
 import { ThemeProvider } from '@/components/theme-provider'
-import { isChinaRegion } from '@/lib/config/region'
 import { I18nProvider } from '@/lib/i18n'
+import { Providers } from '@/components/providers'
 
-const isChina = isChinaRegion()
+const isChina = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION !== 'INTL'
 
 export const metadata: Metadata = {
   title: isChina ? 'AI 教师助手' : 'AI Teacher Assistant',
@@ -25,17 +22,9 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <I18nProvider>
-            {isChina ? (
-              <AuthProvider>
-                {children}
-                <Toaster />
-              </AuthProvider>
-            ) : (
-              <UserProviderIntl>
-                {children}
-                <Toaster />
-              </UserProviderIntl>
-            )}
+            <Providers>
+              {children}
+            </Providers>
           </I18nProvider>
         </ThemeProvider>
       </body>

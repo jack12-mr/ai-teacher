@@ -341,7 +341,7 @@ export function QuizResults({
           )}
 
           {/* 操作按钮 */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-3 gap-4 mb-4">
             <Button
               onClick={onRestart}
               className="bg-indigo-600 hover:bg-indigo-700 text-white py-6 cursor-pointer"
@@ -349,7 +349,7 @@ export function QuizResults({
               <RotateCcw className="w-5 h-5 mr-2" />
               再来一轮
             </Button>
-            {onGoReview && (wrongCountProp !== undefined ? wrongCountProp : wrongCount) > 0 ? (
+            {onGoReview && (wrongCountProp !== undefined ? wrongCountProp : wrongCount) > 0 && (
               <Button
                 onClick={onGoReview}
                 variant="outline"
@@ -358,16 +358,15 @@ export function QuizResults({
                 <BookMarked className="w-5 h-5 mr-2" />
                 复习错题 ({wrongCountProp !== undefined ? wrongCountProp : wrongCount})
               </Button>
-            ) : (
-              <Button
-                onClick={onGoHome}
-                variant="outline"
-                className="border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-6 cursor-pointer"
-              >
-                <Home className="w-5 h-5 mr-2" />
-                返回首页
-              </Button>
             )}
+            <Button
+              onClick={onGoHome}
+              variant="outline"
+              className="border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-6 cursor-pointer"
+            >
+              <Home className="w-5 h-5 mr-2" />
+              返回首页
+            </Button>
           </div>
         </div>
       </div>

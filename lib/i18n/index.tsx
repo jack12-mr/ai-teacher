@@ -7,7 +7,8 @@
 "use client"
 
 import { useState, useEffect, useContext, createContext, useCallback, type ReactNode } from "react"
-import { isChinaRegion } from "@/lib/config/region"
+import { isChinaRegion, getRegion } from "@/lib/config/region"
+type DeploymentRegion = "CN" | "INTL"
 import { zhCN, type Translations } from "./translations/zh-CN"
 import { enUS } from "./translations/en-US"
 
@@ -15,6 +16,46 @@ const LANGUAGE_KEY = "app_language"
 const LANGUAGE_SET_BY_USER_KEY = "app_language_user_set" // 标记用户是否手动设置过语言
 
 type Language = "zh-CN" | "en-US"
+
+/**
+ * 获取带区域标记的用户设置标志
+ * 格式: "true|CN" 或 "true|INTL"
+ */
+function getUserSetFlag(): string {
+  return `true|${getRegion()}`
+}
+
+/**
+ * 解析用户设置标志并提取区域
+ */
+function parseUserSetFlag(value: string | null): { isValid: boolean; region: DeploymentRegion | null } {
+  if (!value || !value.startsWith('true|')) return { isValid: false, region: null }
+  const region = value.split('|')[1]
+  return {
+    isValid: region === 'CN' || region === 'INTL',
+    region: region as DeploymentRegion
+  }
+}
+
+/**
+ * 验证缓存语言是否与当前区域匹配
+ */
+function shouldUseCachedLanguage(userSetFlag: string | null): boolean {
+  if (!userSetFlag) return false
+
+  const { isValid, region: cachedRegion } = parseUserSetFlag(userSetFlag)
+  const currentRegion = getRegion()
+
+  return isValid && cachedRegion === currentRegion
+}
+
+/**
+ * 清除过期的语言缓存
+ */
+function clearStaleLanguageCache(): void {
+  localStorage.removeItem(LANGUAGE_KEY)
+  localStorage.removeItem(LANGUAGE_SET_BY_USER_KEY)
+}
 
 interface I18nContextType {
   lang: Language
@@ -37,11 +78,15 @@ function getDefaultLanguage(): Language {
  */
 export function getCurrentLanguage(): Language {
   if (typeof window !== "undefined") {
-    // 只有用户手动设置过语言时才读取
-    const userSet = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
-    if (userSet === "true") {
+    const userSetFlag = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
+
+    // 检查缓存语言是否对当前区域有效
+    if (shouldUseCachedLanguage(userSetFlag)) {
       const saved = localStorage.getItem(LANGUAGE_KEY)
       if (saved === "zh-CN" || saved === "en-US") return saved
+    } else if (userSetFlag) {
+      // 检测到过期缓存（区域变化），清除它
+      clearStaleLanguageCache()
     }
   }
   // 默认：国内版中文，国际版英文
@@ -65,19 +110,23 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>(defaultLang)
 
   useEffect(() => {
-    // 只有用户手动设置过语言时才读取
-    const userSet = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
-    if (userSet === "true") {
+    const userSetFlag = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
+
+    // 检查缓存语言是否对当前区域有效
+    if (shouldUseCachedLanguage(userSetFlag)) {
       const saved = localStorage.getItem(LANGUAGE_KEY)
       if (saved === "zh-CN" || saved === "en-US") {
         setLangState(saved)
       }
+    } else if (userSetFlag) {
+      // 检测到过期缓存（区域变化），清除它
+      clearStaleLanguageCache()
     }
   }, [])
 
   const setLanguage = useCallback((newLang: Language) => {
     localStorage.setItem(LANGUAGE_KEY, newLang)
-    localStorage.setItem(LANGUAGE_SET_BY_USER_KEY, "true") // 标记用户手动设置了语言
+    localStorage.setItem(LANGUAGE_SET_BY_USER_KEY, getUserSetFlag()) // 标记当前区域
     setLangState(newLang)
   }, [])
 
@@ -107,15 +156,19 @@ export function useT(): Translations {
   const [lang, setLang] = useState<Language>(defaultLang)
 
   useEffect(() => {
-    // 只有用户手动设置过语言时才读取
-    const userSet = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
-    if (userSet === "true") {
+    const userSetFlag = localStorage.getItem(LANGUAGE_SET_BY_USER_KEY)
+
+    // 检查缓存语言是否对当前区域有效
+    if (shouldUseCachedLanguage(userSetFlag)) {
       const saved = localStorage.getItem(LANGUAGE_KEY)
       if (saved === "zh-CN" || saved === "en-US") {
         setLang(saved)
       }
+    } else if (userSetFlag) {
+      // 检测到过期缓存（区域变化），清除它
+      clearStaleLanguageCache()
     }
-    
+
   }, [])
 
   return lang === "zh-CN" ? zhCN : enUS
@@ -141,7 +194,7 @@ export function useI18n() {
 export function setLanguage(lang: Language) {
   if (typeof window !== "undefined") {
     localStorage.setItem(LANGUAGE_KEY, lang)
-    localStorage.setItem(LANGUAGE_SET_BY_USER_KEY, "true") // 标记用户手动设置了语言
+    localStorage.setItem(LANGUAGE_SET_BY_USER_KEY, getUserSetFlag()) // 标记当前区域
     // 触发自定义事件通知语言变化
     window.dispatchEvent(new CustomEvent("languageChange", { detail: lang }))
   }

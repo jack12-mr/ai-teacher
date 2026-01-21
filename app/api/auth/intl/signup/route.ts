@@ -37,13 +37,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 创建用户资料记录
+    // 创建用户资料记录（用于后台管理系统）
     if (data.user) {
-      await supabase.from("user_profiles").insert({
+      const displayNameValue = displayName || email.split("@")[0];
+      console.log("📝 [Profile] Creating profile for user:", data.user.id, displayNameValue);
+
+      const { data: profileData, error } = await supabase.from("profiles").insert({
         id: data.user.id,
         email: data.user.email,
-        display_name: displayName || email.split("@")[0],
-      });
+        name: displayNameValue,
+        display_name: displayNameValue,
+        region: "INTL",
+      }).select();
+
+      if (error) {
+        console.error("❌ [Profile] Failed to create profile:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+      } else {
+        console.log("✅ [Profile] Profile created successfully:", profileData);
+      }
     }
 
     return NextResponse.json({

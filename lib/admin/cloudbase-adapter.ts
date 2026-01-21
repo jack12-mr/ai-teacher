@@ -1021,7 +1021,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    */
   async getAdById(id: string): Promise<Advertisement | null> {
     try {
-      const result = await this.db.collection("ads").doc(id).get();
+      const result = await this.db.collection("advertisements").doc(id).get();
       if (!result.data || result.data.length === 0) {
         return null;
       }
@@ -1071,7 +1071,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
 
     try {
       const result = await this.db
-        .collection("ads")
+        .collection("advertisements")
         .where(where)
         .orderBy("priority", "desc")
         .orderBy("created_at", "desc")
@@ -1118,7 +1118,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     }
 
     try {
-      const result = await this.db.collection("ads").where(where).count();
+      const result = await this.db.collection("advertisements").where(where).count();
       return result.total;
     } catch (error: any) {
       throw handleDatabaseError(error);
@@ -1148,8 +1148,8 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     };
 
     try {
-      const result = await this.db.collection("ads").add(doc);
-      const created = await this.db.collection("ads").doc(result.id).get();
+      const result = await this.db.collection("advertisements").add(doc);
+      const created = await this.db.collection("advertisements").doc(result.id).get();
       return this.dbToAd(created.data[0]);
     } catch (error: any) {
       throw handleDatabaseError(error);
@@ -1177,8 +1177,8 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     if (data.endDate !== undefined) update.endDate = data.endDate;
 
     try {
-      await this.db.collection("ads").doc(id).update(update);
-      const result = await this.db.collection("ads").doc(id).get();
+      await this.db.collection("advertisements").doc(id).update(update);
+      const result = await this.db.collection("advertisements").doc(id).get();
       return this.dbToAd(result.data[0]);
     } catch (error: any) {
       throw handleDatabaseError(error);
@@ -1190,7 +1190,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    */
   async deleteAd(id: string): Promise<void> {
     try {
-      await this.db.collection("ads").doc(id).remove();
+      await this.db.collection("advertisements").doc(id).remove();
     } catch (error: any) {
       throw handleDatabaseError(error);
     }
@@ -1205,14 +1205,14 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
       title: doc.title,
       type: doc.type || "image",
       position: doc.position || "bottom",
-      fileUrl: doc.fileUrl,
-      fileUrlCn: doc.fileUrlCn,
-      fileUrlIntl: doc.fileUrlIntl,
-      linkUrl: doc.linkUrl,
+      fileUrl: doc.fileUrl || doc.file_url, // 兼容驼峰和蛇形式
+      fileUrlCn: doc.fileUrlCn || doc.file_url_cn,
+      fileUrlIntl: doc.fileUrlIntl || doc.file_url_intl,
+      linkUrl: doc.linkUrl || doc.link_url || doc.redirect_url, // 兼容多种字段名
       priority: doc.priority ?? 0,
       status: doc.status ?? "active",
-      startDate: doc.startDate,
-      endDate: doc.endDate,
+      startDate: doc.startDate || doc.start_date,
+      endDate: doc.endDate || doc.end_date,
       created_at: doc.created_at,
       updated_at: doc.updated_at,
     };

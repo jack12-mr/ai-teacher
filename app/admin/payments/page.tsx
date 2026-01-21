@@ -47,6 +47,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Loader2,
   Search,
@@ -276,85 +277,117 @@ export default function PaymentsManagementPage() {
       )}
 
       {/* 统计卡片 */}
-      {!statsLoading && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                总支付数
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                总订单数
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                本月支付
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.thisMonth}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                今日支付
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.today}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                总收入
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {formatAmount(stats.totalRevenue, "CNY")}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                完成率
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats.total > 0
-                  ? Math.round(
-                      (payments.filter((p) => p.status === "completed").length /
-                        stats.total) *
-                        100
-                    )
-                  : 0}
-                %
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {statsLoading ? (
+          // 骨架屏：加载时显示
+          <>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Card key={i}>
+                <CardHeader className="pb-2">
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-16 mb-2" />
+                  <Skeleton className="h-3 w-20" />
+                </CardContent>
+              </Card>
+            ))}
+          </>
+        ) : stats ? (
+          // 数据加载完成：显示实际数据
+          <>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  总支付数
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  总订单数
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  本月支付
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.thisMonth}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  今日支付
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.today}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  总收入
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {formatAmount(stats.totalRevenue, "CNY")}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  完成率
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats.total > 0
+                    ? Math.round(
+                        (payments.filter((p) => p.status === "completed").length /
+                          stats.total) *
+                          100
+                      )
+                    : 0}
+                  %
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        ) : null}
+      </div>
 
       {/* 收入分析卡片 */}
-      {!statsLoading && stats && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              按支付方式统计收入
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-medium flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            按支付方式统计收入
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {statsLoading ? (
+            // 骨架屏：加载时显示
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1">
+                    <Skeleton className="h-3 w-16 mb-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : stats ? (
+            // 数据加载完成：显示实际数据
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                 <div className="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center text-white">
@@ -393,9 +426,9 @@ export default function PaymentsManagementPage() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : null}
+        </CardContent>
+      </Card>
 
       {/* 搜索和筛选栏 */}
       <Card>

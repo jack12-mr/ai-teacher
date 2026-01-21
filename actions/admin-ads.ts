@@ -18,6 +18,8 @@ import type {
   UpdateAdData,
 } from "@/lib/admin/types";
 import { revalidatePath } from "next/cache";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { CloudBaseConnector } from "@/lib/cloudbase/connector";
 
 /**
  * 获取广告列表
@@ -348,6 +350,513 @@ export async function updateAdPriorities(
     return {
       success: false,
       error: error.message || "批量更新优先级失败",
+    };
+  }
+}
+
+// ============================================================
+// 文件管理相关类型和函数
+// ============================================================
+
+export interface StorageFile {
+  name: string;
+  url: string;
+  size?: number;
+  lastModified?: string;
+  source: "supabase" | "cloudbase";
+  fileId?: string;
+  adId?: string;
+}
+
+export interface ListFilesResult {
+  success: boolean;
+  error?: string;
+  supabaseFiles?: StorageFile[];
+  cloudbaseFiles?: StorageFile[];
+}
+
+export interface FileOperationResult {
+  success: boolean;
+  error?: string;
+}
+
+export interface DownloadResult {
+  success: boolean;
+  error?: string;
+  data?: string;
+  contentType?: string;
+  fileName?: string;
+}
+
+/**
+ * 列出存储文件 - 两个云存储
+ */
+export async function listStorageFiles(): Promise<ListFilesResult> {
+  try {
+    await requireAdminSession();
+
+    const supabaseFiles: StorageFile[] = [];
+    const cloudbaseFiles: StorageFile[] = [];
+
+    // 获取 Supabase Storage 文件
+    if (supabaseAdmin) {
+      try {
+        const { data, error } = await supabaseAdmin.storage
+          .from("ads")
+          .list("", { limit: 100 });
+
+        if (!error && data) {
+          for (const file of data) {
+            const { data: urlData } = supabaseAdmin.storage
+              .from("ads")
+              .getPublicUrl(file.name);
+
+            supabaseFiles.push({
+              name: file.name,
+              url: urlData.publicUrl,
+              size: file.metadata?.size,
+              lastModified: file.updated_at,
+              source: "supabase",
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("List Supabase files warning:", err);
+      }
+    }
+
+    // 获取 CloudBase Storage 文件
+    try {
+      const connector = new CloudBaseConnector();
+      await connector.initialize();
+      const db = connector.getClient();
+      const app = connector.getApp();
+
+      const { data } = await db.collection("advertisements").get();
+
+      if (data && Array.isArray(data)) {
+        const fileIdList: string[] = [];
+        const adMap: Map<string, { ad: any; fileName: string }> = new Map();
+
+        for (const ad of data) {
+          if (ad.media_url) {
+            let fileId: string | null = null;
+            let fileName: string;
+
+            if (ad.media_url.startsWith("cloud://")) {
+              fileId = ad.media_url;
+              const pathParts = ad.media_url.split("/");
+              fileName = pathParts[pathParts.length - 1] || ad._id;
+            } else {
+              const urlParts = ad.media_url.split("/");
+              fileName = urlParts[urlParts.length - 1]?.split("?")[0] || ad._id;
+
+              cloudbaseFiles.push({
+                name: fileName,
+                url: ad.media_url,
+                size: ad.file_size,
+                lastModified: ad.created_at,
+                source: "cloudbase",
+                fileId: undefined,
+                adId: ad._id || ad.id,
+              });
+              continue;
+            }
+
+            if (fileId) {
+              fileIdList.push(fileId);
+              adMap.set(fileId, { ad, fileName });
+            }
+          }
+        }
+
+        if (fileIdList.length > 0) {
+          try {
+            const urlResult = await app.getTempFileURL({
+              fileList: fileIdList,
+            });
+
+            if (urlResult.fileList && Array.isArray(urlResult.fileList)) {
+              for (const fileInfo of urlResult.fileList) {
+                const mapEntry = adMap.get(fileInfo.fileID);
+                if (mapEntry) {
+                  const { ad, fileName } = mapEntry;
+                  const isSuccess = fileInfo.code === "SUCCESS" && fileInfo.tempFileURL;
+                  const displayUrl = isSuccess ? fileInfo.tempFileURL : ad.media_url;
+
+                  cloudbaseFiles.push({
+                    name: fileName,
+                    url: displayUrl,
+                    size: ad.file_size,
+                    lastModified: ad.created_at,
+                    source: "cloudbase",
+                    fileId: fileInfo.fileID,
+                    adId: ad._id || ad.id,
+                  });
+
+                  adMap.delete(fileInfo.fileID);
+                }
+              }
+            }
+
+            for (const [fileId, { ad, fileName }] of adMap) {
+              cloudbaseFiles.push({
+                name: fileName,
+                url: ad.media_url,
+                size: ad.file_size,
+                lastModified: ad.created_at,
+                source: "cloudbase",
+                fileId: fileId,
+                adId: ad._id || ad.id,
+              });
+            }
+          } catch (urlErr) {
+            console.error("CloudBase getTempFileURL error:", urlErr);
+            for (const [fileId, { ad, fileName }] of adMap) {
+              cloudbaseFiles.push({
+                name: fileName,
+                url: ad.media_url,
+                size: ad.file_size,
+                lastModified: ad.created_at,
+                source: "cloudbase",
+                fileId: fileId,
+                adId: ad._id || ad.id,
+              });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("List CloudBase files error:", err);
+    }
+
+    return {
+      success: true,
+      supabaseFiles,
+      cloudbaseFiles,
+    };
+  } catch (err) {
+    console.error("List storage files error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "获取文件列表失败",
+    };
+  }
+}
+
+/**
+ * 删除存储文件
+ */
+export async function deleteStorageFile(
+  fileName: string,
+  source: "supabase" | "cloudbase",
+  fileId?: string,
+  adId?: string
+): Promise<FileOperationResult> {
+  try {
+    await requireAdminSession();
+
+    if (source === "supabase") {
+      if (!supabaseAdmin) {
+        return { success: false, error: "Supabase 未配置" };
+      }
+
+      if (adId) {
+        try {
+          const db = await getDatabaseAdapter();
+          await db.deleteAd(adId);
+          console.log("Supabase ad record deleted:", adId);
+        } catch (dbErr) {
+          console.warn("Supabase delete ad record warning:", dbErr);
+        }
+      }
+
+      const { error } = await supabaseAdmin.storage
+        .from("ads")
+        .remove([fileName]);
+
+      if (error) {
+        console.error("Supabase delete file error:", error);
+        return { success: false, error: "删除文件失败" };
+      }
+    } else if (source === "cloudbase") {
+      try {
+        const connector = new CloudBaseConnector();
+        await connector.initialize();
+        const db = connector.getClient();
+        const app = connector.getApp();
+
+        if (adId) {
+          try {
+            await db.collection("advertisements").doc(adId).remove();
+            console.log("CloudBase ad record deleted:", adId);
+          } catch (dbErr) {
+            console.warn("CloudBase delete ad record warning:", dbErr);
+          }
+        }
+
+        if (fileId && fileId.startsWith("cloud://")) {
+          try {
+            await app.deleteFile({ fileList: [fileId] });
+            console.log("CloudBase file deleted:", fileId);
+          } catch (fileErr) {
+            console.warn("CloudBase delete file warning:", fileErr);
+          }
+        } else {
+          console.log("No valid CloudBase fileId provided, skipping file deletion");
+        }
+      } catch (err) {
+        console.error("CloudBase delete error:", err);
+        return { success: false, error: "删除 CloudBase 文件失败" };
+      }
+    }
+
+    revalidatePath("/admin/files");
+    revalidatePath("/admin/ads");
+    return { success: true };
+  } catch (err) {
+    console.error("Delete storage file error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "删除文件失败",
+    };
+  }
+}
+
+/**
+ * 重命名存储文件（Supabase）
+ */
+export async function renameStorageFile(
+  oldName: string,
+  newName: string,
+  source: "supabase" | "cloudbase"
+): Promise<FileOperationResult> {
+  try {
+    await requireAdminSession();
+
+    if (source === "supabase") {
+      if (!supabaseAdmin) {
+        return { success: false, error: "Supabase 未配置" };
+      }
+
+      const { data: fileData, error: downloadError } = await supabaseAdmin.storage
+        .from("ads")
+        .download(oldName);
+
+      if (downloadError || !fileData) {
+        console.error("Supabase download error:", downloadError);
+        return { success: false, error: "下载原文件失败" };
+      }
+
+      const buffer = Buffer.from(await fileData.arrayBuffer());
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("ads")
+        .upload(newName, buffer, {
+          contentType: fileData.type,
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("Supabase upload error:", uploadError);
+        return { success: false, error: "上传新文件失败" };
+      }
+
+      const { error: deleteError } = await supabaseAdmin.storage
+        .from("ads")
+        .remove([oldName]);
+
+      if (deleteError) {
+        console.warn("Supabase delete old file warning:", deleteError);
+      }
+
+      const { data: urlData } = supabaseAdmin.storage
+        .from("ads")
+        .getPublicUrl(newName);
+
+      const oldUrl = supabaseAdmin.storage.from("ads").getPublicUrl(oldName).data.publicUrl;
+
+      await supabaseAdmin
+        .from("advertisements")
+        .update({ media_url: urlData.publicUrl })
+        .eq("media_url", oldUrl);
+
+    } else if (source === "cloudbase") {
+      return { success: false, error: "CloudBase 暂不支持重命名文件（需要提供 fileId 和 adId）" };
+    }
+
+    revalidatePath("/admin/files");
+    revalidatePath("/admin/ads");
+    return { success: true };
+  } catch (err) {
+    console.error("Rename storage file error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "重命名文件失败",
+    };
+  }
+}
+
+/**
+ * CloudBase 文件重命名（需要 fileId 和 adId）
+ */
+export async function renameCloudBaseFile(
+  oldName: string,
+  newName: string,
+  fileId: string,
+  adId: string
+): Promise<FileOperationResult> {
+  try {
+    await requireAdminSession();
+
+    if (!fileId || !fileId.startsWith("cloud://")) {
+      return { success: false, error: "无效的 CloudBase fileId" };
+    }
+
+    const connector = new CloudBaseConnector();
+    await connector.initialize();
+    const db = connector.getClient();
+    const app = connector.getApp();
+
+    console.log("CloudBase rename: downloading file", fileId);
+    const downloadResult = await app.downloadFile({
+      fileID: fileId,
+    });
+
+    if (!downloadResult.fileContent) {
+      console.error("CloudBase download failed: no fileContent");
+      return { success: false, error: "下载原文件失败" };
+    }
+
+    const newCloudPath = `ads/${newName}`;
+    console.log("CloudBase rename: uploading to", newCloudPath);
+    const uploadResult = await app.uploadFile({
+      cloudPath: newCloudPath,
+      fileContent: downloadResult.fileContent,
+    });
+
+    if (!uploadResult.fileID) {
+      console.error("CloudBase upload failed: no fileID returned");
+      return { success: false, error: "上传新文件失败" };
+    }
+
+    console.log("CloudBase rename: new fileID", uploadResult.fileID);
+
+    try {
+      await db.collection("advertisements").doc(adId).update({
+        media_url: uploadResult.fileID,
+      });
+      console.log("CloudBase rename: database updated");
+    } catch (dbErr) {
+      console.error("CloudBase rename: database update failed", dbErr);
+      try {
+        await app.deleteFile({ fileList: [uploadResult.fileID] });
+      } catch {}
+      return { success: false, error: "更新数据库记录失败" };
+    }
+
+    try {
+      await app.deleteFile({ fileList: [fileId] });
+      console.log("CloudBase rename: old file deleted");
+    } catch (deleteErr) {
+      console.warn("CloudBase rename: delete old file warning", deleteErr);
+    }
+
+    revalidatePath("/admin/files");
+    revalidatePath("/admin/ads");
+    return { success: true };
+  } catch (err) {
+    console.error("CloudBase rename error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "重命名文件失败",
+    };
+  }
+}
+
+/**
+ * 下载存储文件
+ */
+export async function downloadStorageFile(
+  fileName: string,
+  source: "supabase" | "cloudbase",
+  fileId?: string
+): Promise<DownloadResult> {
+  try {
+    await requireAdminSession();
+
+    if (source === "supabase") {
+      if (!supabaseAdmin) {
+        return { success: false, error: "Supabase 未配置" };
+      }
+
+      const { data, error } = await supabaseAdmin.storage
+        .from("ads")
+        .download(fileName);
+
+      if (error || !data) {
+        console.error("Supabase download error:", error);
+        return { success: false, error: "下载文件失败" };
+      }
+
+      const buffer = Buffer.from(await data.arrayBuffer());
+      return {
+        success: true,
+        data: buffer.toString("base64"),
+        contentType: data.type,
+        fileName,
+      };
+    } else if (source === "cloudbase") {
+      if (!fileId || !fileId.startsWith("cloud://")) {
+        return { success: false, error: "无效的 CloudBase fileId" };
+      }
+
+      const connector = new CloudBaseConnector();
+      await connector.initialize();
+      const app = connector.getApp();
+
+      const downloadResult = await app.downloadFile({
+        fileID: fileId,
+      });
+
+      if (!downloadResult.fileContent) {
+        console.error("CloudBase download failed: no fileContent");
+        return { success: false, error: "下载文件失败" };
+      }
+
+      const buffer = Buffer.from(downloadResult.fileContent);
+
+      const ext = fileName.split(".").pop()?.toLowerCase();
+      let contentType = "application/octet-stream";
+      if (ext) {
+        const mimeTypes: Record<string, string> = {
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          png: "image/png",
+          gif: "image/gif",
+          webp: "image/webp",
+          svg: "image/svg+xml",
+          mp4: "video/mp4",
+          webm: "video/webm",
+          mov: "video/quicktime",
+          avi: "video/x-msvideo",
+        };
+        contentType = mimeTypes[ext] || contentType;
+      }
+
+      return {
+        success: true,
+        data: buffer.toString("base64"),
+        contentType,
+        fileName,
+      };
+    }
+
+    return { success: false, error: "不支持的数据源" };
+  } catch (err) {
+    console.error("Download storage file error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "下载文件失败",
     };
   }
 }

@@ -21,7 +21,7 @@ export function UpgradeModal({ isOpen, onClose, onUpgradeSuccess, currentRole }:
 
   const handleUpgrade = () => {
     // Determine region and redirect to appropriate payment page
-    const region = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION || "INTL"
+    const region = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION || "CN"
 
     if (region === "CN") {
       // Chinese region - redirect to Chinese payment page

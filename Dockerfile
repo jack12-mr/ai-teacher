@@ -26,6 +26,9 @@ ENV NEXT_PUBLIC_SUPABASE_URL="https://dummy.supabase.co"
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY="dummy_anon_key_for_build"
 ENV SUPABASE_SERVICE_ROLE_KEY="dummy_service_role_key_for_build"
 
+# 👇 重要：设置部署区域为国内版（CN=微信/支付宝，INTL=Stripe/PayPal）
+ENV NEXT_PUBLIC_DEPLOYMENT_REGION="CN"
+
 # 开始构建
 RUN npm run build
 

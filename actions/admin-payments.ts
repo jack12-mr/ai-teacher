@@ -19,6 +19,7 @@ import type {
   PaginatedResult,
 } from "@/lib/admin/types";
 import { revalidatePath } from "next/cache";
+import { unstable_noStore } from "next/cache";
 
 /**
  * 获取支付记录列表
@@ -102,6 +103,9 @@ export async function getPaymentStats(): Promise<ApiResponse<{
     paypal: number;
   };
 }>> {
+  // 禁用 Next.js 缓存，确保每次都获取最新数据
+  unstable_noStore();
+
   try {
     const session = await requireAdminSession();
     const db = await getDatabaseAdapter();

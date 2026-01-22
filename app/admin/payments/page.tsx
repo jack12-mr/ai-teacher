@@ -161,6 +161,7 @@ export default function PaymentsManagementPage() {
   function getStatusBadge(status: string) {
     switch (status) {
       case "completed":
+      case "paid":
         return (
           <Badge variant="default" className="bg-green-600 gap-1">
             <CheckCircle className="h-3 w-3" />
@@ -352,7 +353,7 @@ export default function PaymentsManagementPage() {
                 <div className="text-2xl font-bold">
                   {stats.total > 0
                     ? Math.round(
-                        (payments.filter((p) => p.status === "completed").length /
+                        (payments.filter((p) => p.status === "paid" || p.status === "completed").length /
                           stats.total) *
                           100
                       )

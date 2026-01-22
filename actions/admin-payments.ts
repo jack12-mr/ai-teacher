@@ -7,9 +7,6 @@
  * 支持双数据库（CloudBase + Supabase）
  */
 
-// 禁用 Next.js 缓存，确保每次都获取最新数据
-export const dynamic = 'force-dynamic';
-
 import { requireAdminSession } from "@/lib/admin/session";
 import { getDatabaseAdapter } from "@/lib/admin/database";
 import type {

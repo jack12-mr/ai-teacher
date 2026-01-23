@@ -122,6 +122,9 @@ export default function AdsManagementPage() {
     status: "active" as "active" | "inactive",
     startDate: "",
     endDate: "",
+    uploadTarget: "both" as "both" | "supabase" | "cloudbase",
+    fileSize: 0 as number,
+    file: null as File | null,
   });
 
   // ==================== 筛选后的广告列表 ====================
@@ -130,7 +133,7 @@ export default function AdsManagementPage() {
       if (filterStatus !== "all" && ad.status !== filterStatus) {
         return false;
       }
-      if (filterType !== "all" && ad.type !== filterType) {
+      if (filterType !== "all" && ad.source !== filterType) {
         return false;
       }
       if (filterPosition !== "all" && ad.position !== filterPosition) {
@@ -197,7 +200,26 @@ export default function AdsManagementPage() {
     setError(null);
 
     try {
-      const result = await createAd(formData);
+      // 构造 FormData
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("type", formData.type);
+      formDataToSend.append("position", formData.position);
+      formDataToSend.append("linkUrl", formData.linkUrl || "");
+      formDataToSend.append("priority", String(formData.priority));
+      formDataToSend.append("status", formData.status);
+      formDataToSend.append("uploadTarget", formData.uploadTarget);
+
+      // 添加文件
+      if (formData.file) {
+        formDataToSend.append("file", formData.file);
+      } else {
+        setError("请上传广告文件");
+        setSubmitting(false);
+        return;
+      }
+
+      const result = await createAd(formDataToSend);
 
       if (result.success) {
         setCreatingAd(false);
@@ -317,14 +339,32 @@ export default function AdsManagementPage() {
     return status === "active" ? (
       <Badge variant="default" className="bg-green-600 gap-1">
         <Power className="h-3 w-3" />
-        激活
+        上架
       </Badge>
     ) : (
       <Badge variant="outline" className="gap-1">
         <Power className="h-3 w-3" />
-        禁用
+        下架
       </Badge>
     );
+  }
+
+  function formatFileSize(bytes: number): string {
+    if (!bytes) return "-";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  }
+
+  function formatUploadTime(dateStr: string): string {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}/${month}/${day} ${hours}:${minutes}`;
   }
 
   function getTypeBadge(type: string) {
@@ -481,24 +521,13 @@ export default function AdsManagementPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
-                <SelectItem value="active">激活</SelectItem>
-                <SelectItem value="inactive">禁用</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="类型" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部类型</SelectItem>
-                <SelectItem value="image">图片</SelectItem>
-                <SelectItem value="video">视频</SelectItem>
+                <SelectItem value="active">上架</SelectItem>
+                <SelectItem value="inactive">下架</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={filterPosition} onValueChange={setFilterPosition}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="位置" />
               </SelectTrigger>
               <SelectContent>
@@ -510,6 +539,18 @@ export default function AdsManagementPage() {
                 <SelectItem value="bottom-left">左下角</SelectItem>
                 <SelectItem value="bottom-right">右下角</SelectItem>
                 <SelectItem value="sidebar">侧边栏</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="数据源" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部数据源</SelectItem>
+                <SelectItem value="supabase">Supabase</SelectItem>
+                <SelectItem value="cloudbase">CloudBase</SelectItem>
+                <SelectItem value="both">Both</SelectItem>
               </SelectContent>
             </Select>
 
@@ -554,13 +595,15 @@ export default function AdsManagementPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[80px]">排序</TableHead>
+                      <TableHead className="w-[100px]">预览</TableHead>
                       <TableHead>标题</TableHead>
-                      <TableHead>类型</TableHead>
-                      <TableHead>位置</TableHead>
-                      <TableHead>优先级</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>有效期</TableHead>
+                      <TableHead className="w-[100px]">数据源</TableHead>
+                      <TableHead className="w-[100px]">位置</TableHead>
+                      <TableHead className="w-[80px]">类型</TableHead>
+                      <TableHead className="w-[100px]">大小</TableHead>
+                      <TableHead className="w-[140px]">上传时间</TableHead>
+                      <TableHead className="w-[80px]">优先级</TableHead>
+                      <TableHead className="w-[80px]">状态</TableHead>
                       <TableHead className="text-right">操作</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -568,62 +611,61 @@ export default function AdsManagementPage() {
                     {filteredAds.map((ad) => (
                       <TableRow key={ad.id}>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-                            <span className="text-sm font-mono">{ad.priority}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10"
+                            onClick={() => setViewingAd(ad)}
+                            title="预览"
+                          >
                             {ad.type === "image" ? (
-                              <div className="h-12 w-12 rounded bg-muted overflow-hidden">
-                                <img
-                                  src={ad.fileUrl}
-                                  alt={ad.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
+                              <img
+                                src={ad.fileUrl}
+                                alt={ad.title}
+                                className="h-8 w-8 object-cover rounded"
+                              />
                             ) : (
-                              <div className="h-12 w-12 rounded bg-primary/10 flex items-center justify-center">
-                                <Video className="h-6 w-6 text-primary" />
+                              <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
+                                <Video className="h-4 w-4 text-primary" />
                               </div>
                             )}
-                            <div>
-                              <div className="font-medium text-sm">{ad.title}</div>
-                              <div className="text-xs text-muted-foreground">
-                                ID: {ad.id.slice(0, 8)}...
-                              </div>
-                            </div>
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium text-sm">{ad.title}</div>
+                          <div className="text-xs text-muted-foreground">
+                            ID: {ad.id.slice(0, 8)}...
                           </div>
                         </TableCell>
-                        <TableCell>{getTypeBadge(ad.type)}</TableCell>
+                        <TableCell>
+                          <Badge variant={ad.source === "both" ? "default" : "outline"}>
+                            {ad.source === "supabase" ? "Supabase" :
+                             ad.source === "cloudbase" ? "CloudBase" :
+                             ad.source === "both" ? "Both" : "Unknown"}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline">{getPositionLabel(ad.position)}</Badge>
+                        </TableCell>
+                        <TableCell>{getTypeBadge(ad.type)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {ad.file_size ? formatFileSize(ad.file_size) : "-"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatUploadTime(ad.created_at)}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">{ad.priority}</Badge>
                         </TableCell>
                         <TableCell>{getStatusBadge(ad.status)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDate(ad.startDate)} - {formatDate(ad.endDate)}
-                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => setViewingAd(ad)}
-                              title="预览"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
                               onClick={() => handleToggleStatus(ad)}
-                              title={ad.status === "active" ? "禁用" : "激活"}
+                              title={ad.status === "active" ? "下架" : "上架"}
                             >
                               <Power className="h-4 w-4" />
                             </Button>
@@ -799,38 +841,69 @@ export default function AdsManagementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fileUrl">文件 URL *</Label>
+              <Label htmlFor="file">上传文件 *</Label>
               <Input
-                id="fileUrl"
-                value={formData.fileUrl}
-                onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
-                placeholder="https://example.com/ad.jpg"
+                id="file"
+                type="file"
+                accept="image/*,video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setFormData({
+                      ...formData,
+                      file: file,
+                      fileSize: file.size,
+                      fileUrl: URL.createObjectURL(file)
+                    });
+                  }
+                }}
               />
-              {formData.type === "image" && formData.fileUrl && (
+              {formData.type === "image" && formData.file && (
                 <div className="mt-2 h-32 rounded border overflow-hidden">
                   <img src={formData.fileUrl} alt="预览" className="h-full w-full object-cover" />
                 </div>
+              )}
+              {formData.fileSize > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  文件大小: {formatFileSize(formData.fileSize)}
+                </p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="fileUrlCn">国内版文件 URL</Label>
-                <Input
-                  id="fileUrlCn"
-                  value={formData.fileUrlCn}
-                  onChange={(e) => setFormData({ ...formData, fileUrlCn: e.target.value })}
-                  placeholder="国内环境的文件URL（可选）"
-                />
+                <Label htmlFor="uploadTarget">数据源 *</Label>
+                <Select
+                  value={formData.uploadTarget}
+                  onValueChange={(value: any) => setFormData({ ...formData, uploadTarget: value })}
+                >
+                  <SelectTrigger id="uploadTarget">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="both">Both (Supabase + CloudBase)</SelectItem>
+                    <SelectItem value="supabase">Supabase (国际版)</SelectItem>
+                    <SelectItem value="cloudbase">CloudBase (国内版)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  选择广告存储到哪个数据库
+                </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="fileUrlIntl">国际版文件 URL</Label>
-                <Input
-                  id="fileUrlIntl"
-                  value={formData.fileUrlIntl}
-                  onChange={(e) => setFormData({ ...formData, fileUrlIntl: e.target.value })}
-                  placeholder="国际环境的文件URL（可选）"
-                />
+                <Label htmlFor="status">状态</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">上架</SelectItem>
+                    <SelectItem value="inactive">下架</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -842,42 +915,6 @@ export default function AdsManagementPage() {
                 onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
                 placeholder="https://example.com"
               />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">状态</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">激活</SelectItem>
-                    <SelectItem value="inactive">禁用</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="startDate">开始日期</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endDate">结束日期</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                />
-              </div>
             </div>
           </div>
           <DialogFooter>

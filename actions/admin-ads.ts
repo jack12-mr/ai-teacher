@@ -5,6 +5,7 @@
  *
  * 提供广告的创建、编辑、删除、列表查看等功能
  * 支持双数据库（CloudBase + Supabase）
+ * 支持文件上传到云存储
  */
 
 import { requireAdminSession } from "@/lib/admin/session";
@@ -21,6 +22,136 @@ import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { CloudBaseConnector } from "@/lib/cloudbase/connector";
 
+// ============================================================
+// 文件上传辅助函数
+// ============================================================
+
+/**
+ * 上传文件到 Supabase Storage
+ */
+async function uploadFileToSupabase(
+  file: File,
+  fileName: string
+): Promise<string | null> {
+  if (!supabaseAdmin) return null;
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filePath = `${fileName}`;
+
+    const { error } = await supabaseAdmin.storage
+      .from("ads")
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Supabase upload error:", error);
+      return null;
+    }
+
+    // 获取公开 URL
+    const { data: urlData } = supabaseAdmin.storage
+      .from("ads")
+      .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+  } catch (err) {
+    console.error("Supabase upload exception:", err);
+    return null;
+  }
+}
+
+/**
+ * 上传文件到 CloudBase Storage
+ * 返回 fileID（用于后续获取临时 URL）
+ */
+async function uploadFileToCloudBase(
+  file: File,
+  fileName: string
+): Promise<string | null> {
+  try {
+    const connector = new CloudBaseConnector();
+    await connector.initialize();
+    const app = connector.getApp();
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const cloudPath = `ads/${fileName}`;
+
+    console.log("CloudBase uploading to:", cloudPath);
+
+    // Node SDK 使用 uploadFile 方法
+    const uploadResult = await app.uploadFile({
+      cloudPath,
+      fileContent: buffer,
+    });
+
+    console.log("CloudBase upload result:", JSON.stringify(uploadResult, null, 2));
+
+    if (!uploadResult.fileID) {
+      console.error("CloudBase upload failed: no fileID returned");
+      return null;
+    }
+
+    console.log("CloudBase upload success, fileID:", uploadResult.fileID);
+
+    // 返回 fileID
+    return uploadResult.fileID;
+  } catch (err) {
+    console.error("CloudBase upload exception:", err);
+    return null;
+  }
+}
+
+/**
+ * 获取 CloudBase 文件的临时访问 URL
+ * 将 cloud:// fileID 转换为可访问的 HTTPS URL
+ */
+async function getCloudBaseTempUrls(
+  ads: Advertisement[]
+): Promise<Map<string, string>> {
+  const urlMap = new Map<string, string>();
+
+  // 收集所有 CloudBase 文件 ID
+  const cloudBaseFileIds: string[] = [];
+  const adIndexMap = new Map<string, number>();
+
+  for (let i = 0; i < ads.length; i++) {
+    const ad = ads[i];
+    if (ad.fileUrl && ad.fileUrl.startsWith("cloud://")) {
+      cloudBaseFileIds.push(ad.fileUrl);
+      adIndexMap.set(ad.fileUrl, i);
+    }
+  }
+
+  if (cloudBaseFileIds.length === 0) {
+    return urlMap;
+  }
+
+  try {
+    const connector = new CloudBaseConnector();
+    await connector.initialize();
+    const app = connector.getApp();
+
+    const result = await app.getTempFileURL({
+      fileList: cloudBaseFileIds,
+    });
+
+    if (result.fileList && Array.isArray(result.fileList)) {
+      for (const fileInfo of result.fileList) {
+        if (fileInfo.code === "SUCCESS" && fileInfo.tempFileURL) {
+          urlMap.set(fileInfo.fileID, fileInfo.tempFileURL);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("获取 CloudBase 临时 URL 失败:", error);
+  }
+
+  return urlMap;
+}
+
 /**
  * 获取广告列表
  */
@@ -34,13 +165,28 @@ export async function listAds(
     const ads = await db.listAds(filters || {});
     const total = await db.countAds(filters || {});
 
+    // 获取 CloudBase 文件的临时 URL
+    const tempUrlMap = await getCloudBaseTempUrls(ads);
+
+    // 将 CloudBase fileID 替换为临时 URL
+    const items = ads.map((ad) => {
+      if (ad.fileUrl && ad.fileUrl.startsWith("cloud://")) {
+        const tempUrl = tempUrlMap.get(ad.fileUrl);
+        return {
+          ...ad,
+          fileUrl: tempUrl || ad.fileUrl, // 如果获取临时 URL 失败，使用原 fileID
+        };
+      }
+      return ad;
+    });
+
     const pageSize = filters?.limit || 20;
     const page = filters?.offset ? Math.floor(filters.offset / pageSize) + 1 : 1;
 
     return {
       success: true,
       data: {
-        items: ads,
+        items,
         total,
         page,
         pageSize,
@@ -90,15 +236,96 @@ export async function getAdById(
 
 /**
  * 创建广告
+ * 支持文件上传到云存储
  */
 export async function createAd(
-  data: CreateAdData
+  data: CreateAdData | FormData
 ): Promise<ApiResponse<Advertisement>> {
   try {
     const session = await requireAdminSession();
 
+    let finalData: CreateAdData;
+
+    // 如果是 FormData，先处理文件上传
+    if (data instanceof FormData) {
+      const formData = data;
+
+      const title = formData.get("title") as string;
+      const type = formData.get("type") as "image" | "video";
+      const position = formData.get("position") as string;
+      const linkUrl = formData.get("linkUrl") as string;
+      const priority = parseInt(formData.get("priority") as string) || 0;
+      const status = formData.get("status") as "active" | "inactive";
+      const uploadTarget = formData.get("uploadTarget") as "both" | "supabase" | "cloudbase";
+      const file = formData.get("file") as File;
+
+      if (!title || !type || !position) {
+        return {
+          success: false,
+          error: "请填写必填字段",
+        };
+      }
+
+      if (!file || file.size === 0) {
+        return {
+          success: false,
+          error: "请上传广告文件",
+        };
+      }
+
+      // 生成唯一文件名
+      const ext = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      // 根据选择上传到对应存储
+      let fileUrl = "";
+      let fileSize = file.size;
+
+      if (uploadTarget === "both" || uploadTarget === "supabase") {
+        const supabaseUrl = await uploadFileToSupabase(file, fileName);
+        if (!supabaseUrl && uploadTarget === "supabase") {
+          return {
+            success: false,
+            error: "上传到 Supabase 失败",
+          };
+        }
+        if (supabaseUrl) {
+          fileUrl = supabaseUrl;
+        }
+      }
+
+      if (uploadTarget === "both" || uploadTarget === "cloudbase") {
+        const cloudbaseFileId = await uploadFileToCloudBase(file, fileName);
+        if (!cloudbaseFileId && uploadTarget === "cloudbase") {
+          return {
+            success: false,
+            error: "上传到 CloudBase 失败",
+          };
+        }
+        if (cloudbaseFileId) {
+          fileUrl = cloudbaseFileId;
+        }
+      }
+
+      // 构造 CreateAdData
+      finalData = {
+        title,
+        type,
+        position,
+        fileUrl,
+        linkUrl,
+        priority,
+        status,
+        uploadTarget,
+        fileSize,
+      };
+    } else {
+      // 直接是 CreateAdData 对象（兼容性处理）
+      finalData = data as CreateAdData;
+    }
+
     const db = await getDatabaseAdapter();
-    const ad = await db.createAd(data);
+    const ad = await db.createAd(finalData);
 
     // 记录操作日志
     await db.createLog({
@@ -107,7 +334,7 @@ export async function createAd(
       action: "ad.create",
       resource_type: "ad",
       resource_id: ad.id,
-      details: { title: data.title, position: data.position },
+      details: { title: finalData.title, position: finalData.position },
     });
 
     // 重新验证缓存

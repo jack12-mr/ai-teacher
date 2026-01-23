@@ -1130,6 +1130,7 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
       target_url: data.linkUrl,
       priority: data.priority ?? 0,
       is_active: data.status === "active",
+      file_size: data.fileSize || 0, // 添加文件大小
       created_at: now,
     };
 
@@ -1211,6 +1212,7 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
       endDate: undefined,
       created_at: doc.created_at,
       updated_at: doc.updated_at,
+      file_size: doc.file_size, // 添加文件大小字段
     };
   }
 

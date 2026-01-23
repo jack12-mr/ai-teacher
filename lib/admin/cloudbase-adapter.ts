@@ -1216,6 +1216,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
       endDate: doc.endDate || doc.end_date,
       created_at: doc.created_at,
       updated_at: doc.updated_at,
+      file_size: doc.file_size || doc.fileSize, // 添加文件大小字段
     };
   }
 

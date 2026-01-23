@@ -511,7 +511,7 @@ export class DualDatabaseAdapter implements AdminDatabaseAdapter {
    * 根据 ID 获取广告
    */
   async getAdById(id: string): Promise<Advertisement | null> {
-    const isCloudBaseId = /^[a-f0-9]{24}$/.test(id);
+    const isCloudBaseId = /^[a-f0-9]{24,32}$/.test(id);
 
     if (isCloudBaseId) {
       try {
@@ -530,6 +530,7 @@ export class DualDatabaseAdapter implements AdminDatabaseAdapter {
 
   /**
    * 列出广告
+   * 合并两个数据库的广告列表，并标记数据源
    */
   async listAds(filters?: AdFilters): Promise<Advertisement[]> {
     const [supabaseAds, cloudbaseAds] = await this.parallelQuery(
@@ -537,7 +538,31 @@ export class DualDatabaseAdapter implements AdminDatabaseAdapter {
       () => this.cloudbase.listAds(filters)
     );
 
-    return this.mergeArrays(supabaseAds, cloudbaseAds);
+    // 使用 Map 合并结果，标记数据源
+    const adsMap = new Map<string, Advertisement>();
+
+    // 处理 Supabase 广告
+    for (const ad of supabaseAds) {
+      adsMap.set(ad.id, { ...ad, source: "supabase" as const });
+    }
+
+    // 处理 CloudBase 广告
+    for (const ad of cloudbaseAds) {
+      const existing = adsMap.get(ad.id);
+      if (existing) {
+        // 两个数据库都有，标记为 both
+        adsMap.set(ad.id, { ...existing, source: "both" as const });
+      } else {
+        // 只在 CloudBase 有
+        adsMap.set(ad.id, { ...ad, source: "cloudbase" as const });
+      }
+    }
+
+    // 转换为数组并排序
+    return Array.from(adsMap.values()).sort((a, b) => {
+      if (b.priority !== a.priority) return b.priority - a.priority;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
   }
 
   /**
@@ -554,32 +579,102 @@ export class DualDatabaseAdapter implements AdminDatabaseAdapter {
 
   /**
    * 创建广告
-   * 同时在两个数据库创建（双写）
+   * 根据 uploadTarget 选择在哪个数据库创建
    */
   async createAd(data: CreateAdData): Promise<Advertisement> {
+    const uploadTarget = data.uploadTarget || "both";
+    const fileSize = data.fileSize || 0;
+
+    // 准备广告数据
+    const adData: any = {
+      title: data.title,
+      type: data.type,
+      position: data.position,
+      fileUrl: data.fileUrl,
+      linkUrl: data.linkUrl || null,
+      priority: data.priority || 0,
+      status: data.status || "active",
+      file_size: fileSize,
+    };
+
+    let supabaseResult: any = null;
+    let cloudbaseResult: any = null;
+
     // 在 Supabase 创建
-    return await this.supabase.createAd(data);
+    if (uploadTarget === "both" || uploadTarget === "supabase") {
+      try {
+        supabaseResult = await this.supabase.createAd(adData);
+      } catch (error) {
+        if (uploadTarget === "supabase") {
+          throw error;
+        }
+        console.warn("Supabase 创建广告失败:", error);
+      }
+    }
+
+    // 在 CloudBase 创建
+    if (uploadTarget === "both" || uploadTarget === "cloudbase") {
+      try {
+        cloudbaseResult = await this.cloudbase.createAd(adData);
+      } catch (error) {
+        if (uploadTarget === "cloudbase") {
+          throw error;
+        }
+        console.warn("CloudBase 创建广告失败:", error);
+      }
+    }
+
+    // 至少一个成功即可
+    if (!supabaseResult && !cloudbaseResult) {
+      throw new Error("创建广告失败：两个数据库都失败");
+    }
+
+    // 返回结果（优先返回 Supabase 的）
+    const result = supabaseResult || cloudbaseResult;
+    const source: "supabase" | "cloudbase" | "both" = uploadTarget === "both"
+      ? (supabaseResult && cloudbaseResult ? "both" : (supabaseResult ? "supabase" : "cloudbase"))
+      : uploadTarget;
+
+    return {
+      ...result,
+      source,
+      file_size: fileSize,
+    };
   }
 
   /**
    * 更新广告
+   * 同时更新两个数据库
    */
   async updateAd(id: string, data: UpdateAdData): Promise<Advertisement> {
-    try {
-      return await this.supabase.updateAd(id, data);
-    } catch (error) {
-      return await this.cloudbase.updateAd(id, data);
+    const results = await Promise.allSettled([
+      this.supabase.updateAd(id, data),
+      this.cloudbase.updateAd(id, data),
+    ]);
+
+    // 至少一个成功即可
+    const successResult = results.find(r => r.status === "fulfilled");
+    if (!successResult) {
+      throw new Error("更新广告失败：两个数据库都失败");
     }
+
+    return (successResult as PromiseFulfilledResult<Advertisement>).value;
   }
 
   /**
    * 删除广告
+   * 同时删除两个数据库的广告
    */
   async deleteAd(id: string): Promise<void> {
-    try {
-      await this.supabase.deleteAd(id);
-    } catch (error) {
-      await this.cloudbase.deleteAd(id);
+    const results = await Promise.allSettled([
+      this.supabase.deleteAd(id).catch(() => ({ error: "not found" })),
+      this.cloudbase.deleteAd(id).catch(() => ({ error: "not found" })),
+    ]);
+
+    // 至少一个成功即可
+    const successCount = results.filter(r => r.status === "fulfilled").length;
+    if (successCount === 0) {
+      throw new Error("删除广告失败");
     }
   }
 

@@ -668,15 +668,17 @@ export interface Advertisement {
   type: AdType;
   position: AdPosition;
   fileUrl: string;
-  fileUrlCn?: string; // 国内版本文件 URL
-  fileUrlIntl?: string; // 国际版本文件 URL
+  fileUrlCn?: string; // 国内版本文件 URL（保留字段，暂时不使用）
+  fileUrlIntl?: string; // 国际版本文件 URL（保留字段，暂时不使用）
   linkUrl?: string;
   priority: number;
   status: AdStatus;
-  startDate?: string;
-  endDate?: string;
+  startDate?: string; // 保留字段，暂时不使用
+  endDate?: string; // 保留字段，暂时不使用
   created_at: string;
   updated_at: string;
+  source?: "supabase" | "cloudbase" | "both"; // 数据源标识
+  file_size?: number; // 文件大小（字节）
 }
 
 /**
@@ -687,13 +689,15 @@ export interface CreateAdData {
   type: AdType;
   position: AdPosition;
   fileUrl: string;
-  fileUrlCn?: string;
-  fileUrlIntl?: string;
+  fileUrlCn?: string; // 保留字段，暂时不使用
+  fileUrlIntl?: string; // 保留字段，暂时不使用
   linkUrl?: string;
   priority?: number;
   status?: AdStatus;
-  startDate?: string;
-  endDate?: string;
+  startDate?: string; // 保留字段，暂时不使用
+  endDate?: string; // 保留字段，暂时不使用
+  uploadTarget?: "both" | "supabase" | "cloudbase"; // 上传目标
+  fileSize?: number; // 文件大小（字节）
 }
 
 /**

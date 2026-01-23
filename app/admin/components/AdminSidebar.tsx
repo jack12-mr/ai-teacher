@@ -13,7 +13,6 @@ import { adminLogoutAction } from "@/actions/admin-auth";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
-  Users,
   CreditCard,
   Image,
   FolderOpen,
@@ -38,11 +37,6 @@ const navItems = [
     href: "/admin/dashboard",
     label: "数据统计",
     icon: LayoutDashboard,
-  },
-  {
-    href: "/admin/users",
-    label: "用户管理",
-    icon: Users,
   },
   {
     href: "/admin/payments",

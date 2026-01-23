@@ -1144,6 +1144,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
       status: data.status ?? "active",
       startDate: data.startDate,
       endDate: data.endDate,
+      file_size: data.fileSize || data.file_size || 0,
       created_at: now,
       updated_at: now,
     };
@@ -1176,6 +1177,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     if (data.status !== undefined) update.status = data.status;
     if (data.startDate !== undefined) update.startDate = data.startDate;
     if (data.endDate !== undefined) update.endDate = data.endDate;
+    if (data.fileSize !== undefined || data.file_size !== undefined) update.file_size = data.fileSize || data.file_size;
 
     try {
       await this.db.collection("advertisements").doc(id).update(update);

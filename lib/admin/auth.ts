@@ -56,14 +56,18 @@ export async function adminLogin(
   }
 
   try {
-    // 获取数据库适配器
-    const db = await getDatabaseAdapter();
+    // 只查询 Supabase（单数据库架构，与模板项目一致）
+    const { getSupabaseAdmin } = await import("@/lib/integrations/supabase-admin");
+    const supabase = getSupabaseAdmin();
 
-    // 查找管理员
-    const admin = await db.getAdminByUsername(username);
+    const { data: admin, error } = await supabase
+      .from("admin_users")
+      .select("id, username, password_hash, role, status")
+      .eq("username", username)
+      .maybeSingle();
 
-    if (!admin) {
-      // 记录失败的登录尝试
+    if (error || !admin) {
+      console.error("[adminLogin] Supabase query failed:", error);
       await logFailedLoginAttempt(username, "user_not_found", ipAddress, userAgent);
       return {
         success: false,
@@ -80,17 +84,8 @@ export async function adminLogin(
       };
     }
 
-    // 获取密码（需要从数据库重新获取，因为 AdminUser 接口不包含密码）
-    const adminWithPassword = await getAdminWithPassword(username);
-    if (!adminWithPassword) {
-      return {
-        success: false,
-        error: "用户名或密码错误",
-      };
-    }
-
     // 验证密码
-    const isPasswordValid = await bcrypt.compare(password, adminWithPassword.password_hash);
+    const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
 
     if (!isPasswordValid) {
       await logFailedLoginAttempt(username, "invalid_password", ipAddress, userAgent);
@@ -101,31 +96,45 @@ export async function adminLogin(
     }
 
     // 更新最后登录时间
-    await db.updateAdmin(admin.id, {
-      last_login_at: new Date().toISOString(),
-    });
+    const { error: updateError } = await supabase
+      .from("admin_users")
+      .update({ last_login_at: new Date().toISOString() })
+      .eq("id", admin.id);
+
+    if (updateError) {
+      console.error("[adminLogin] Update last_login_at failed:", updateError);
+    }
 
     // 创建会话
     const session = createAdminSession(admin.id, admin.username, admin.role);
     await setAdminSessionCookie(session);
 
     // 记录登录日志
-    await db.createLog({
-      admin_id: admin.id,
-      admin_username: admin.username,
-      action: "admin.login",
-      resource_type: "admin",
-      resource_id: admin.id,
-      details: { login_method: "password" },
-      ip_address: ipAddress,
-      user_agent: userAgent,
-      status: "success",
-    });
+    const { error: logError } = await supabase
+      .from("admin_logs")
+      .insert({
+        admin_id: admin.id,
+        admin_username: admin.username,
+        action: "admin.login",
+        resource_type: "admin",
+        resource_id: admin.id,
+        details: { login_method: "password" },
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        status: "success",
+      });
+
+    if (logError) {
+      console.error("[adminLogin] Log creation failed:", logError);
+    }
 
     return {
       success: true,
       admin: {
-        ...admin,
+        id: admin.id,
+        username: admin.username,
+        role: admin.role,
+        status: admin.status,
         last_login_at: new Date().toISOString(),
       },
     };
@@ -235,20 +244,19 @@ export async function changePassword(
   }
 
   try {
-    const db = await getDatabaseAdapter();
+    // 只使用 Supabase（单数据库架构，与模板项目一致）
+    const { getSupabaseAdmin } = await import("@/lib/integrations/supabase-admin");
+    const supabase = getSupabaseAdmin();
 
     // 获取当前管理员
-    const admin = await db.getAdminById(adminId);
-    if (!admin) {
-      return {
-        success: false,
-        error: "管理员不存在",
-      };
-    }
+    const { data: admin, error: fetchError } = await supabase
+      .from("admin_users")
+      .select("id, username, password_hash")
+      .eq("id", adminId)
+      .single();
 
-    // 获取密码
-    const adminWithPassword = await getAdminWithPassword(admin.username);
-    if (!adminWithPassword) {
+    if (fetchError || !admin) {
+      console.error("[changePassword] Fetch admin failed:", fetchError);
       return {
         success: false,
         error: "管理员不存在",
@@ -256,7 +264,7 @@ export async function changePassword(
     }
 
     // 验证旧密码
-    const isOldPasswordValid = await bcrypt.compare(oldPassword, adminWithPassword.password_hash);
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, admin.password_hash);
 
     if (!isOldPasswordValid) {
       return {
@@ -265,21 +273,41 @@ export async function changePassword(
       };
     }
 
+    // 生成新密码哈希
+    const newHash = await hashPassword(newPassword);
+
     // 更新密码
-    await db.updateAdmin(adminId, {
-      password: newPassword,
-    });
+    const { error: updateError } = await supabase
+      .from("admin_users")
+      .update({ password_hash: newHash })
+      .eq("id", adminId);
+
+    if (updateError) {
+      console.error("[changePassword] Supabase update failed:", updateError);
+      return {
+        success: false,
+        error: "修改密码失败",
+      };
+    }
+
+    console.log("[changePassword] 密码更新成功");
 
     // 记录日志
-    await db.createLog({
-      admin_id: adminId,
-      admin_username: admin.username,
-      action: "admin.update",
-      resource_type: "admin",
-      resource_id: adminId,
-      details: { action: "change_password" },
-      status: "success",
-    });
+    const { error: logError } = await supabase
+      .from("admin_logs")
+      .insert({
+        admin_id: adminId,
+        admin_username: admin.username,
+        action: "admin.update",
+        resource_type: "admin",
+        resource_id: adminId,
+        details: { action: "change_password" },
+        status: "success",
+      });
+
+    if (logError) {
+      console.error("[changePassword] Log creation failed:", logError);
+    }
 
     return {
       success: true,
@@ -323,65 +351,6 @@ export async function requireSuperAdmin(adminId: string): Promise<void> {
   if (!hasPermission) {
     throw new Error("需要超级管理员权限");
   }
-}
-
-// ==================== 辅助函数 ====================
-
-/**
- * 获取包含密码的管理员信息（内部使用）
- *
- * 注意：此函数返回包含明文密码哈希的对象，仅用于密码验证
- *
- * @param username - 用户名
- * @returns 包含密码的管理员对象或 null
- */
-async function getAdminWithPassword(
-  username: string
-): Promise<{ id: string; username: string; password_hash: string; role: string; status: string } | null> {
-  // 查询两个数据库以支持双数据库架构
-  try {
-    // CloudBase 查询
-    const { getCloudBaseDatabase } = await import("@/lib/cloudbase/init");
-    const database = getCloudBaseDatabase();
-
-    const cloudbaseResult = await database
-      .collection("admin_users")
-      .where({ username })
-      .field({ id: true, username: true, password_hash: true, role: true, status: true })
-      .get();
-
-    if (cloudbaseResult.data.length > 0) {
-      return {
-        id: cloudbaseResult.data[0]._id,
-        username: cloudbaseResult.data[0].username,
-        password_hash: cloudbaseResult.data[0].password_hash,
-        role: cloudbaseResult.data[0].role,
-        status: cloudbaseResult.data[0].status,
-      };
-    }
-  } catch (error) {
-    console.error("CloudBase 查询失败:", error);
-  }
-
-  // Supabase 查询（作为后备或并行查询）
-  try {
-    const { getSupabaseAdmin } = await import("@/lib/integrations/supabase-admin");
-    const supabase = getSupabaseAdmin();
-
-    const result = await supabase
-      .from("admin_users")
-      .select("id, username, password_hash, role, status")
-      .eq("username", username)
-      .single();
-
-    if (result.data && !result.error) {
-      return result.data;
-    }
-  } catch (error) {
-    console.error("Supabase 查询失败:", error);
-  }
-
-  return null;
 }
 
 /**

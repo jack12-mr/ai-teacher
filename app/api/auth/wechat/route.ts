@@ -278,11 +278,11 @@ export async function GET(request: NextRequest) {
     // 构建微信授权 URL
     const redirectUri = callback || `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/wechat/callback`;
 
-    const wechatAuthUrl = new URL("https://open.weixin.qq.com/connect/qrconnect");
+    const wechatAuthUrl = new URL("https://open.weixin.qq.com/connect/oauth2/authorize");
     wechatAuthUrl.searchParams.set("appid", appId);
     wechatAuthUrl.searchParams.set("redirect_uri", redirectUri);
     wechatAuthUrl.searchParams.set("response_type", "code");
-    wechatAuthUrl.searchParams.set("scope", "snsapi_login");
+    wechatAuthUrl.searchParams.set("scope", "snsapi_userinfo");
     wechatAuthUrl.searchParams.set("state", state);
 
     return NextResponse.redirect(wechatAuthUrl.toString() + "#wechat_redirect");

@@ -11,7 +11,7 @@
  */
 
 import bcrypt from "bcryptjs";
-import { getCloudBaseDatabase } from "@/lib/cloudbase/init";
+import { CloudBaseConnector } from "@/lib/cloudbase/connector";
 import type {
   AdminUser,
   CreateAdminData,
@@ -50,9 +50,22 @@ import { handleDatabaseError, toISOString } from "./database";
  */
 export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
   private db: any;
+  private connector: CloudBaseConnector;
+  private initialized: boolean = false;
 
   constructor() {
-    this.db = getCloudBaseDatabase();
+    this.connector = new CloudBaseConnector();
+  }
+
+  /**
+   * 确保 CloudBase 已初始化
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (!this.initialized) {
+      await this.connector.initialize();
+      this.db = this.connector.getClient();
+      this.initialized = true;
+    }
   }
 
   // ==================== 辅助方法 ====================
@@ -1345,17 +1358,36 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 根据 ID 获取版本发布
    */
   async getReleaseById(id: string): Promise<Release | null> {
+    await this.ensureInitialized();
     try {
+      console.log(`[getReleaseById] 查询版本 ID: ${id}`);
       const result = await this.db.collection("releases").doc(id).get();
+
+      console.log(`[getReleaseById] 查询结果:`, {
+        hasData: !!result.data,
+        dataLength: result.data?.length,
+        requestId: result.requestId
+      });
+
       if (!result.data || result.data.length === 0) {
+        console.warn(`[getReleaseById] 未找到版本: ${id}`);
         return null;
       }
-      return this.dbToRelease(result.data[0]);
+
+      const release = this.dbToRelease(result.data[0]);
+      console.log(`[getReleaseById] 成功获取版本:`, { id: release.id, version: release.version });
+      return release;
     } catch (error: any) {
+      console.error(`[getReleaseById] 查询版本失败:`, { id, error: error.message, code: error.code });
+
       if (error.code === "DOC_NOT_FOUND") {
         return null;
       }
-      throw handleDatabaseError(error);
+
+      // 对于其他错误，也返回 null 而不是抛出异常
+      // 这样可以让调用方处理"未找到"的情况
+      console.warn(`[getReleaseById] 返回 null 而不是抛出异常`);
+      return null;
     }
   }
 
@@ -1363,6 +1395,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 列出版本发布
    */
   async listReleases(filters?: ReleaseFilters): Promise<Release[]> {
+    await this.ensureInitialized();
     const where: any = {};
 
     if (filters?.status) {
@@ -1408,6 +1441,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 统计版本发布数量
    */
   async countReleases(filters?: ReleaseFilters): Promise<number> {
+    await this.ensureInitialized();
     const where: any = {};
 
     if (filters?.status) {
@@ -1443,6 +1477,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 创建版本发布
    */
   async createRelease(data: CreateReleaseData): Promise<Release> {
+    await this.ensureInitialized();
     const now = new Date().toISOString();
 
     const doc: any = {
@@ -1461,10 +1496,40 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     }
 
     try {
+      // 使用 add() 方法，CloudBase Node SDK 会自动生成 ID
       const result = await this.db.collection("releases").add(doc);
-      const created = await this.db.collection("releases").doc(result.id).get();
-      return this.dbToRelease(created.data[0]);
+
+      console.log("[createRelease] CloudBase add() 返回结果:", result);
+
+      // 获取插入的文档 ID
+      let insertedId: string | undefined;
+      if (result && result.id) {
+        insertedId = result.id;
+      } else if (result && result.ids && result.ids.length > 0) {
+        insertedId = result.ids[0];
+      }
+
+      if (!insertedId) {
+        console.error("[createRelease] 无法获取插入的文档 ID:", result);
+        throw new DatabaseError("创建版本失败：无法获取文档 ID", "INSERT_FAILED");
+      }
+
+      console.log("[createRelease] 成功创建版本:", { insertedId, version: data.version });
+
+      // 返回完整的版本对象
+      return {
+        id: insertedId,
+        ...doc,
+      };
     } catch (error: any) {
+      console.error("[createRelease] 创建版本失败 - 详细错误信息:", {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack,
+        fullError: error,
+        docData: doc,
+      });
       throw handleDatabaseError(error);
     }
   }
@@ -1473,6 +1538,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 更新版本发布
    */
   async updateRelease(id: string, data: UpdateReleaseData): Promise<Release> {
+    await this.ensureInitialized();
     const update: any = {
       updated_at: new Date().toISOString(),
     };
@@ -1504,9 +1570,36 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 删除版本发布
    */
   async deleteRelease(id: string): Promise<void> {
+    await this.ensureInitialized();
     try {
-      await this.db.collection("releases").doc(id).remove();
+      console.log(`[deleteRelease] 删除版本 ID: ${id}`);
+
+      // 先验证文档是否存在
+      const existing = await this.db.collection("releases").doc(id).get();
+      if (!existing.data || existing.data.length === 0) {
+        console.warn(`[deleteRelease] 版本不存在: ${id}`);
+        throw new DatabaseError(`版本不存在: ${id}`, "DOC_NOT_FOUND");
+      }
+
+      // 删除文档
+      const result = await this.db.collection("releases").doc(id).remove();
+
+      console.log(`[deleteRelease] 删除结果:`, {
+        id,
+        requestId: result.requestId,
+        removed: result.removed
+      });
+
+      // 验证删除是否成功
+      const verify = await this.db.collection("releases").doc(id).get();
+      if (verify.data && verify.data.length > 0) {
+        console.error(`[deleteRelease] 删除后验证失败，文档仍存在: ${id}`);
+        throw new DatabaseError("删除失败：文档仍然存在", "DELETE_FAILED");
+      }
+
+      console.log(`[deleteRelease] 成功删除版本: ${id}`);
     } catch (error: any) {
+      console.error(`[deleteRelease] 删除版本失败:`, { id, error: error.message, code: error.code });
       throw handleDatabaseError(error);
     }
   }

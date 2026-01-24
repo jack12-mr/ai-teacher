@@ -53,9 +53,8 @@ function WechatCallbackContent() {
           localStorage.setItem("auth_user", JSON.stringify(data.user));
         }
 
-        // 跳转到目标页面
-        router.push(redirect);
-        router.refresh();
+        // 使用硬跳转确保 Cookie 已生效（解决 Race Condition）
+        window.location.href = redirect;
       } catch (err: any) {
         console.error("WeChat login error:", err);
         setError(err.message || "微信登录失败，请重试");

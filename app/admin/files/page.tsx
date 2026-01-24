@@ -357,11 +357,19 @@ export default function FilesManagementPage() {
                     title="点击预览"
                   >
                     {fileType === "image" ? (
-                      <img
-                        src={file.url}
-                        alt={file.name}
-                        className="w-12 h-12 object-cover rounded"
-                      />
+                      file.source === "cloudbase" ? (
+                        // CloudBase 文件使用占位符，因为临时 URL 会过期
+                        <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded flex items-center justify-center">
+                          <ImageIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                      ) : (
+                        // Supabase 文件直接显示，因为使用的是公开 URL
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      )
                     ) : fileType === "video" ? (
                       <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded flex items-center justify-center">
                         <Video className="h-5 w-5 text-muted-foreground" />

@@ -169,14 +169,9 @@ export function SubscriptionCard() {
             {t.subscription.upgradeToPro}
           </Button>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={handleRenew} className="cursor-pointer">
-              {t.subscription.renewSubscription}
-            </Button>
-            <Button variant="ghost" className="text-muted-foreground cursor-pointer">
-              {t.subscription.cancel}
-            </Button>
-          </div>
+          <Button variant="outline" onClick={handleRenew} className="w-full cursor-pointer">
+            {t.subscription.renewSubscription}
+          </Button>
         )}
 
         <Separator />

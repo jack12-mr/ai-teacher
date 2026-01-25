@@ -134,7 +134,7 @@ export function PaymentHistory() {
                 {payments.map((payment) => (
                   <TableRow key={payment.id}>
                     <TableCell className="font-mono text-xs">
-                      {payment.paymentId.slice(0, 16)}...
+                      {payment.paymentId?.slice(0, 16) || 'N/A'}...
                     </TableCell>
                     <TableCell className="font-semibold">
                       {formatAmount(payment.amount, payment.currency)}
@@ -145,7 +145,7 @@ export function PaymentHistory() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={statusColors[payment.status]}>
+                      <Badge className={statusColors[payment.status] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'}>
                         {statusLabels[payment.status] || payment.status}
                       </Badge>
                     </TableCell>

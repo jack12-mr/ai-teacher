@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJwtToken, getUserById } from "@/lib/cloudbase/cloudbase-service";
+import { getCloudBaseApp } from "@/lib/cloudbase/init";
+import { CLOUDBASE_COLLECTIONS } from "@/lib/database/cloudbase-schema";
 
 // 生成默认头像 SVG
 function generateDefaultAvatar(name: string, email: string): string {
@@ -51,6 +53,40 @@ export async function GET(request: NextRequest) {
         { error: "用户不存在" },
         { status: 404 }
       );
+    }
+
+    // 检查用户是否有 pro 状态但订阅已过期
+    if (user.pro) {
+      const db = getCloudBaseApp().database();
+      const { data: subs } = await db
+        .collection(CLOUDBASE_COLLECTIONS.SUBSCRIPTIONS)
+        .where({ user_id: userId })
+        .orderBy("created_at", "desc")
+        .limit(1)
+        .get();
+
+      if (subs && subs.length > 0) {
+        const sub = subs[0];
+        const endDate = new Date(sub.end_date);
+        const isExpired = endDate < new Date();
+
+        if (isExpired && user.pro) {
+          const now = new Date().toISOString();
+
+          // 更新用户的 pro 状态
+          await db
+            .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
+            .doc(userId)
+            .update({
+              pro: false,
+              subscription_status: "expired",
+              updated_at: now,
+            });
+
+          user.pro = false;
+          user.subscription_status = "expired";
+        }
+      }
     }
 
     // 如果用户没有头像，生成默认头像

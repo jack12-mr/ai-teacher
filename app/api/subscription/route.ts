@@ -54,6 +54,36 @@ export async function GET(request: NextRequest) {
     const isExpired = endDate < new Date();
     const status = isExpired ? "expired" : sub.status;
 
+    // 如果订阅已过期且数据库状态未更新，则更新数据库
+    if (isExpired && sub.status !== "expired") {
+      const now = new Date().toISOString();
+
+      // 更新订阅记录状态
+      await db
+        .collection(CLOUDBASE_COLLECTIONS.SUBSCRIPTIONS)
+        .doc(sub._id)
+        .update({
+          status: "expired",
+          updated_at: now,
+        });
+
+      // 更新用户的 pro 状态
+      await db
+        .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
+        .doc(userId)
+        .update({
+          pro: false,
+          subscription_status: "expired",
+          updated_at: now,
+        });
+
+      logInfo("Subscription expired and updated", {
+        userId,
+        subscriptionId: sub._id,
+        endDate: sub.end_date,
+      });
+    }
+
     logInfo("Subscription fetched", {
       userId,
       plan: sub.plan,

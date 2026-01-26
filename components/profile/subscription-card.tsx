@@ -77,12 +77,12 @@ export function SubscriptionCard() {
 
   const handleUpgrade = () => {
     // 跳转到升级页面或打开升级弹窗
-    window.location.href = "/upgrade"
+    window.location.href = "/payment"
   }
 
   const handleRenew = () => {
     // 跳转到续费页面
-    window.location.href = "/upgrade?action=renew"
+    window.location.href = "/payment"
   }
 
   if (isLoading) {
@@ -169,8 +169,13 @@ export function SubscriptionCard() {
             {t.subscription.upgradeToPro}
           </Button>
         ) : (
-  
-  
+          <Button
+            onClick={handleRenew}
+            variant="outline"
+            className="w-full"
+          >
+            续费订阅
+          </Button>
         )}
 
         <Separator />

@@ -156,7 +156,6 @@ export default function HomePage() {
               <div className="text-2xl font-bold text-neutral-950 dark:text-white">
                 SkillMap
               </div>
-              <div className="text-sm text-neutral-500 dark:text-neutral-400">{t.home.tagline}</div>
             </div>
             <div className="flex items-center space-x-3">
               {userProfile.weeklyRank > 0 && (

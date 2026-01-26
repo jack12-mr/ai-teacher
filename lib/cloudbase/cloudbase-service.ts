@@ -119,11 +119,14 @@ export async function loginUser(
     }
 
     // 更新用户登录信息
-    await usersCollection.doc(user._id).update({
+    const updateResult = await usersCollection.doc(user._id).update({
       last_login_at: new Date().toISOString(),
       last_login_ip: options?.ipAddress,
       login_count: (user.login_count || 0) + 1,
     });
+
+    console.log("[CloudBase Service] ✅ 登录信息更新结果:", updateResult);
+    console.log("[CloudBase Service] 用户ID:", user._id, "| last_login_at:", new Date().toISOString());
 
     return {
       success: true,

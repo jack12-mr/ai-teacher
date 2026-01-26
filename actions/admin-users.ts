@@ -48,6 +48,16 @@ export async function getUserStats(): Promise<ApiResponse<{
     // 获取所有用户进行统计
     const allUsers = await db.listUsers({ limit: 10000 });
 
+    // Debug logging
+    console.log("[getUserStats] Total users fetched:", allUsers.length);
+    const usersWithLastLogin = allUsers.filter(u => u.last_login_at).length;
+    const usersWithoutLastLogin = allUsers.length - usersWithLastLogin;
+    console.log("[getUserStats] Users with last_login_at:", usersWithLastLogin);
+    console.log("[getUserStats] Users without last_login_at:", usersWithoutLastLogin);
+    console.log("[getUserStats] Date range - startOfMonthAgo:", startOfMonthAgo);
+    console.log("[getUserStats] Date range - startOfDay:", startOfDay);
+    console.log("[getUserStats] Date range - startOfWeek:", startOfWeek);
+
     // 在内存中统计
     const free = allUsers.filter(u =>
       !u.subscription_plan || u.subscription_plan === "free"
@@ -80,6 +90,10 @@ export async function getUserStats(): Promise<ApiResponse<{
     const dailyActive = allUsers.filter(u =>
       u.last_login_at && u.last_login_at >= startOfDay
     ).length;
+
+    console.log("[getUserStats] Monthly active (30 days):", monthlyActive);
+    console.log("[getUserStats] Daily active:", dailyActive);
+    console.log("[getUserStats] Weekly active:", activeThisWeek);
 
     const paidUsers = pro + enterprise;
     const conversionRate = allUsers.length > 0

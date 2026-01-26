@@ -627,6 +627,8 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 列出普通用户
    */
   async listUsers(filters?: UserFilters): Promise<User[]> {
+    await this.ensureInitialized();
+
     const where: any = {};
 
     if (filters?.status) {

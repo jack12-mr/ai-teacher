@@ -9,10 +9,10 @@ import { CloudBaseConnector } from "@/lib/cloudbase/connector";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adId = params.id;
+    const { id: adId } = await params;
     const { type } = await request.json();
 
     if (type !== 'click' && type !== 'impression') {

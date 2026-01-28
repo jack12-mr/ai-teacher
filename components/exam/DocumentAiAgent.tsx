@@ -86,6 +86,20 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
         newMessages[newMessages.length - 1].content = buffer
         return newMessages
       })
+
+      // 【新增】实时提取标签（当检测到完整的JSON块时）
+      const jsonMatch = buffer.match(/<<<JSON>>>(.*?)<<<JSON>>>/s)
+      if (jsonMatch) {
+        try {
+          const data = JSON.parse(jsonMatch[1])
+          if (data.update && Array.isArray(data.update)) {
+            setRequirements(prev => mergeRequirements(prev, data.update))
+          }
+        } catch (e) {
+          // JSON还未完整，等待更多数据
+          console.debug('Incomplete JSON, waiting for more data...')
+        }
+      }
     }
 
     return buffer

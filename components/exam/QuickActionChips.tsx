@@ -1,21 +1,26 @@
 'use client'
 
+import { useT } from '@/lib/i18n'
+
 interface QuickActionChipsProps {
   onChipClick: (message: string) => void
 }
 
-const QUICK_ACTIONS = [
-  '2026年真题卷',
-  '针对函数考点',
-  '难度：中等',
-  '难度：困难',
-  '5道题目',
-  '阅读理解',
-  '选择题',
-  '高考真题'
-]
-
 export function QuickActionChips({ onChipClick }: QuickActionChipsProps) {
+  const t = useT()
+
+  // Define actions with translations
+  const QUICK_ACTIONS = [
+    '2026年真题卷',
+    '针对函数考点',
+    `${t.exam.difficulty.label || '难度'}：${t.exam.difficulty.medium}`,
+    `${t.exam.difficulty.label || '难度'}：${t.exam.difficulty.hard}`,
+    '5道题目',
+    '阅读理解',
+    '选择题',
+    '高考真题'
+  ]
+
   return (
     <div className="w-full overflow-x-auto pb-2">
       <div className="flex gap-2 min-w-max px-1">

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSearchGuidancePrompts } from '@/lib/i18n/ai-prompts';
 
 /**
  * 联网搜索考试大纲 API
@@ -20,6 +21,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 获取区域适配的 AI 提示词
+    const prompts = getSearchGuidancePrompts();
+
     // 构建搜索提示词
     const searchPrompt = buildSearchPrompt(examType, examName, requirements);
 
@@ -35,34 +39,7 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `你是一个专业的考试备考助手。请根据用户的考试需求，联网搜索最新的考试大纲、题型分布、重点知识点等信息。
-
-请以 JSON 格式返回，包含以下字段：
-{
-  "examInfo": {
-    "name": "考试全称",
-    "officialWebsite": "官方网站",
-    "examTime": "考试时间",
-    "totalScore": "总分",
-    "duration": "考试时长"
-  },
-  "syllabus": [
-    {
-      "chapter": "章节名称",
-      "weight": "占比百分比",
-      "keyPoints": ["重点1", "重点2"],
-      "questionTypes": ["题型1", "题型2"]
-    }
-  ],
-  "questionDistribution": {
-    "选择题": "数量或分值",
-    "填空题": "数量或分值",
-    "解答题": "数量或分值"
-  },
-  "preparationTips": ["备考建议1", "备考建议2"],
-  "recentChanges": "最近的考纲变化（如有）",
-  "searchSources": ["信息来源1", "信息来源2"]
-}`
+            content: prompts.systemPrompt
           },
           {
             role: 'user',
@@ -135,53 +112,20 @@ export async function POST(request: NextRequest) {
  * 构建搜索提示词
  */
 function buildSearchPrompt(examType: string, examName: string, requirements?: string): string {
-  const requirementsText = requirements ? `\n\n用户特定需求：${requirements}` : '';
+  // 获取区域适配的提示词
+  const prompts = getSearchGuidancePrompts();
+  const examPrompts = prompts.examTypes;
 
-  const examPrompts: Record<string, string> = {
-    'postgraduate': `请联网搜索 ${examName} 考研的最新考试大纲和信息，包括：
-1. 2025年最新考试大纲和变化
-2. 各科目分值分布和题型
-3. 重点章节和知识点
-4. 历年真题考查重点
-5. 备考建议和时间规划${requirementsText}`,
+  // 根据考试类型获取对应的提示词函数
+  const promptFn = examPrompts[examType as keyof typeof examPrompts] || examPrompts.default;
 
-    'cet4': `请联网搜索 大学英语四级(CET-4) 的最新考试信息，包括：
-1. 最新考试大纲和题型改革
-2. 各部分分值和时间分配
-3. 听力、阅读、写作、翻译的考查重点
-4. 词汇量要求和高频词汇
-5. 提分技巧和备考策略${requirementsText}`,
-
-    'cet6': `请联网搜索 大学英语六级(CET-6) 的最新考试信息，包括：
-1. 最新考试大纲
-2. 与四级的难度差异
-3. 各题型的评分标准
-4. 高频考点和词汇
-5. 高分备考策略${requirementsText}`,
-
-    'civilService': `请联网搜索 ${examName} 公务员考试的最新信息，包括：
-1. 行测和申论的最新大纲
-2. 各模块题量和分值
-3. 考试时间和形式
-4. 近年考查热点
-5. 备考资料推荐${requirementsText}`,
-
-    'professional': `请联网搜索 ${examName} 职业资格考试的最新信息，包括：
-1. 最新考试大纲
-2. 考试科目和题型
-3. 报考条件和时间
-4. 通过率和难度分析
-5. 备考建议${requirementsText}`,
-
-    'default': `请联网搜索 ${examName} 考试的最新信息，包括：
-1. 考试大纲和范围
-2. 题型分布和分值
-3. 重点知识点
-4. 备考建议
-5. 相关学习资源${requirementsText}`
-  };
-
-  return examPrompts[examType] || examPrompts['default'];
+  // 调用函数生成提示词
+  if (examType === 'postgraduate' || examType === 'civilService' || examType === 'professional' || examType === 'default') {
+    return promptFn(examName, requirements);
+  } else {
+    // cet4, cet6 不需要 examName 参数
+    return (promptFn as (requirements?: string) => string)(requirements);
+  }
 }
 
 /**

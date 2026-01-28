@@ -2,6 +2,7 @@
 
 import { Requirement } from '@/lib/requirement-parser'
 import { X, Sparkles } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 
 interface RequirementTagsProps {
   requirements: Requirement[]
@@ -9,7 +10,37 @@ interface RequirementTagsProps {
 }
 
 export function RequirementTags({ requirements, onRemove }: RequirementTagsProps) {
+  const t = useT()
+
   if (requirements.length === 0) return null
+
+  // Translate category names
+  const translateCategory = (category: string): string => {
+    const categoryMap: Record<string, string> = {
+      '科目': t.exam.subject || 'Subject',
+      '难度': t.exam.difficulty.label || 'Difficulty',
+      '题型': t.exam.questionType || 'Question Type',
+      '考点': t.exam.keyPoint || 'Key Point',
+      '年份': t.exam.year || 'Year',
+      '数量': t.exam.count || 'Count',
+      '学段': t.exam.level || 'Level',
+      '考点/活动': t.exam.activity || 'Activity'
+    }
+    return categoryMap[category] || category
+  }
+
+  // Translate difficulty values
+  const translateValue = (category: string, value: string): string => {
+    if (category === '难度') {
+      const difficultyMap: Record<string, string> = {
+        '简单': t.exam.difficulty.easy,
+        '中等': t.exam.difficulty.medium,
+        '困难': t.exam.difficulty.hard
+      }
+      return difficultyMap[value] || value
+    }
+    return value
+  }
 
   return (
     <div className="w-full backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border border-gray-200 dark:border-white/10 rounded-2xl p-4 shadow-lg">
@@ -29,7 +60,7 @@ export function RequirementTags({ requirements, onRemove }: RequirementTagsProps
             className="group flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 border border-blue-200/50 dark:border-blue-400/30 backdrop-blur-sm transition-all duration-200 hover:shadow-md hover:scale-105"
           >
             <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              {req.category}: <span className="text-blue-600 dark:text-blue-400">{req.value}</span>
+              {translateCategory(req.category)}: <span className="text-blue-600 dark:text-blue-400">{translateValue(req.category, req.value)}</span>
             </span>
             <button
               onClick={() => onRemove(req.category)}

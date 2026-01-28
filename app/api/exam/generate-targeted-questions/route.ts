@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getTargetedQuestionsPrompts } from '@/lib/i18n/ai-prompts';
 
 /**
  * AI 针对性出题 API
@@ -69,6 +70,9 @@ export async function POST(request: NextRequest) {
     const mediumCount = Math.ceil(count * 0.3);
     const strongCount = count - weakCount - mediumCount;
 
+    // 获取区域适配的 AI 提示词
+    const prompts = getTargetedQuestionsPrompts();
+
     // 构建针对性出题提示词
     const prompt = buildTargetedPrompt(
       subjectName,
@@ -90,39 +94,7 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `你是一个专业的个性化学习出题专家。你的任务是根据学生的能力评估结果，生成针对其薄弱环节的练习题目。
-
-核心原则：
-1. 题目必须精准针对学生的薄弱知识点
-2. 难度要适中，既要有挑战性，又不能太难打击信心
-3. 解析要详细，帮助学生真正理解知识点
-4. 题目类型以单选题为主，确保可自动判分
-
-题目格式要求（JSON数组）：
-{
-  "id": "唯一ID，如 tq-1",
-  "type": "single",
-  "content": "题目内容（清晰、准确）",
-  "options": ["A. 选项1", "B. 选项2", "C. 选项3", "D. 选项4"],
-  "correctAnswer": 0,
-  "explanation": "详细解析，包含知识点讲解",
-  "difficulty": 3,
-  "knowledgePoint": "具体知识点",
-  "dimensionId": "对应的评估维度ID",
-  "dimensionName": "对应的评估维度名称"
-}
-
-注意事项：
-- correctAnswer 是正确选项的索引（0-3）
-- difficulty 范围是 1-5（1最简单，5最难）
-- 薄弱环节的题目难度建议 2-3
-- 中等环节的题目难度建议 3-4
-- 优势环节的题目难度建议 4-5
-- 【重要】数学公式格式要求：
-  * 行内公式（嵌入在文本中）必须用 $...$ 包裹
-  * 独立公式块用 $$...$$ 包裹
-  * 示例：$x^2 + y^2 = r^2$ 或 $$\int_{-\infty}^{+\infty} e^{-x^2} dx = \sqrt{\pi}$$
-  * 不要使用 \(...\) 或 \[...\] 格式`
+            content: prompts.systemPrompt
           },
           {
             role: 'user',

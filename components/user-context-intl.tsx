@@ -16,9 +16,6 @@ import {
   clearSupabaseUserCache,
 } from "@/lib/auth/auth-state-manager-intl";
 
-// 获取 Supabase 客户端实例
-const supabase = getSupabaseClient();
-
 export interface UserProfile {
   id: string;
   email: string;
@@ -53,6 +50,9 @@ export function UserProviderIntl({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthInitialized, setIsAuthInitialized] = useState(false);
+
+  // 获取 Supabase 客户端实例（延迟初始化）
+  const supabase = useMemo(() => getSupabaseClient(), []);
 
   // 邮箱密码登录
   const signInWithPassword = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {

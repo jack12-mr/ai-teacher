@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDocumentQuestionsPrompts } from '@/lib/i18n/ai-prompts';
 
 /**
  * 基于文档内容生成题目 API
@@ -25,7 +26,7 @@ export interface GeneratedQuestion {
 
 export async function POST(request: NextRequest) {
   try {
-    const { documentContent, examName, count = 10 } = await request.json();
+    const { documentContent, examName, count = 10, requirements = [] } = await request.json();
 
     if (!documentContent || documentContent.trim().length === 0) {
       return NextResponse.json(
@@ -41,8 +42,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 获取区域适配的 AI 提示词
+    const prompts = getDocumentQuestionsPrompts();
+
     // 构建出题提示词
-    const prompt = buildDocumentQuestionPrompt(documentContent, examName, count);
+    const prompt = buildDocumentQuestionPrompt(documentContent, examName, count, requirements);
 
     // 调用通义千问 API 生成题目
     const response = await fetch(DASHSCOPE_API_URL, {
@@ -56,60 +60,7 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `你是一个专业的考试出题专家。请根据用户提供的文档内容，生成高质量的考试题目。
-
-你需要生成三种类型的题目：
-1. 单选题 (type: "single")：4个选项，只有1个正确答案
-2. 多选题 (type: "multiple")：4个选项，有2-4个正确答案
-3. 填空题 (type: "fill")：题目中用"____"表示空位，可以有1-3个空
-
-要求：
-1. 题目必须基于提供的文档内容
-2. 难度分布：简单题 40%、中等题 40%、困难题 20%
-3. 根据文档内容自动决定题型比例，如果内容适合出填空题就出填空题
-4. 多选题必须明确标注为多选题
-5. 填空题答案必须是精确的文本，用于严格匹配
-6. 【重要】数学公式格式要求：
-   - 行内公式（嵌入在文本中）必须用 $...$ 包裹
-   - 独立公式块用 $$...$$ 包裹
-   - 示例：$x^2 + y^2 = r^2$ 或 $$\int_{-\infty}^{+\infty} e^{-x^2} dx = \sqrt{\pi}$$
-   - 不要使用 \(...\) 或 \[...\] 格式
-
-请以 JSON 格式返回，格式如下：
-{
-  "questions": [
-    {
-      "id": "唯一ID",
-      "type": "single",
-      "content": "题目内容",
-      "options": ["选项A", "选项B", "选项C", "选项D"],
-      "correctAnswer": 0,
-      "explanation": "详细解析",
-      "difficulty": 2,
-      "knowledgePoint": "知识点名称"
-    },
-    {
-      "id": "唯一ID",
-      "type": "multiple",
-      "content": "【多选题】题目内容",
-      "options": ["选项A", "选项B", "选项C", "选项D"],
-      "correctAnswer": [0, 2],
-      "explanation": "详细解析",
-      "difficulty": 3,
-      "knowledgePoint": "知识点名称"
-    },
-    {
-      "id": "唯一ID",
-      "type": "fill",
-      "content": "____是中国的首都，位于____地区。",
-      "correctAnswer": ["北京", "华北"],
-      "explanation": "详细解析",
-      "difficulty": 1,
-      "knowledgePoint": "知识点名称",
-      "blanksCount": 2
-    }
-  ]
-}`
+            content: prompts.systemPrompt
           },
           {
             role: 'user',
@@ -214,22 +165,53 @@ export async function POST(request: NextRequest) {
 function buildDocumentQuestionPrompt(
   documentContent: string,
   examName: string,
-  count: number
+  count: number,
+  requirements: any[]
 ): string {
-  // 计算难度分布
-  const easyCount = Math.round(count * 0.4);
-  const mediumCount = Math.round(count * 0.4);
-  const hardCount = count - easyCount - mediumCount;
+  // 提取题型要求
+  const questionTypeReq = requirements.find(r => r.category === '题型');
+  const difficultyReq = requirements.find(r => r.category === '难度');
+
+  // 构建题型指令
+  let questionTypeInstructions = '';
+  if (questionTypeReq) {
+    const type = questionTypeReq.value;
+    if (type === '填空题') {
+      questionTypeInstructions = '- 全部生成填空题 (type: "fill")，题目中用"____"表示空位';
+    } else if (type === '选择题') {
+      questionTypeInstructions = '- 全部生成选择题（单选或多选）';
+    } else if (type === '判断题') {
+      questionTypeInstructions = '- 全部生成判断题（作为单选题，选项为"正确"和"错误"）';
+    }
+  } else {
+    questionTypeInstructions = '- 根据文档内容自动决定题型（单选题、多选题、填空题）';
+  }
+
+  // 构建难度指令
+  let difficultyInstructions = '';
+  if (difficultyReq) {
+    const difficulty = difficultyReq.value;
+    if (difficulty === '简单') {
+      difficultyInstructions = '- 简单题（难度1-2）：100%';
+    } else if (difficulty === '中等') {
+      difficultyInstructions = '- 中等题（难度3）：100%';
+    } else if (difficulty === '困难') {
+      difficultyInstructions = '- 困难题（难度4-5）：100%';
+    }
+  } else {
+    const easyCount = Math.round(count * 0.4);
+    const mediumCount = Math.round(count * 0.4);
+    const hardCount = count - easyCount - mediumCount;
+    difficultyInstructions = `- 简单题（难度1-2）：约 ${easyCount} 道\n- 中等题（难度3）：约 ${mediumCount} 道\n- 困难题（难度4-5）：约 ${hardCount} 道`;
+  }
 
   return `请根据以下文档内容，为【${examName || '考试'}】生成 ${count} 道高质量题目。
 
 难度分布要求：
-- 简单题（难度1-2）：约 ${easyCount} 道
-- 中等题（难度3）：约 ${mediumCount} 道
-- 困难题（难度4-5）：约 ${hardCount} 道
+${difficultyInstructions}
 
 题型要求：
-- 根据文档内容自动决定题型（单选题、多选题、填空题）
+${questionTypeInstructions}
 - 如果文档中有明确的概念定义，适合出填空题
 - 如果有多个相关知识点，适合出多选题
 - 多选题的题目内容必须以"【多选题】"开头

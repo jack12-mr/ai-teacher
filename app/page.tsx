@@ -22,6 +22,8 @@ import { UserAvatarMenu } from "@/components/navigation/user-avatar-menu"
 import { LanguageSwitcher } from "@/components/navigation/language-switcher"
 import { ModeToggle } from "@/components/ModeToggle"
 import { useT } from "@/lib/i18n"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { MobileHeaderMenu } from "@/components/navigation/mobile-header-menu"
 
 // 根据区域选择正确的 hook
 const useAuth = isChinaRegion() ? useAuthCN : useUserIntl
@@ -47,6 +49,7 @@ export default function HomePage() {
   const router = useRouter()
   const { isAuthenticated, isLoading, user } = useAuth()
   const t = useT()
+  const isMobile = useIsMobile()
   const [currentStep, setCurrentStep] = useState<"assessment" | "results" | "paths">("assessment")
   const [userSkills, setUserSkills] = useState<UserSkills>({})
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -152,68 +155,116 @@ export default function HomePage() {
       <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="text-2xl font-bold text-neutral-950 dark:text-white">
-                SkillMap
-              </div>
+            {/* Logo - always visible */}
+            <div className="text-2xl font-bold text-neutral-950 dark:text-white">
+              SkillMap
             </div>
-            <div className="flex items-center space-x-3">
-              {userProfile.weeklyRank > 0 && (
-                <Badge variant="outline" className="border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  {t.home.weeklyRank} #{userProfile.weeklyRank}
-                </Badge>
-              )}
-              {userProfile.isPremium ? (
-                <Badge className="bg-indigo-600 text-white border-0">
-                  <Crown className="w-3 h-3 mr-1" />
-                  Premium
-                </Badge>
-              ) : (
+
+            {/* Desktop Navigation */}
+            {!isMobile && (
+              <div className="flex items-center space-x-3">
+                {userProfile.weeklyRank > 0 && (
+                  <Badge variant="outline" className="border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    {t.home.weeklyRank} #{userProfile.weeklyRank}
+                  </Badge>
+                )}
+                {userProfile.isPremium ? (
+                  <Badge className="bg-indigo-600 text-white border-0">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Premium
+                  </Badge>
+                ) : (
+                  <Button
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    {t.home.upgradePro}
+                  </Button>
+                )}
+                <LanguageSwitcher />
+                <ModeToggle />
                 <Button
-                  onClick={() => setShowUpgradeModal(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  onClick={handleStartAiCoach}
+                  variant="outline"
+                  className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  disabled={!userProfile.role}
                 >
-                  <Crown className="w-4 h-4 mr-2" />
-                  {t.home.upgradePro}
+                  <Brain className="w-4 h-4 mr-2" />
+                  {t.home.aiCoach} {!userProfile.isPremium && `(${3 - aiCoachSessions}/3)`}
                 </Button>
-              )}
-              <LanguageSwitcher />
-              <ModeToggle />
-              <Button
-                onClick={handleStartAiCoach}
-                variant="outline"
-                className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                disabled={!userProfile.role}
-              >
-                <Brain className="w-4 h-4 mr-2" />
-                {t.home.aiCoach} {!userProfile.isPremium && `(${3 - aiCoachSessions}/3)`}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push('/exam/review')}
-                className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              >
-                <BookMarked className="w-4 h-4 mr-2" />
-                {t.home.viewWrongBook}
-              </Button>
-              <UserAvatarMenu />
-            </div>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push('/exam/review')}
+                  className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <BookMarked className="w-4 h-4 mr-2" />
+                  {t.home.viewWrongBook}
+                </Button>
+                <UserAvatarMenu />
+              </div>
+            )}
+
+            {/* Mobile Navigation */}
+            {isMobile && (
+              <div className="flex items-center space-x-2">
+                {userProfile.isPremium && (
+                  <Badge className="bg-indigo-600 text-white border-0 text-xs px-2 py-1">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Pro
+                  </Badge>
+                )}
+                <MobileHeaderMenu>
+                  {!userProfile.isPremium && (
+                    <Button
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="w-full justify-start min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      {t.home.upgradePro}
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleStartAiCoach}
+                    variant="outline"
+                    className="w-full justify-start min-h-[44px]"
+                    disabled={!userProfile.role}
+                  >
+                    <Brain className="w-4 h-4 mr-2" />
+                    {t.home.aiCoach} {!userProfile.isPremium && `(${3 - aiCoachSessions}/3)`}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/exam/review')}
+                    className="w-full justify-start min-h-[44px]"
+                  >
+                    <BookMarked className="w-4 h-4 mr-2" />
+                    {t.home.viewWrongBook}
+                  </Button>
+                  <div className="border-t border-neutral-200 dark:border-neutral-800 pt-3 mt-3 space-y-3">
+                    <LanguageSwitcher />
+                    <ModeToggle />
+                    <UserAvatarMenu />
+                  </div>
+                </MobileHeaderMenu>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-8 max-w-6xl">
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="mb-4">
-            <h1 className="text-3xl font-bold tracking-tight text-neutral-950 dark:text-white">{t.home.discoverSkills}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white">{t.home.discoverSkills}</h1>
           </div>
 
           {/* Step Indicator */}
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
             <div
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-colors ${
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs md:text-sm transition-colors ${
                 currentStep === "assessment"
                   ? "bg-indigo-600 text-white"
                   : userProfile.assessmentProgress > 0
@@ -224,9 +275,9 @@ export default function HomePage() {
               <div className="w-2 h-2 rounded-full bg-current" />
               <span>{t.home.skillAssessment}</span>
             </div>
-            <div className="w-8 h-px bg-neutral-300 dark:bg-neutral-700" />
+            <div className="w-4 h-px md:w-8 bg-neutral-300 dark:bg-neutral-700 hidden md:block" />
             <div
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-colors ${
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs md:text-sm transition-colors ${
                 currentStep === "results"
                   ? "bg-indigo-600 text-white"
                   : userProfile.role
@@ -237,9 +288,9 @@ export default function HomePage() {
               <div className="w-2 h-2 rounded-full bg-current" />
               <span>{t.home.rolePositioning}</span>
             </div>
-            <div className="w-8 h-px bg-neutral-300 dark:bg-neutral-700" />
+            <div className="w-4 h-px md:w-8 bg-neutral-300 dark:bg-neutral-700 hidden md:block" />
             <div
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm transition-colors ${
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs md:text-sm transition-colors ${
                 currentStep === "paths"
                   ? "bg-indigo-600 text-white"
                   : userProfile.isPremium
@@ -287,7 +338,7 @@ export default function HomePage() {
                 </div>
 
                 <Tabs defaultValue="classification" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+                <TabsList className="grid w-full grid-cols-1 md:grid-cols-2 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
                   <TabsTrigger value="classification" className="data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-950 data-[state=active]:text-indigo-600">
                     {t.home.roleAnalysis}
                   </TabsTrigger>

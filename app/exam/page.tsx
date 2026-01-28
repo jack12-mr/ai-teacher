@@ -26,9 +26,10 @@ import { EXAM_PRESETS } from "@/lib/exam-mock-data"
 import { parseFile, validateFile, MAX_FILE_SIZE } from "@/lib/file-parser"
 import { useT } from "@/lib/i18n"
 import { AiRequirementAgent } from "@/components/exam/AiRequirementAgent"
+import { DocumentAiAgent } from "@/components/exam/DocumentAiAgent"
 import { Requirement } from "@/lib/requirement-parser"
 
-type Step = 'goal' | 'source' | 'config' | 'processing' | 'ready'
+type Step = 'goal' | 'source' | 'config' | 'processing' | 'ready' | 'document-chat'
 type SourceType = 'upload' | 'search' | null
 type Mode = 'traditional' | 'ai-guide'
 
@@ -102,6 +103,9 @@ function ExamSetupContent() {
   // 拖拽上传状态
   const [isDragOver, setIsDragOver] = useState(false)
 
+  // 文档内容状态（用于AI对话）
+  const [parsedDocumentContent, setParsedDocumentContent] = useState<string>('')
+
   // 获取考试类型
   const getExamType = (name: string): string => {
     const lowerName = name.toLowerCase()
@@ -112,18 +116,65 @@ function ExamSetupContent() {
     return 'default'
   }
 
+  // 处理AI明确需求按钮
+  const handleAiClarify = async () => {
+    if (!uploadedFile) return
+
+    try {
+      setProcessingProgress(10)
+      const parseResult = await parseFile(uploadedFile)
+
+      if (!parseResult.success || !parseResult.text) {
+        setFileError(parseResult.error || '文件解析失败')
+        return
+      }
+
+      // 保存解析的文档内容
+      setParsedDocumentContent(parseResult.text)
+
+      // 进入文档AI对话步骤
+      setStep('document-chat')
+    } catch (error) {
+      console.error('文件解析失败:', error)
+      setFileError('文件解析失败，请重试')
+    }
+  }
+
   // 处理下一步
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 'goal' && examName) {
       setStep('source')
     } else if (step === 'source' && sourceType) {
-      setStep('processing')
       if (sourceType === 'search') {
         // 真实联网搜索
+        setStep('processing')
         performWebSearch()
-      } else {
-        // 真实文件处理
-        processUploadedFile()
+      } else if (sourceType === 'upload' && uploadedFile) {
+        // 文件上传：如果已选择题目数量，直接生成；否则进入AI对话
+        try {
+          setProcessingProgress(10)
+          const parseResult = await parseFile(uploadedFile)
+
+          if (!parseResult.success || !parseResult.text) {
+            setFileError(parseResult.error || '文件解析失败')
+            return
+          }
+
+          // 保存解析的文档内容
+          setParsedDocumentContent(parseResult.text)
+
+          // 如果用户已选择题目数量，直接进入处理步骤
+          if (questionCount > 0) {
+            setStep('processing')
+            processUploadedFile()
+          } else {
+            // 否则进入文档AI对话步骤
+            setStep('document-chat')
+          }
+        } catch (error) {
+          console.error('文件解析失败:', error)
+          setFileError('文件解析失败，请重试')
+        }
       }
     }
   }
@@ -700,6 +751,69 @@ function ExamSetupContent() {
     }
   }
 
+  // 处理文档AI对话后的生成
+  const handleDocumentGeneration = async (requirements: Requirement[], count: number) => {
+    setStep('processing')
+    setProcessingProgress(0)
+    setProcessingSteps([])
+    setSearchError(null)
+
+    // 清除之前的题目缓存
+    localStorage.removeItem('generatedQuestions')
+    localStorage.removeItem('generatedExamName')
+    localStorage.removeItem('examSyllabus')
+
+    try {
+      setProcessingSteps([`🤖 AI 正在基于文档生成 ${count} 道精选题目...`])
+      setProcessingProgress(20)
+
+      const response = await fetch('/api/exam/generate-from-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentContent: parsedDocumentContent,
+          examName: examName,
+          count: count,
+          requirements: requirements
+        })
+      })
+
+      setProcessingProgress(70)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'AI 生成题目失败')
+      }
+
+      const data = await response.json()
+
+      if (!data.success || !data.questions || data.questions.length === 0) {
+        throw new Error(data.error || 'AI 返回的题目为空')
+      }
+
+      setProcessingSteps(prev => [...prev, `📝 已生成 ${data.questions.length} 道题目`])
+      setProcessingProgress(90)
+
+      // 保存生成的题目到 localStorage
+      localStorage.setItem('generatedQuestions', JSON.stringify(data.questions))
+      localStorage.setItem('generatedExamName', examName)
+
+      setProcessingSteps(prev => [...prev, `🎉 题库生成完成！共 ${data.questions.length} 道精选题目`])
+      setProcessingProgress(100)
+
+      await new Promise(resolve => setTimeout(resolve, 500))
+      setStep('ready')
+
+    } catch (error) {
+      console.error('文档出题失败:', error)
+      setSearchError(error instanceof Error ? error.message : '文档出题失败，请稍后重试')
+      setProcessingSteps(prev => [...prev, '⚠️ 出题失败，请重试'])
+      setProcessingProgress(100)
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      setStep('document-chat')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
@@ -1052,11 +1166,12 @@ function ExamSetupContent() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => router.push('/')}
-                  className="flex-1 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  onClick={handleAiClarify}
+                  disabled={!sourceType || (sourceType === 'upload' && !uploadedFile)}
+                  className="flex-1 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  {t.examSetup.prevStep}
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI明确需求
                 </Button>
                 <div className="flex-1">
                   <Button
@@ -1073,6 +1188,50 @@ function ExamSetupContent() {
                     </p>
                   )}
                 </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Step 2.5: 文档AI对话 */}
+          {step === 'document-chat' && (
+            <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Dashboard Header */}
+              <div className="flex items-center justify-between mb-6 p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                {/* Left: File Status */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-600 dark:bg-indigo-500 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-neutral-950 dark:text-white">{uploadedFile?.name || '文档'}</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                      {uploadedFile ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB` : '已加载'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: Hint */}
+                <div className="text-right">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    💡 告诉AI你的需求，定制专属题库
+                  </p>
+                </div>
+              </div>
+
+              <DocumentAiAgent
+                documentContent={parsedDocumentContent}
+                onStartGeneration={handleDocumentGeneration}
+              />
+
+              <div className="mt-4 flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setStep('source')}
+                  className="flex-1 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  返回上传
+                </Button>
               </div>
             </Card>
           )}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getQuestionGenerationPrompts } from '@/lib/i18n/ai-prompts';
 
 /**
  * AI 动态出题 API
@@ -31,6 +32,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 获取区域适配的 AI 提示词
+    const prompts = getQuestionGenerationPrompts();
+
     // 构建出题提示词
     const prompt = buildQuestionPrompt(examType, examName, syllabus, count, requirements);
 
@@ -46,31 +50,7 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `你是一个专业的考试出题专家。请根据用户提供的考试信息，生成高质量的选择题。
-
-要求：
-1. 题目必须符合该考试的真实难度和风格
-2. 每道题必须有 4 个选项（A、B、C、D）
-3. 必须提供正确答案和详细解析
-4. 题目难度要有梯度分布（1-5 星）
-5. 覆盖不同的知识点
-6. 【重要】数学公式格式要求：
-   - 行内公式（嵌入在文本中）必须用 $...$ 包裹
-   - 独立公式块用 $$...$$ 包裹
-   - 示例：$x^2 + y^2 = r^2$ 或 $$\int_{-\infty}^{+\infty} e^{-x^2} dx = \sqrt{\pi}$$
-   - 不要使用 \(...\) 或 \[...\] 格式
-
-请以 JSON 数组格式返回题目，每道题的格式如下：
-{
-  "id": "唯一ID",
-  "question": "题目内容",
-  "options": ["选项A", "选项B", "选项C", "选项D"],
-  "correctAnswer": 0, // 正确答案索引 (0-3)
-  "explanation": "详细解析",
-  "difficulty": 2, // 难度 1-5
-  "knowledgePoint": "知识点名称",
-  "category": "所属章节/类别"
-}`
+            content: prompts.systemPrompt
           },
           {
             role: 'user',
@@ -164,6 +144,10 @@ function buildQuestionPrompt(
   count: number,
   requirements?: string
 ): string {
+  // 获取区域适配的提示词
+  const prompts = getQuestionGenerationPrompts();
+  const examRequirements = prompts.examTypes;
+
   // 基础提示
   let prompt = `请为【${examName}】考试生成 ${count} 道高质量选择题。\n\n`;
 
@@ -173,50 +157,7 @@ function buildQuestionPrompt(
   }
 
   // 根据考试类型添加特定要求
-  const examRequirements: Record<string, string> = {
-    'cet4': `
-这是大学英语四级考试，题目类型应包括：
-- 词汇语法题（考查词汇辨析、固定搭配、语法知识）
-- 阅读理解题（考查细节理解、主旨大意、推理判断）
-- 完形填空题（考查上下文理解、词汇运用）
-- 翻译题知识点（考查中英互译能力）
-
-难度要求：四级水平，词汇量约4500词`,
-
-    'cet6': `
-这是大学英语六级考试，题目类型应包括：
-- 词汇语法题（考查高级词汇、复杂句式）
-- 阅读理解题（考查深层理解、批判性思维）
-- 完形填空题（考查语篇连贯、逻辑推理）
-- 翻译题知识点（考查文化、经济、社会话题翻译）
-
-难度要求：六级水平，词汇量约6000词`,
-
-    'postgraduate': `
-这是考研数学/英语/政治考试，题目应：
-- 符合研究生入学考试难度
-- 覆盖考纲重点内容
-- 包含计算题、概念题、应用题等
-- 难度分布：基础题40%、中等题40%、难题20%`,
-
-    'civilService': `
-这是公务员考试，题目类型应包括：
-- 言语理解与表达
-- 数量关系
-- 判断推理（图形、定义、类比、逻辑）
-- 资料分析
-- 常识判断
-
-难度要求：符合国考/省考真题难度`,
-
-    'default': `
-请根据考试特点生成合适的选择题，确保：
-- 题目表述清晰准确
-- 选项设置合理，干扰项有迷惑性
-- 难度适中，有一定区分度`
-  };
-
-  prompt += examRequirements[examType] || examRequirements['default'];
+  prompt += examRequirements[examType as keyof typeof examRequirements] || examRequirements.default;
 
   // 如果有考纲信息，加入考纲要求
   if (syllabus && syllabus.length > 0) {

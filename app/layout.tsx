@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   title: isChina ? 'AI 教师助手' : 'AI Teacher Assistant',
   description: isChina ? '智能教学辅助平台' : 'Smart Teaching Platform',
   generator: 'v0.dev',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 }
 
 export default function RootLayout({

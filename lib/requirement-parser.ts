@@ -20,9 +20,9 @@ export function parseRequirements(text: string): Requirement[] {
 export function extractRequirementsFromUserMessage(text: string, previousAiMessage?: string): Requirement[] {
   const requirements: Requirement[] = []
 
-  // 检查用户是否在确认（如果是确认，则从 AI 的上一条消息中提取）
-  const isConfirmation = /^(需要|好的?|是的?|可以|行|对|嗯|确认|同意)$/i.test(text.trim())
-  const textToExtract = isConfirmation && previousAiMessage ? previousAiMessage : text
+  // 【关键修改】只从用户的直接消息中提取，不再从AI建议中提取
+  // 用户必须明确说出需求，而不是简单地确认AI的建议
+  const textToExtract = text
 
   // 题型 - Collect all question types
   const questionTypes: string[] = []
@@ -31,6 +31,8 @@ export function extractRequirementsFromUserMessage(text: string, previousAiMessa
   if (/判断题/.test(textToExtract)) questionTypes.push('判断题')
   if (/简答题/.test(textToExtract)) questionTypes.push('简答题')
   if (/计算题/.test(textToExtract)) questionTypes.push('计算题')
+  if (/案例分析题|案例题/.test(textToExtract)) questionTypes.push('案例分析题')
+  if (/翻译题/.test(textToExtract)) questionTypes.push('翻译题')
 
   // Combine multiple question types with "+"
   if (questionTypes.length > 0) {
@@ -42,7 +44,7 @@ export function extractRequirementsFromUserMessage(text: string, previousAiMessa
   else if (/中等|适中/.test(textToExtract)) requirements.push({ category: '难度', value: '中等' })
   else if (/简单|容易|基础/.test(textToExtract)) requirements.push({ category: '难度', value: '简单' })
 
-  // 数量
+  // 数量 - 匹配"5道"、"10题"等格式
   const countMatch = textToExtract.match(/(\d+)\s*[道题个]/);
   if (countMatch) requirements.push({ category: '数量', value: `${countMatch[1]}道` })
 

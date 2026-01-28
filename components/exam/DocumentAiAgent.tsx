@@ -99,11 +99,9 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
     setInput('')
     setIsStreaming(true)
 
-    // 从用户消息中提取需求标签（如果用户是确认，则从 AI 的上一条消息中提取）
-    const previousAiMessage = messages.length > 0 && messages[messages.length - 1].role === 'assistant'
-      ? messages[messages.length - 1].content
-      : undefined
-    const newRequirements = extractRequirementsFromUserMessage(message, previousAiMessage)
+    // 【关键修改】只在用户明确表达需求时才提取标签
+    // 不再从AI的建议中自动提取，必须是用户自己说出来的需求
+    const newRequirements = extractRequirementsFromUserMessage(message, undefined)
     if (newRequirements.length > 0) {
       setRequirements(prev => mergeRequirements(prev, newRequirements))
     }

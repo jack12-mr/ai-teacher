@@ -16,6 +16,18 @@ export function RequirementTags({ requirements, onRemove }: RequirementTagsProps
 
   // Translate category names
   const translateCategory = (category: string): string => {
+    // 【修复】检查category是否已经是英文格式
+    // 如果已经是英文，直接返回，避免重复翻译
+    const englishCategories = [
+      'Subject', 'Difficulty', 'Question Type',
+      'Key Point', 'Year', 'Count', 'Level', 'Activity'
+    ]
+
+    if (englishCategories.includes(category)) {
+      return category
+    }
+
+    // 中文category映射（只映射中文key）
     const categoryMap: Record<string, string> = {
       '科目': t.exam.subject || 'Subject',
       '难度': t.exam.difficulty.label || 'Difficulty',
@@ -26,6 +38,7 @@ export function RequirementTags({ requirements, onRemove }: RequirementTagsProps
       '学段': t.exam.level || 'Level',
       '考点/活动': t.exam.activity || 'Activity'
     }
+
     return categoryMap[category] || category
   }
 

@@ -3,18 +3,33 @@ export interface Requirement {
   value: string
 }
 
-export function parseRequirements(text: string): Requirement[] {
+export function parseRequirements(text: string): {
+  updates: Requirement[]
+  removes: Requirement[]
+} {
   const regex = /<<<JSON>>>(.*?)<<<JSON>>>/gs
   const matches = [...text.matchAll(regex)]
 
-  return matches.flatMap(match => {
+  const result = {
+    updates: [] as Requirement[],
+    removes: [] as Requirement[]
+  }
+
+  matches.forEach(match => {
     try {
       const data = JSON.parse(match[1])
-      return data.update || []
+      if (data.update && Array.isArray(data.update)) {
+        result.updates = [...result.updates, ...data.update]
+      }
+      if (data.remove && Array.isArray(data.remove)) {
+        result.removes = [...result.removes, ...data.remove]
+      }
     } catch {
-      return []
+      // Ignore malformed JSON
     }
   })
+
+  return result
 }
 
 export function extractRequirementsFromUserMessage(text: string, previousAiMessage?: string): Requirement[] {

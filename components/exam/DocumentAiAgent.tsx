@@ -92,17 +92,8 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
       if (jsonMatch) {
         try {
           const data = JSON.parse(jsonMatch[1])
-          // 处理 update 指令
           if (data.update && Array.isArray(data.update)) {
             setRequirements(prev => mergeRequirements(prev, data.update))
-          }
-          // 处理 remove 指令
-          if (data.remove && Array.isArray(data.remove)) {
-            setRequirements(prev => prev.filter(req =>
-              !data.remove.some((r: Requirement) =>
-                r.category === req.category && r.value === req.value
-              )
-            ))
           }
         } catch (e) {
           // JSON还未完整，等待更多数据
@@ -168,20 +159,9 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
       const assistantMessage = await processStream(reader)
 
       // 从AI响应中提取JSON格式的需求
-      const { updates, removes } = parseRequirements(assistantMessage)
-
-      // 处理 update 指令
-      if (updates.length > 0) {
-        setRequirements(prev => mergeRequirements(prev, updates))
-      }
-
-      // 处理 remove 指令
-      if (removes.length > 0) {
-        setRequirements(prev => prev.filter(req =>
-          !removes.some(r =>
-            r.category === req.category && r.value === req.value
-          )
-        ))
+      const aiRequirements = parseRequirements(assistantMessage)
+      if (aiRequirements.length > 0) {
+        setRequirements(prev => mergeRequirements(prev, aiRequirements))
       }
 
     } catch (error) {

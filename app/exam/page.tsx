@@ -854,41 +854,8 @@ function ExamSetupContent() {
         </div>
       ) : (
         <>
-          {/* Progress Steps */}
-          <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-center gap-4 mb-8">
-          {['goal', 'source', 'processing', 'ready'].map((s, i) => (
-            <div key={s} className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                  step === s
-                    ? 'bg-indigo-600 text-white scale-110'
-                    : ['goal', 'source', 'processing', 'ready'].indexOf(step) > i
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400'
-                }`}
-              >
-                {['goal', 'source', 'processing', 'ready'].indexOf(step) > i ? (
-                  <CheckCircle className="w-5 h-5" />
-                ) : (
-                  i + 1
-                )}
-              </div>
-              {i < 3 && (
-                <div
-                  className={`w-16 h-1 mx-2 rounded ${
-                    ['goal', 'source', 'processing', 'ready'].indexOf(step) > i
-                      ? 'bg-emerald-600'
-                      : 'bg-neutral-300 dark:bg-neutral-700'
-                  }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Step Content */}
-        <div className="max-w-2xl mx-auto">
+          {/* Step Content */}
+          <div className="max-w-2xl mx-auto">
           {/* Step 1: 设置考试目标 */}
           {step === 'goal' && (
             <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1426,8 +1393,7 @@ function ExamSetupContent() {
             </Card>
           )}
         </div>
-      </div>
-      </>
+        </>
       )}
     </div>
   )

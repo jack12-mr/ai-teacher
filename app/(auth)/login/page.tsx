@@ -97,7 +97,7 @@ function LoginContent() {
               <WechatLoginButton
                 onError={(error) => setWechatError(error)}
                 onSuccess={() => {
-                  window.location.href = "/"
+                  window.location.href = "/dashboard"
                 }}
               />
 

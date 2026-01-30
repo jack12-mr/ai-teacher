@@ -110,7 +110,7 @@ function IntlAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAut
         if (onSuccess) {
           onSuccess()
         } else {
-          router.push("/")
+          router.push("/dashboard")
         }
       }, 500)
     } catch (err: any) {
@@ -151,7 +151,7 @@ function IntlAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAut
             if (onSuccess) {
               onSuccess()
             } else {
-              router.push("/")
+              router.push("/dashboard")
             }
           }, 500)
         }
@@ -888,7 +888,7 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
         if (onSuccess) {
           onSuccess()
         } else {
-          router.push("/")
+          router.push("/dashboard")
         }
       }, 1000)
     } catch (err: any) {

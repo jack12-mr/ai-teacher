@@ -17,7 +17,7 @@ export default function LandingPage() {
             晨佑AI教学
           </div>
           <Button
-            onClick={() => router.push("/auth/login")}
+            onClick={() => router.push("/login")}
             className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm md:text-base px-4 py-2 md:px-6 md:py-3 min-h-[44px]"
           >
             登录/注册
@@ -37,7 +37,7 @@ export default function LandingPage() {
           AI驱动的文档解析、智能出题与个性化学习路径
         </p>
         <Button
-          onClick={() => router.push("/auth/login")}
+          onClick={() => router.push("/login")}
           size="lg"
           className="bg-indigo-600 hover:bg-indigo-700 text-white text-base md:text-lg px-6 py-5 md:px-8 md:py-6 min-h-[48px]"
         >

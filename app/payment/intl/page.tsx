@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { isChinaRegion } from "@/lib/config/region";
 import { useAuth as useAuthCN, getAccessToken } from "@/components/auth/auth-provider";
 import { useUserIntl } from "@/components/user-context-intl";
+import { getSupabaseClient } from "@/lib/integrations/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +84,19 @@ export default function IntlPaymentPage() {
     setIsCreating(true);
 
     try {
-      const token = getAccessToken();
+      let token: string | null = null;
+
+      // Get token based on region
+      if (isChinaRegion()) {
+        // 国内版: 使用 localStorage 的 token
+        token = getAccessToken();
+      } else {
+        // 国际版: 使用 Supabase session token
+        const supabase = getSupabaseClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        token = session?.access_token || null;
+      }
+
       if (!token) {
         router.push("/login?redirect=/payment/intl");
         return;

@@ -34,7 +34,7 @@ function PaymentSuccessContent() {
             // Stripe webhook handles the activation, just show success
             setVerificationStatus("success");
           } else if (paypalToken) {
-            // PayPal: capture the payment
+            // PayPal: capture the payment (no auth required for this endpoint)
             const response = await fetch("/api/payment/intl/capture", {
               method: "POST",
               headers: {

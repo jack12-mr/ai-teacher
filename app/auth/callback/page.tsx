@@ -62,7 +62,7 @@ function AuthCallbackContent() {
 
           // 等待一下让 UserContext 更新
           setTimeout(() => {
-            router.replace("/");
+            router.replace("/dashboard");
           }, 500);
         } else {
           console.log("❌ [OAuth Callback] 没有找到有效的 session");

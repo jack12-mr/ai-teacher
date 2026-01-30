@@ -96,8 +96,8 @@ export async function createPayPalPayment(
           },
         ],
         application_context: {
-          return_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
-          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel`,
+          return_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?provider=paypal`,
+          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel?provider=paypal`,
         },
       }),
     });

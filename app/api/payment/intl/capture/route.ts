@@ -139,6 +139,25 @@ export async function POST(request: NextRequest) {
 
     console.log("[PayPal Capture] Subscription created/updated:", JSON.stringify(subscriptionResult));
 
+    // 6. Update user metadata with subscription info
+    const { error: userUpdateError } = await supabase.auth.admin.updateUserById(
+      userId,
+      {
+        user_metadata: {
+          subscription_plan: paymentType || "pro",
+          subscription_status: "active",
+          membership_expires_at: endDate.toISOString(),
+        }
+      }
+    );
+
+    if (userUpdateError) {
+      console.error("[PayPal Capture] User metadata update failed:", userUpdateError);
+      // Don't fail the whole request if user metadata update fails
+    } else {
+      console.log("[PayPal Capture] User metadata updated successfully");
+    }
+
     // 5. Update payment record
     const { error: paymentError } = await supabase
       .from("payments")

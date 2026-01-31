@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { isChinaRegion } from "@/lib/config/region";
 import { getAccessToken } from "@/components/auth/auth-provider";
+import { getSupabaseClient } from "@/lib/integrations/supabase";
 import { useT } from "@/lib/i18n";
 
 function PaymentSuccessContent() {
@@ -49,9 +51,15 @@ function PaymentSuccessContent() {
             if (response.ok) {
               setVerificationStatus("success");
             } else {
-              const data = await response.json();
+              let errorMsg = "Payment verification failed";
+              try {
+                const data = await response.json();
+                errorMsg = data.error || errorMsg;
+              } catch (e) {
+                errorMsg = `Server error (${response.status}): ${response.statusText}`;
+              }
               setVerificationStatus("error");
-              setErrorMessage(data.error || "Payment verification failed");
+              setErrorMessage(errorMsg);
             }
           }
         } catch (error: any) {
@@ -125,22 +133,33 @@ function PaymentSuccessContent() {
 
   useEffect(() => {
     if (verificationStatus === "success") {
-      // 刷新用户状态到 localStorage
+      // 刷新用户状态
       const refreshUserStatus = async () => {
-        const token = getAccessToken();
-        if (!token) return;
-
         try {
-          const response = await fetch("/api/auth/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem("auth_user", JSON.stringify(data.user));
-            // 延迟后重新加载页面以更新 AuthProvider 状态
-            setTimeout(() => {
-              window.location.href = "/";
-            }, 3000);
+          if (isChinaRegion()) {
+            // 国内版: 使用 /api/auth/me API
+            const token = getAccessToken();
+            if (!token) return;
+
+            const response = await fetch("/api/auth/me", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              localStorage.setItem("auth_user", JSON.stringify(data.user));
+              console.log("User status refreshed successfully (CN)");
+            }
+          } else {
+            // 国际版: 使用 Supabase refreshSession
+            const supabase = getSupabaseClient();
+            const { data: { session }, error } = await supabase.auth.refreshSession();
+
+            if (error || !session) {
+              console.error("Failed to refresh session:", error);
+              return;
+            }
+
+            console.log("Session refreshed successfully (INTL)");
           }
         } catch (error) {
           console.error("Failed to refresh user status:", error);

@@ -82,6 +82,9 @@ export function UserProviderIntl({ children }: { children: ReactNode }) {
             data.user.user_metadata?.avatar_url ||
             data.user.user_metadata?.picture ||
             "",
+          subscription_plan: data.user.user_metadata?.subscription_plan,
+          subscription_status: data.user.user_metadata?.subscription_status,
+          membership_expires_at: data.user.user_metadata?.membership_expires_at,
         };
         setUser(userProfile);
         saveSupabaseUserCache(userProfile);
@@ -171,6 +174,9 @@ export function UserProviderIntl({ children }: { children: ReactNode }) {
             data.user.user_metadata?.avatar_url ||
             data.user.user_metadata?.picture ||
             "",
+          subscription_plan: data.user.user_metadata?.subscription_plan,
+          subscription_status: data.user.user_metadata?.subscription_status,
+          membership_expires_at: data.user.user_metadata?.membership_expires_at,
         };
         setUser(userProfile);
         saveSupabaseUserCache(userProfile);
@@ -336,6 +342,9 @@ export function UserProviderIntl({ children }: { children: ReactNode }) {
               session.user.user_metadata?.avatar_url ||
               session.user.user_metadata?.picture ||
               "",
+            subscription_plan: session.user.user_metadata?.subscription_plan,
+            subscription_status: session.user.user_metadata?.subscription_status,
+            membership_expires_at: session.user.user_metadata?.membership_expires_at,
           };
           setUser(userProfile);
           saveSupabaseUserCache(userProfile);
@@ -429,6 +438,9 @@ export function UserProviderIntl({ children }: { children: ReactNode }) {
             session.user.user_metadata?.avatar_url ||
             session.user.user_metadata?.picture ||
             "",
+          subscription_plan: session.user.user_metadata?.subscription_plan,
+          subscription_status: session.user.user_metadata?.subscription_status,
+          membership_expires_at: session.user.user_metadata?.membership_expires_at,
         };
         setUser(userProfile);
         saveSupabaseUserCache(userProfile);

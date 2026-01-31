@@ -150,16 +150,21 @@ function PaymentSuccessContent() {
               console.log("User status refreshed successfully (CN)");
             }
           } else {
-            // 国际版: 使用 Supabase refreshSession
+            // 国际版: 强制从服务器重新获取用户信息
             const supabase = getSupabaseClient();
-            const { data: { session }, error } = await supabase.auth.refreshSession();
 
-            if (error || !session) {
-              console.error("Failed to refresh session:", error);
+            // 先刷新会话
+            await supabase.auth.refreshSession();
+
+            // 然后强制从服务器获取最新的用户信息(包括更新后的 user_metadata)
+            const { data: { user }, error } = await supabase.auth.getUser();
+
+            if (error || !user) {
+              console.error("Failed to get user:", error);
               return;
             }
 
-            console.log("Session refreshed successfully (INTL)");
+            console.log("User info refreshed successfully (INTL):", user.user_metadata);
           }
         } catch (error) {
           console.error("Failed to refresh user status:", error);
@@ -194,8 +199,19 @@ function PaymentSuccessContent() {
     }
   }, [verificationStatus]);
 
-  const handleGoHome = () => {
-    router.push("/");
+  const handleGoHome = async () => {
+    // 确保会话已刷新后再跳转
+    if (!isChinaRegion()) {
+      try {
+        const supabase = getSupabaseClient();
+        await supabase.auth.refreshSession();
+        // 等待一小段时间确保会话信息已保存
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error("Failed to refresh session before navigation:", error);
+      }
+    }
+    router.push("/dashboard");
   };
 
   const handleStartUsing = () => {

@@ -1013,20 +1013,30 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 辅助方法：从数据库格式转换为 Payment
    */
   private dbToPayment(doc: any): Payment {
+    // Map CloudBase payment fields to admin Payment interface
+    // CloudBase uses: method, status (with "completed"), billing_cycle
+    // Admin expects: method, status (with "paid"), type
+
+    let status = doc.status || "pending";
+    // Convert CloudBase "completed" status to admin "paid" status
+    if (status === "completed") {
+      status = "paid";
+    }
+
     return {
       id: doc._id || doc.id,
       order_id: doc.order_id,
       user_id: doc.user_id,
-      user_email: doc.user_email,
+      user_email: doc.user_email || doc.email,
       amount: doc.amount || 0,
       currency: doc.currency || "CNY",
-      method: doc.payment_method || "wechat",
-      status: doc.status || "pending",
-      type: doc.billing_cycle || "subscription",
+      method: doc.method || doc.payment_method || "wechat",
+      status: status,
+      type: doc.product_type || doc.billing_cycle || "subscription",
       product_id: doc.product_id,
       created_at: doc.created_at,
       updated_at: doc.updated_at,
-      completed_at: doc.paid_at,
+      completed_at: doc.completed_at || doc.paid_at,
     };
   }
 

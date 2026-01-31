@@ -87,18 +87,10 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
         return newMessages
       })
 
-      // 【新增】实时提取标签（当检测到完整的JSON块时）
-      const jsonMatch = buffer.match(/<<<JSON>>>(.*?)<<<JSON>>>/s)
-      if (jsonMatch) {
-        try {
-          const data = JSON.parse(jsonMatch[1])
-          if (data.update && Array.isArray(data.update)) {
-            setRequirements(prev => mergeRequirements(prev, data.update))
-          }
-        } catch (e) {
-          // JSON还未完整，等待更多数据
-          console.debug('Incomplete JSON, waiting for more data...')
-        }
+      // 实时提取标签（从AI响应中）
+      const newRequirements = parseRequirements(buffer)
+      if (newRequirements.length > 0) {
+        setRequirements(prev => mergeRequirements(prev, newRequirements))
       }
     }
 
@@ -112,23 +104,6 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsStreaming(true)
-
-    // 【混合模式】提取用户明确表达的需求
-    let newRequirements = extractRequirementsFromUserMessage(message, undefined)
-
-    // 【混合模式】如果用户确认，且上一次AI有建议，则提取AI的建议
-    const lastAiMessage = messages.length > 0 && messages[messages.length - 1].role === 'assistant'
-      ? messages[messages.length - 1].content
-      : ''
-
-    if (detectUserConfirmIntent(message) && lastAiMessage) {
-      const aiSuggestions = extractAiSuggestedRequirements(lastAiMessage)
-      newRequirements = [...newRequirements, ...aiSuggestions]
-    }
-
-    if (newRequirements.length > 0) {
-      setRequirements(prev => mergeRequirements(prev, newRequirements))
-    }
 
     try {
       // 构建历史消息（排除初始的硬编码消息）

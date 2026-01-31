@@ -64,16 +64,27 @@ export default function DashboardPage() {
       if (payments.success && payments.data) setPaymentStats(payments.data);
       if (userTrendData.success && userTrendData.data) setUserTrends(userTrendData.data);
       if (paymentTrendData.success && paymentTrendData.data) setPaymentTrends(paymentTrendData.data);
+
+      setLoading(false);
+      setRefreshing(false);
     } catch (err) {
       setError("加载统计数据失败");
-    } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }
 
   useEffect(() => {
+    setLoading(true);
     loadAllStats();
+
+    return () => {
+      // Cleanup on unmount
+      setUserStats(null);
+      setPaymentStats(null);
+      setUserTrends(null);
+      setPaymentTrends(null);
+    };
   }, [timeRange]);
 
   async function handleRefresh() {
@@ -192,7 +203,7 @@ export default function DashboardPage() {
       )}
 
       {/* 加载状态 */}
-      {loading ? (
+      {loading || !userStats || !paymentStats ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
         </div>

@@ -205,8 +205,9 @@ function PaymentSuccessContent() {
       try {
         const supabase = getSupabaseClient();
         await supabase.auth.refreshSession();
-        // 等待一小段时间确保会话信息已保存
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await supabase.auth.getUser();
+        // 等待更长时间确保 UserProviderIntl 完成状态更新
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
         console.error("Failed to refresh session before navigation:", error);
       }

@@ -72,7 +72,7 @@ export default function HomePage() {
   // 认证检查：未登录时重定向到登录页
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/auth/login")
+      router.push("/login")
     }
   }, [isLoading, isAuthenticated, router])
 

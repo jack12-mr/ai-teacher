@@ -15,13 +15,13 @@ export function getCloudBaseApp() {
     return cachedApp;
   }
 
-  const envId = process.env.NEXT_PUBLIC_WECHAT_CLOUDBASE_ID;
+  const envId = process.env.NEXT_PUBLIC_WECHAT_CLOUDBASE_ID || process.env.NEXT_PUBLIC_CLOUDBASE_ENV_ID;
   const secretId = process.env.CLOUDBASE_SECRET_ID;
   const secretKey = process.env.CLOUDBASE_SECRET_KEY;
 
   if (!envId) {
     throw new Error(
-      "CloudBase 环境 ID 未配置。请设置 NEXT_PUBLIC_WECHAT_CLOUDBASE_ID 环境变量"
+      "CloudBase 环境 ID 未配置。请设置 NEXT_PUBLIC_WECHAT_CLOUDBASE_ID 或 NEXT_PUBLIC_CLOUDBASE_ENV_ID 环境变量"
     );
   }
 

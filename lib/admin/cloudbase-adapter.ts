@@ -929,7 +929,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     }
 
     if (filters?.method) {
-      where.method = filters.method;
+      where.payment_method = filters.method;
     }
 
     if (filters?.type) {
@@ -984,7 +984,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     }
 
     if (filters?.method) {
-      where.method = filters.method;
+      where.payment_method = filters.method;
     }
 
     if (filters?.type) {

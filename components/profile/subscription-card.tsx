@@ -17,6 +17,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import { useT } from "@/lib/i18n"
+import { useIsIOSApp } from "@/hooks/use-is-ios-app"
 
 // 根据区域选择正确的 hook
 const useAuth = isChinaRegion() ? useAuthCN : useUserIntl
@@ -34,6 +35,7 @@ interface Subscription {
 export function SubscriptionCard() {
   const { user } = useAuth()
   const t = useT()
+  const isIOSApp = useIsIOSApp()
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -179,22 +181,24 @@ export function SubscriptionCard() {
         </div>
 
         {/* 操作按钮 */}
-        {!isPro || !isActive ? (
-          <Button
-            onClick={handleUpgrade}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
-          >
-            <Crown className="mr-2 h-4 w-4" />
-            {t.subscription.upgradeToPro}
-          </Button>
-        ) : (
-          <Button
-            onClick={handleRenew}
-            variant="outline"
-            className="w-full"
-          >
-            续费订阅
-          </Button>
+        {!isIOSApp && (
+          !isPro || !isActive ? (
+            <Button
+              onClick={handleUpgrade}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+            >
+              <Crown className="mr-2 h-4 w-4" />
+              {t.subscription.upgradeToPro}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleRenew}
+              variant="outline"
+              className="w-full"
+            >
+              续费订阅
+            </Button>
+          )
         )}
 
         <Separator />

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, Target, Users, Crown, ArrowRight, Star } from "lucide-react"
+import { useIsIOSApp } from "@/hooks/use-is-ios-app"
 
 interface UserSkills {
   [category: string]: {
@@ -20,6 +21,8 @@ interface RoleClassificationProps {
 }
 
 export function RoleClassification({ userSkills, role, score, onUpgrade }: RoleClassificationProps) {
+  const isIOSApp = useIsIOSApp()
+
   const getSkillStrengths = () => {
     const strengths: Array<{ category: string; skill: string; score: number }> = []
 
@@ -235,29 +238,31 @@ export function RoleClassification({ userSkills, role, score, onUpgrade }: RoleC
       </Card>
 
       {/* Upgrade CTA */}
-      <Card className="bg-gradient-to-r from-amber-500 to-orange-500 border-0 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-bold text-white mb-2 flex items-center">
-              <Crown className="w-5 h-5 mr-2 text-white" />
-              解锁个性化学习路径
-            </h3>
-            <p className="text-white/90 mb-4">基于你的技能评估结果，AI将为你生成专属的学习计划和职业发展建议</p>
-            <div className="flex flex-wrap gap-2">
-              <Badge className="bg-white/20 text-white border-white/30">AI路径规划</Badge>
-              <Badge className="bg-white/20 text-white border-white/30">每日学习计划</Badge>
-              <Badge className="bg-white/20 text-white border-white/30">进度追踪</Badge>
-              <Badge className="bg-white/20 text-white border-white/30">目标导向</Badge>
+      {!isIOSApp && (
+        <Card className="bg-gradient-to-r from-amber-500 to-orange-500 border-0 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2 flex items-center">
+                <Crown className="w-5 h-5 mr-2 text-white" />
+                解锁个性化学习路径
+              </h3>
+              <p className="text-white/90 mb-4">基于你的技能评估结果，AI将为你生成专属的学习计划和职业发展建议</p>
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-white/20 text-white border-white/30">AI路径规划</Badge>
+                <Badge className="bg-white/20 text-white border-white/30">每日学习计划</Badge>
+                <Badge className="bg-white/20 text-white border-white/30">进度追踪</Badge>
+                <Badge className="bg-white/20 text-white border-white/30">目标导向</Badge>
+              </div>
             </div>
+            <Button
+              onClick={onUpgrade}
+              className="bg-white text-amber-700 hover:bg-white/90 font-semibold px-8 shadow-lg cursor-pointer"
+            >
+              立即升级
+            </Button>
           </div>
-          <Button
-            onClick={onUpgrade}
-            className="bg-white text-amber-700 hover:bg-white/90 font-semibold px-8 shadow-lg cursor-pointer"
-          >
-            立即升级
-          </Button>
-        </div>
-      </Card>
+        </Card>
+      )}
     </div>
   )
 }

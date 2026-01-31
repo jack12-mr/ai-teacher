@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useIsIOSApp } from "@/hooks/use-is-ios-app";
 import { isChinaRegion } from "@/lib/config/region";
 import { useAuth as useAuthCN, getAccessToken } from "@/components/auth/auth-provider";
 import { useUserIntl } from "@/components/user-context-intl";
@@ -57,6 +58,7 @@ const FEATURES = [
 export default function PaymentPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+  const isIOSApp = useIsIOSApp();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("yearly");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("wechat");
   const [paymentState, setPaymentState] = useState<PaymentState>({
@@ -69,6 +71,13 @@ export default function PaymentPage() {
     billingCycle: "yearly",
   });
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect iOS App users to dashboard
+  useEffect(() => {
+    if (isIOSApp) {
+      router.push("/dashboard");
+    }
+  }, [isIOSApp, router]);
 
   // 检查登录状态
   if (authLoading) {

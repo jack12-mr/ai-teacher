@@ -5,6 +5,7 @@ import { Crown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useT } from "@/lib/i18n"
+import { useIsIOSApp } from "@/hooks/use-is-ios-app"
 
 interface BannerAdProps {
   onUpgrade: () => void
@@ -29,6 +30,7 @@ interface Advertisement {
 
 export function BannerAd({ onUpgrade, position = 'bottom' }: BannerAdProps) {
   const t = useT()
+  const isIOSApp = useIsIOSApp()
   const [isVisible, setIsVisible] = useState(true)
   const [dynamicAd, setDynamicAd] = useState<Advertisement | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -199,12 +201,14 @@ export function BannerAd({ onUpgrade, position = 'bottom' }: BannerAdProps) {
 
         {/* 右侧按钮区域 */}
         <div className="flex items-center space-x-2 ml-4">
-          <Button
-            onClick={onUpgrade}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 whitespace-nowrap"
-          >
-            {t.banner.upgradeNow}
-          </Button>
+          {!isIOSApp && (
+            <Button
+              onClick={onUpgrade}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 whitespace-nowrap"
+            >
+              {t.banner.upgradeNow}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"

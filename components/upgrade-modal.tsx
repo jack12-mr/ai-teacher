@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Crown, Check, Brain, Target, Calendar, Star } from "lucide-react"
 import { useT } from "@/lib/i18n"
+import { useIsIOSApp } from "@/hooks/use-is-ios-app"
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -18,6 +19,7 @@ interface UpgradeModalProps {
 export function UpgradeModal({ isOpen, onClose, onUpgradeSuccess, currentRole }: UpgradeModalProps) {
   const router = useRouter()
   const t = useT()
+  const isIOSApp = useIsIOSApp()
 
   const handleUpgrade = () => {
     // Determine region and redirect to appropriate payment page
@@ -215,16 +217,18 @@ export function UpgradeModal({ isOpen, onClose, onUpgradeSuccess, currentRole }:
           </Card>
 
           {/* CTA */}
-          <div className="text-center space-y-4">
-            <Button
-              onClick={handleUpgrade}
-              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-8 py-3 text-lg cursor-pointer"
-            >
-              <Crown className="w-5 h-5 mr-2" />
-              {t.upgrade.upgradeNow}
-            </Button>
-            <div className="text-sm text-neutral-500 dark:text-neutral-400">{t.upgrade.guarantee}</div>
-          </div>
+          {!isIOSApp && (
+            <div className="text-center space-y-4">
+              <Button
+                onClick={handleUpgrade}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-8 py-3 text-lg cursor-pointer"
+              >
+                <Crown className="w-5 h-5 mr-2" />
+                {t.upgrade.upgradeNow}
+              </Button>
+              <div className="text-sm text-neutral-500 dark:text-neutral-400">{t.upgrade.guarantee}</div>
+            </div>
+          )}
 
           {/* Limited Time Offer */}
           <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4 text-center">

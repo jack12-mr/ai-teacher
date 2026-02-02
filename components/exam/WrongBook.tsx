@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MathText, MathBlock } from "@/components/ui/MathText"
 import {
-  BookOpen,
   CheckCircle,
   XCircle,
   RotateCcw,
@@ -14,10 +13,10 @@ import {
   ChevronDown,
   ChevronUp,
   Tag,
-  Calendar,
   AlertTriangle
 } from "lucide-react"
 import type { WrongQuestion, Question } from "@/lib/exam-mock-data"
+import { useT } from "@/lib/i18n"
 
 interface WrongBookProps {
   wrongQuestions: WrongQuestion[]
@@ -32,6 +31,7 @@ export function WrongBook({
   onMarkMastered,
   onRemove
 }: WrongBookProps) {
+  const t = useT()
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'unmastered' | 'mastered'>('all')
 
@@ -63,8 +63,8 @@ export function WrongBook({
         <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h3 className="text-xl font-bold text-neutral-950 dark:text-white mb-2">太棒了！</h3>
-        <p className="text-neutral-500 dark:text-neutral-400">你还没有错题，继续保持！</p>
+        <h3 className="text-xl font-bold text-neutral-950 dark:text-white mb-2">{t.wrongBook.emptyTitle}</h3>
+        <p className="text-neutral-500 dark:text-neutral-400">{t.wrongBook.emptyMessage}</p>
       </Card>
     )
   }
@@ -75,24 +75,24 @@ export function WrongBook({
       <div className="grid grid-cols-3 gap-4">
         <Card className="bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 p-4 text-center">
           <div className="text-2xl font-bold text-neutral-950 dark:text-white">{stats.total}</div>
-          <div className="text-sm text-neutral-500 dark:text-neutral-400">总错题</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">{t.wrongBook.totalWrong}</div>
         </Card>
         <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 p-4 text-center">
           <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.unmastered}</div>
-          <div className="text-sm text-neutral-500 dark:text-neutral-400">未掌握</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">{t.wrongBook.unmastered}</div>
         </Card>
         <Card className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 p-4 text-center">
           <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.mastered}</div>
-          <div className="text-sm text-neutral-500 dark:text-neutral-400">已掌握</div>
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">{t.wrongBook.mastered}</div>
         </Card>
       </div>
 
       {/* 过滤按钮 */}
       <div className="flex gap-2">
         {[
-          { value: 'all', label: '全部' },
-          { value: 'unmastered', label: '未掌握' },
-          { value: 'mastered', label: '已掌握' }
+          { value: 'all', label: t.wrongBook.filterAll },
+          { value: 'unmastered', label: t.wrongBook.unmastered },
+          { value: 'mastered', label: t.wrongBook.mastered }
         ].map(f => (
           <button
             key={f.value}
@@ -116,7 +116,7 @@ export function WrongBook({
             <Tag className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{knowledge}</span>
             <Badge className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-              {questions.length} 题
+              {questions.length} {t.wrongBook.questionsCount}
             </Badge>
           </div>
 
@@ -153,7 +153,7 @@ export function WrongBook({
                         : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
                     }`}
                   >
-                    错 {wq.wrongCount} 次
+                    {t.wrongBook.wrongTimes.replace('{count}', String(wq.wrongCount))}
                   </Badge>
                   {expandedId === wq.questionId ? (
                     <ChevronUp className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -182,8 +182,8 @@ export function WrongBook({
                           ? (wq.question.correctAnswer as number[]).includes(i)
                           : i === wq.question.correctAnswer
                         const isUserAnswer = questionType === 'multiple'
-                          ? wq.userAnswers.some(ans => Array.isArray(ans) && ans.includes(i))
-                          : wq.userAnswers.includes(i)
+                          ? wq.userAnswers.some(ans => Array.isArray(ans) && (ans as number[]).includes(i))
+                          : wq.userAnswers.some(ans => ans === i)
 
                         return (
                           <div
@@ -198,10 +198,10 @@ export function WrongBook({
                           >
                             <MathText>{opt}</MathText>
                             {isCorrectAnswer && (
-                              <span className="ml-2">✓ 正确答案</span>
+                              <span className="ml-2">{t.wrongBook.correctAnswer}</span>
                             )}
                             {isUserAnswer && !isCorrectAnswer && (
-                              <span className="ml-2">✗ 你的选择</span>
+                              <span className="ml-2">{t.wrongBook.yourChoice}</span>
                             )}
                           </div>
                         )
@@ -212,7 +212,7 @@ export function WrongBook({
                   {/* 填空题答案展示 */}
                   {wq.question.type === 'fill' && (
                     <div className="space-y-2">
-                      <div className="text-sm text-neutral-500 dark:text-neutral-400">正确答案：</div>
+                      <div className="text-sm text-neutral-500 dark:text-neutral-400">{t.wrongBook.correctAnswerLabel}</div>
                       <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg px-3 py-2">
                         {(wq.question.correctAnswer as string[]).map((ans, i) => (
                           <span key={i} className="text-emerald-600 dark:text-emerald-400">
@@ -220,7 +220,7 @@ export function WrongBook({
                           </span>
                         ))}
                       </div>
-                      <div className="text-sm text-neutral-500 dark:text-neutral-400">你的答案：</div>
+                      <div className="text-sm text-neutral-500 dark:text-neutral-400">{t.wrongBook.yourAnswerLabel}</div>
                       <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
                         {wq.userAnswers.map((ans, i) => (
                           <div key={i} className="text-red-600 dark:text-red-400">
@@ -233,7 +233,7 @@ export function WrongBook({
 
                   {/* 解析 */}
                   <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl p-4">
-                    <div className="text-sm text-indigo-600 dark:text-indigo-400 mb-2">📖 解析</div>
+                    <div className="text-sm text-indigo-600 dark:text-indigo-400 mb-2">{t.wrongBook.explanation}</div>
                     <div className="text-neutral-600 dark:text-neutral-300 text-sm">
                       <MathBlock>{wq.question.explanation}</MathBlock>
                     </div>
@@ -243,7 +243,7 @@ export function WrongBook({
                   {wq.wrongCount >= 2 && (
                     <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
                       <AlertTriangle className="w-4 h-4" />
-                      <span>这道题你已经错了 {wq.wrongCount} 次，建议重点复习！</span>
+                      <span>{t.wrongBook.warningReview.replace('{count}', String(wq.wrongCount))}</span>
                     </div>
                   )}
 
@@ -255,7 +255,7 @@ export function WrongBook({
                       className="bg-indigo-600 hover:bg-indigo-700 text-white"
                     >
                       <RotateCcw className="w-4 h-4 mr-2" />
-                      重新练习
+                      {t.wrongBook.retryPractice}
                     </Button>
                     <Button
                       size="sm"
@@ -268,7 +268,7 @@ export function WrongBook({
                       }
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      {wq.mastered ? '取消掌握' : '标记已掌握'}
+                      {wq.mastered ? t.wrongBook.unmarkMastered : t.wrongBook.markMastered}
                     </Button>
                     <Button
                       size="sm"

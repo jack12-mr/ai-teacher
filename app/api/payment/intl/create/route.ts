@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: userId,
         payment_id: result.paymentId,
+        provider: provider,
         method: provider,
         amount,
         currency: currency || "USD",

@@ -12,6 +12,7 @@ import { QuizResults } from "@/components/assessment/QuizResults"
 import { QuestionCard } from "@/components/exam/QuestionCard"
 import { AnswerFeedback } from "@/components/exam/AnswerFeedback"
 import { FollowUpChat } from "@/components/exam/FollowUpChat"
+import { RankPanel } from "@/components/exam/RankPanel"
 
 import type {
   AssessmentResult,
@@ -83,9 +84,8 @@ export default function TargetedQuizPage() {
     currentCombo: 0,
     maxCombo: 0,
     consecutiveWrong: 0,
-    consecutiveCorrect: 0,
-    totalAnswered: 0,
-    totalCorrect: 0
+    todayCorrect: 0,
+    todayWrong: 0
   })
 
   // 追问功能状态
@@ -318,9 +318,8 @@ export default function TargetedQuizPage() {
       currentCombo: newCombo,
       maxCombo: newMaxCombo,
       consecutiveWrong: isCorrect ? 0 : prev.consecutiveWrong + 1,
-      consecutiveCorrect: isCorrect ? prev.consecutiveCorrect + 1 : 0,
-      totalAnswered: prev.totalAnswered + 1,
-      totalCorrect: prev.totalCorrect + (isCorrect ? 1 : 0)
+      todayCorrect: prev.todayCorrect + (isCorrect ? 1 : 0),
+      todayWrong: prev.todayWrong + (isCorrect ? 0 : 1)
     }))
     // ========== 计算结束 ==========
 
@@ -705,6 +704,12 @@ export default function TargetedQuizPage() {
               questionNumber={quizState.currentIndex + 1}
               totalQuestions={quizState.questions.length}
               onAnswer={handleAnswer}
+            />
+
+            {/* 统计面板 */}
+            <RankPanel
+              rankState={rankState}
+              totalQuestions={quizState.questions.length}
             />
           </div>
         )}

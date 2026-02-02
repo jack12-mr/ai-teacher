@@ -55,12 +55,20 @@ export function LoginForm({
   };
 
   const handleWechatLogin = () => {
-    // 跳转到微信登录 API
-    const callbackUrl = encodeURIComponent(
-      `${window.location.origin}/api/auth/wechat/callback`
-    );
-    const state = encodeURIComponent(redirectTo);
-    window.location.href = `/api/auth/wechat?callback=${callbackUrl}&state=${state}`;
+    // 优先检查是否在安卓 WebView 环境中
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.Android) {
+      // 调用原生安卓微信登录
+      // @ts-ignore
+      window.Android.login();
+    } else {
+      // 非安卓环境：跳转到微信登录 API
+      const callbackUrl = encodeURIComponent(
+        `${window.location.origin}/api/auth/wechat/callback`
+      );
+      const state = encodeURIComponent(redirectTo);
+      window.location.href = `/api/auth/wechat?callback=${callbackUrl}&state=${state}`;
+    }
   };
 
   return (

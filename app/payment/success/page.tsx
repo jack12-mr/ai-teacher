@@ -31,11 +31,47 @@ function PaymentSuccessContent() {
       if (sessionId || paypalToken) {
         setIsVerifying(true);
         try {
-          // For Stripe payments, the webhook handles activation
-          // Here we just confirm the session exists
+          // For Stripe payments, poll for subscription status
           if (sessionId) {
-            // Stripe webhook handles the activation, just show success
-            setVerificationStatus("success");
+            // Poll for subscription status (wait for webhook to update user metadata)
+            const supabase = getSupabaseClient();
+            let attempts = 0;
+            const maxAttempts = 10;
+            const pollInterval = 2000; // 2 seconds
+
+            const pollSubscriptionStatus = async (): Promise<boolean> => {
+              try {
+                await supabase.auth.refreshSession();
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (user?.user_metadata?.subscription_status === "active") {
+                  console.log("✅ Subscription status detected as active");
+                  return true;
+                }
+                return false;
+              } catch (error) {
+                console.error("Error polling subscription status:", error);
+                return false;
+              }
+            };
+
+            // First attempt
+            let isActive = await pollSubscriptionStatus();
+
+            // Poll until subscription is active or max attempts reached
+            while (!isActive && attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, pollInterval));
+              isActive = await pollSubscriptionStatus();
+              attempts++;
+            }
+
+            if (isActive) {
+              setVerificationStatus("success");
+            } else {
+              // Timeout - show success anyway but user may need to refresh
+              console.warn("⚠️ Subscription polling timed out, showing success page anyway");
+              setVerificationStatus("success");
+            }
           } else if (paypalToken) {
             // PayPal: capture the payment (no auth required for this endpoint)
             const response = await fetch("/api/payment/intl/capture", {
@@ -217,24 +253,46 @@ function PaymentSuccessContent() {
     if (!isChinaRegion()) {
       try {
         const supabase = getSupabaseClient();
-        await supabase.auth.refreshSession();
+
+        // Refresh session and verify it contains subscription data
+        const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession();
+
+        if (sessionError) {
+          console.error("Failed to refresh session:", sessionError);
+          // Fallback: try to get existing session
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            console.error("No valid session found, redirecting to login");
+            window.location.href = "/login?redirect=/dashboard&payment_success=true";
+            return;
+          }
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
 
-        // Save to cache BEFORE navigation to prevent logout on page reload
-        if (user) {
-          const userProfile = {
-            id: user.id,
-            email: user.email || "",
-            name: user.user_metadata?.displayName || user.user_metadata?.full_name || user.user_metadata?.name || "",
-            avatar: user.user_metadata?.avatar || user.user_metadata?.avatar_url || user.user_metadata?.picture || "",
-            subscription_plan: user.user_metadata?.subscription_plan,
-            subscription_status: user.user_metadata?.subscription_status,
-            membership_expires_at: user.user_metadata?.membership_expires_at,
-          };
-          saveSupabaseUserCache(userProfile);
+        // Verify user exists and has valid session
+        if (!user) {
+          console.error("No user found after session refresh");
+          window.location.href = "/login?redirect=/dashboard&payment_success=true";
+          return;
         }
+
+        // Save to cache BEFORE navigation to prevent logout on page reload
+        const userProfile = {
+          id: user.id,
+          email: user.email || "",
+          name: user.user_metadata?.displayName || user.user_metadata?.full_name || user.user_metadata?.name || "",
+          avatar: user.user_metadata?.avatar || user.user_metadata?.avatar_url || user.user_metadata?.picture || "",
+          subscription_plan: user.user_metadata?.subscription_plan,
+          subscription_status: user.user_metadata?.subscription_status,
+          membership_expires_at: user.user_metadata?.membership_expires_at,
+        };
+        saveSupabaseUserCache(userProfile);
+
+        console.log("✅ Session verified and cached before navigation");
       } catch (error) {
         console.error("Failed to refresh session before navigation:", error);
+        // On error, still try to navigate - dashboard will handle auth check
       }
     }
     // 使用完整页面刷新而不是客户端路由跳转,确保 UserProviderIntl 重新初始化

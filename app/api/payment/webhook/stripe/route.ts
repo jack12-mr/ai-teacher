@@ -47,6 +47,17 @@ export async function POST(request: NextRequest) {
           is_active: true,
           plan_type: session.metadata?.paymentType,
         });
+
+        // Update Supabase auth user metadata so session refresh picks up subscription
+        await supabase.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            subscription_plan: session.metadata?.paymentType || "premium",
+            subscription_status: "active",
+            membership_expires_at: endDate.toISOString(),
+          },
+        });
+
+        console.log(`✅ [Stripe Webhook] Updated subscription and user metadata for user ${userId}`);
       }
     }
 

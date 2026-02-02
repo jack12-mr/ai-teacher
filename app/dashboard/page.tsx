@@ -245,7 +245,9 @@ export default function HomePage() {
         </div>
 
         {/* 横幅广告 */}
-        <BannerAd onUpgrade={() => setShowUpgradeModal(true)} />
+        <div className="min-h-[200px]">
+          <BannerAd onUpgrade={() => setShowUpgradeModal(true)} />
+        </div>
 
         {/* Main Content */}
         <div className="w-full">

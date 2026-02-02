@@ -186,15 +186,6 @@ export default function HomePage() {
                 <LanguageSwitcher />
                 <ModeToggle />
                 <Button
-                  onClick={handleStartAiCoach}
-                  variant="outline"
-                  className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  disabled={!userProfile.role}
-                >
-                  <Brain className="w-4 h-4 mr-2" />
-                  {t.home.aiCoach} {!userProfile.isPremium && `(${3 - aiCoachSessions}/3)`}
-                </Button>
-                <Button
                   variant="outline"
                   onClick={() => router.push('/exam/review')}
                   className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -226,15 +217,6 @@ export default function HomePage() {
                     </Button>
                   )}
                   <Button
-                    onClick={handleStartAiCoach}
-                    variant="outline"
-                    className="w-full justify-start min-h-[44px]"
-                    disabled={!userProfile.role}
-                  >
-                    <Brain className="w-4 h-4 mr-2" />
-                    {t.home.aiCoach} {!userProfile.isPremium && `(${3 - aiCoachSessions}/3)`}
-                  </Button>
-                  <Button
                     variant="outline"
                     onClick={() => router.push('/exam/review')}
                     className="w-full justify-start min-h-[44px]"
@@ -259,48 +241,6 @@ export default function HomePage() {
         <div className="mb-8">
           <div className="mb-4">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white">{t.home.discoverSkills}</h1>
-          </div>
-
-          {/* Step Indicator */}
-          <div className="flex flex-col md:flex-row items-start md:items-center space-y-2 md:space-y-0 md:space-x-4">
-            <div
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs md:text-sm transition-colors ${
-                currentStep === "assessment"
-                  ? "bg-indigo-600 text-white"
-                  : userProfile.assessmentProgress > 0
-                    ? "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400"
-                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400"
-              }`}
-            >
-              <div className="w-2 h-2 rounded-full bg-current" />
-              <span>{t.home.skillAssessment}</span>
-            </div>
-            <div className="w-4 h-px md:w-8 bg-neutral-300 dark:bg-neutral-700 hidden md:block" />
-            <div
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs md:text-sm transition-colors ${
-                currentStep === "results"
-                  ? "bg-indigo-600 text-white"
-                  : userProfile.role
-                    ? "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400"
-                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400"
-              }`}
-            >
-              <div className="w-2 h-2 rounded-full bg-current" />
-              <span>{t.home.rolePositioning}</span>
-            </div>
-            <div className="w-4 h-px md:w-8 bg-neutral-300 dark:bg-neutral-700 hidden md:block" />
-            <div
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs md:text-sm transition-colors ${
-                currentStep === "paths"
-                  ? "bg-indigo-600 text-white"
-                  : userProfile.isPremium
-                    ? "bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400"
-                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400"
-              }`}
-            >
-              <div className="w-2 h-2 rounded-full bg-current" />
-              <span>{t.home.learningPath}</span>
-            </div>
           </div>
         </div>
 

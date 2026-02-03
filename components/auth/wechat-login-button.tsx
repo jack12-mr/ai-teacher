@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -32,6 +32,47 @@ export function WechatLoginButton({
   disabled = false,
 }: WechatLoginButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
+
+  // 注册全局回调函数，用于接收 Android 端传回的登录数据
+  useEffect(() => {
+    // @ts-ignore
+    window.onWeChatLoginSuccess = (accessToken: string, openId: string, unionId: string) => {
+      console.log("微信登录成功", { accessToken, openId, unionId });
+      alert(`登录成功！\nAccessToken: ${accessToken}\nOpenId: ${openId}\nUnionId: ${unionId}`);
+
+      // 保存登录信息到 localStorage
+      localStorage.setItem('wechat_access_token', accessToken);
+      localStorage.setItem('wechat_open_id', openId);
+      localStorage.setItem('wechat_union_id', unionId);
+
+      // 调用成功回调
+      if (onSuccess) {
+        onSuccess({ accessToken, openId, unionId });
+      }
+
+      // 跳转到主页
+      window.location.href = "/dashboard";
+    };
+
+    // @ts-ignore
+    window.onWeChatLoginError = (error: string) => {
+      console.error("微信登录失败", error);
+      alert(`登录失败：${error}`);
+
+      // 调用错误回调
+      if (onError) {
+        onError(error);
+      }
+    };
+
+    // 清理函数
+    return () => {
+      // @ts-ignore
+      delete window.onWeChatLoginSuccess;
+      // @ts-ignore
+      delete window.onWeChatLoginError;
+    };
+  }, [onSuccess, onError]);
 
   const handleWechatLogin = async () => {
     // 🔍 DEBUG 1: 看看 window.Android 到底是不是 undefined

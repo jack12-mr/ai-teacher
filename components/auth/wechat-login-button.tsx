@@ -41,7 +41,8 @@ export function WechatLoginButton({
       alert("Web端收到Code了: " + code);
 
       // 把 code 传给后端 API，让后端去换取 accessToken
-      const callbackUrl = `/api/auth/wechat/callback?code=${code}&state=/`;
+      // state=/dashboard 表示登录成功后跳转到 dashboard 页面
+      const callbackUrl = `/api/auth/wechat/callback?code=${code}&state=/dashboard`;
       window.location.href = callbackUrl;
     };
 

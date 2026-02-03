@@ -34,21 +34,39 @@ export function WechatLoginButton({
   const [isLoading, setIsLoading] = useState(false)
 
   const handleWechatLogin = async () => {
-    setIsLoading(true)
+    // 🔍 DEBUG 1: 看看 window.Android 到底是不是 undefined
+    // @ts-ignore
+    const status = window.Android ? "存在(Found)" : "丢失(Missing)";
+    alert("接口状态: " + status);
 
-    try {
-      // 方法1：直接使用 GET 请求重定向到微信授权页
-      const callbackUrl = encodeURIComponent(`${window.location.origin}/api/auth/wechat/callback`)
-      const state = encodeURIComponent("/") // 登录成功后跳转到首页
+    // 🔍 DEBUG 2: 看看现在的网址是不是你的 App 内部
+    alert("当前网址: " + window.location.href);
 
-      // 直接跳转到微信授权获取 URL
-      window.location.href = `/api/auth/wechat?callback=${callbackUrl}&state=${state}`
-    } catch (err: any) {
-      console.error("微信登录错误:", err)
-      if (onError) {
-        onError(err.message || "微信登录失败，请重试")
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.Android) {
+      // 调用原生安卓微信登录
+      // @ts-ignore
+      window.Android.login();
+    } else {
+      // 为了防止手快点错，先弹窗提示进入了 fallback
+      alert("正在走网页版跳转逻辑...");
+
+      setIsLoading(true)
+
+      try {
+        // 方法1：直接使用 GET 请求重定向到微信授权页
+        const callbackUrl = encodeURIComponent(`${window.location.origin}/api/auth/wechat/callback`)
+        const state = encodeURIComponent("/") // 登录成功后跳转到首页
+
+        // 直接跳转到微信授权获取 URL
+        window.location.href = `/api/auth/wechat?callback=${callbackUrl}&state=${state}`
+      } catch (err: any) {
+        console.error("微信登录错误:", err)
+        if (onError) {
+          onError(err.message || "微信登录失败，请重试")
+        }
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
   }
 

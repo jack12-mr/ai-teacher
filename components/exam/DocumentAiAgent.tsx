@@ -56,11 +56,33 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
       const reader = response.body?.getReader()
       if (!reader) throw new Error('No reader available')
 
-      // 添加空的助手消息
       setMessages([{ role: 'assistant', content: '' }])
 
-      // 处理流式响应
-      await processStream(reader)
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        buffer += chunk
+
+        // 清理内容：移除完整的 JSON 块和不完整的 JSON 开始标签
+        let cleanContent = buffer.replace(/<<<JSON>>>[\s\S]*?<<<JSON>>>/g, '')
+        // 如果存在未闭合的 JSON 标签，移除从标签开始到末尾的所有内容
+        const unclosedJsonIndex = cleanContent.lastIndexOf('<<<JSON>>>')
+        if (unclosedJsonIndex !== -1) {
+          cleanContent = cleanContent.substring(0, unclosedJsonIndex)
+        }
+        cleanContent = cleanContent.trim()
+
+        setMessages(prev => {
+          const newMessages = [...prev]
+          newMessages[newMessages.length - 1].content = cleanContent
+          return newMessages
+        })
+      }
     } catch (error) {
       console.error('Error analyzing document:', error)
       setMessages([{ role: 'assistant', content: '抱歉，文档分析失败。请重试。' }])
@@ -80,10 +102,18 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
       const chunk = decoder.decode(value, { stream: true })
       buffer += chunk
 
-      // 更新消息显示
+      // 清理内容：移除完整的 JSON 块和不完整的 JSON 开始标签
+      let cleanContent = buffer.replace(/<<<JSON>>>[\s\S]*?<<<JSON>>>/g, '')
+      // 如果存在未闭合的 JSON 标签，移除从标签开始到末尾的所有内容
+      const unclosedJsonIndex = cleanContent.lastIndexOf('<<<JSON>>>')
+      if (unclosedJsonIndex !== -1) {
+        cleanContent = cleanContent.substring(0, unclosedJsonIndex)
+      }
+      cleanContent = cleanContent.trim()
+
       setMessages(prev => {
         const newMessages = [...prev]
-        newMessages[newMessages.length - 1].content = buffer
+        newMessages[newMessages.length - 1].content = cleanContent
         return newMessages
       })
 
@@ -104,6 +134,12 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsStreaming(true)
+
+    // 【新增】立即从用户消息中提取需求（前端正则）
+    const userRequirements = extractRequirementsFromUserMessage(message)
+    if (userRequirements.length > 0) {
+      setRequirements(prev => mergeRequirements(prev, userRequirements))
+    }
 
     try {
       // 构建历史消息（排除初始的硬编码消息）
@@ -190,10 +226,7 @@ export function DocumentAiAgent({ documentContent, documentName, onStartGenerati
                     : 'text-slate-900 dark:text-slate-100'
                 }`}
               >
-                {(() => {
-                  const cleanContent = msg.content.replace(/<<<JSON>>>[\s\S]*?<<<JSON>>>/g, '').trim()
-                  return cleanContent || (msg.role === 'assistant' ? '...' : '')
-                })()}
+                {msg.content || (msg.role === 'assistant' ? '...' : '')}
               </div>
               {msg.role === 'user' && (
                 <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500">

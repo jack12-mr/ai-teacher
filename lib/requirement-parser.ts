@@ -48,37 +48,8 @@ export function extractRequirementsFromUserMessage(text: string, previousAiMessa
   const countMatch = textToExtract.match(/(\d+)\s*[道题个]/);
   if (countMatch) requirements.push({ category: '数量', value: `${countMatch[1]}道` })
 
-  // 【新增】考点/知识点 - 自动识别用户提到的任何学科内容
-  // 匹配模式：包含学科关键词的短语
-  const knowledgePointPatterns = [
-    // 模式1: "针对X练习"、"关于X学习"、"关于X复习" (动词后缀)
-    /(?:针对|关于)([<>《》\u4e00-\u9fa5a-zA-Z0-9]{2,15})(?:练习|学习|复习)/,
-    // 模式2: "我要考查X"、"我想测试X"、"我要练习X" (带"我要"、"我想"、"想")
-    /(?:我想|我要|想)(?:考查|测试|练习|学习|复习)([<>《》\u4e00-\u9fa5a-zA-Z0-9]{2,15})(?=$|，|。|？|！)/,
-    // 模式3: "考查X"、"测试X"、"练习X" (简单的动词模式)
-    /(?:考查|测试|练习)([<>《》\u4e00-\u9fa5a-zA-Z0-9]{2,15})(?=$|，|。|？|！)/,
-    // 模式4: "关于X的" (只在"的"后面是特定词汇时匹配，避免匹配"X的Y"结构)
-    /(?:关于|针对)([<>《》\u4e00-\u9fa5a-zA-Z0-9]{2,20})的(?:内容|部分|章节|特点|性质|应用)/,
-    // 模式5: "X考点"、"X知识点" (后缀模式)
-    /([<>《》\u4e00-\u9fa5a-zA-Z0-9]{2,15})(?:考点|知识点)/,
-    // 模式6: "重点考点是X"、"主要知识点X" (带"重点"、"主要")
-    /(?:重点|主要)(?:考点|知识点)?(?:是|：)?([<>《》\u4e00-\u9fa5a-zA-Z0-9]{2,15})/,
-    // 模式7: "关于X" (兜底模式，匹配任何"关于"后的内容)
-    /(?:关于|针对)([<>《》\u4e00-\u9fa5a-zA-Z0-9]{2,20})(?=$|，|。|？|！)/
-  ]
-
-  for (const pattern of knowledgePointPatterns) {
-    const match = textToExtract.match(pattern)
-    if (match && match[1]) {
-      const knowledgePoint = match[1].trim()
-      // 过滤掉非学科词汇（如"题目"、"内容"等）
-      const nonSubjectWords = ['题目', '内容', '部分', '章节', '东西', '问题', '情况', '重点', '主要']
-      if (!nonSubjectWords.includes(knowledgePoint) && knowledgePoint.length >= 2) {
-        requirements.push({ category: '考点', value: knowledgePoint })
-        break // 只提取第一个匹配的知识点
-      }
-    }
-  }
+  // 【移除】考点/知识点提取 - 因为前端不知道文档内容，不应该盲目提取考点
+  // 考点由AI根据文档内容来识别和验证
 
   return requirements
 }

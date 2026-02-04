@@ -129,20 +129,20 @@ export async function getPaymentStats(): Promise<ApiResponse<{
     // 计算总收入
     const totalRevenue = paidPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
-    // 按支付方式统计
+    // 按支付方式统计 - 确保所有支付方式都初始化为数字
     const byMethod = {
       wechat: paidPayments
         .filter((p) => p.method === "wechat")
-        .reduce((sum, p) => sum + (p.amount || 0), 0),
+        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0,
       alipay: paidPayments
         .filter((p) => p.method === "alipay")
-        .reduce((sum, p) => sum + (p.amount || 0), 0),
+        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0,
       stripe: paidPayments
         .filter((p) => p.method === "stripe")
-        .reduce((sum, p) => sum + (p.amount || 0), 0),
+        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0,
       paypal: paidPayments
         .filter((p) => p.method === "paypal")
-        .reduce((sum, p) => sum + (p.amount || 0), 0),
+        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0,
     };
 
     // 按币种统计（国际版 USD，国内版 CNY）

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatAmountWithCurrency, formatMultiCurrencyAmount, formatTrendMultiCurrency } from "@/lib/utils/currency";
+import { isValidPaymentStats } from "@/lib/utils/validation";
 import {
   Select,
   SelectContent,
@@ -203,7 +204,7 @@ export default function DashboardPage() {
       )}
 
       {/* 加载状态 */}
-      {loading || !userStats || !paymentStats ? (
+      {loading || !userStats || !paymentStats || !isValidPaymentStats(paymentStats) ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
         </div>
@@ -258,12 +259,12 @@ export default function DashboardPage() {
                     )
                   ) : dataFilter === 'intl' ? (
                     formatAmountWithCurrency(
-                      (paymentStats?.byMethod?.stripe || 0) + (paymentStats?.byMethod?.paypal || 0),
+                      (paymentStats?.byMethod?.stripe ?? 0) + (paymentStats?.byMethod?.paypal ?? 0),
                       'USD'
                     )
                   ) : (
                     formatAmountWithCurrency(
-                      (paymentStats?.byMethod?.wechat || 0) + (paymentStats?.byMethod?.alipay || 0),
+                      (paymentStats?.byMethod?.wechat ?? 0) + (paymentStats?.byMethod?.alipay ?? 0),
                       'CNY'
                     )
                   )}
@@ -324,7 +325,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-3xl font-bold text-foreground">
-                      ${formatNumber((paymentStats?.byMethod?.stripe || 0) + (paymentStats?.byMethod?.paypal || 0))}
+                      ${formatNumber((paymentStats?.byMethod?.stripe ?? 0) + (paymentStats?.byMethod?.paypal ?? 0))}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">总收入</p>
                   </div>
@@ -348,7 +349,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-3xl font-bold text-foreground">
-                      {formatAmount((paymentStats?.byMethod?.wechat || 0) + (paymentStats?.byMethod?.alipay || 0))}
+                      {formatAmount((paymentStats?.byMethod?.wechat ?? 0) + (paymentStats?.byMethod?.alipay ?? 0))}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">总收入</p>
                   </div>

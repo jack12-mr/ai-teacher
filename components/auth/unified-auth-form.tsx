@@ -1075,39 +1075,6 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
               </Button>
             </div>
 
-            {/* 隐私政策同意 */}
-            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-              <Checkbox
-                id="login-agree-terms"
-                checked={agreeTerms}
-                onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
-                disabled={isLoading}
-              />
-              <label
-                htmlFor="login-agree-terms"
-                className="text-sm text-muted-foreground cursor-pointer flex-1"
-              >
-                {t.auth.iAgreeTo}{" "}
-                <Button
-                  variant="link"
-                  className="px-0 h-auto text-sm"
-                  type="button"
-                  onClick={() => window.open('/privacy', '_blank')}
-                >
-                  {t.auth.privacyPolicy}
-                </Button>{" "}
-                {t.common.and}{" "}
-                <Button
-                  variant="link"
-                  className="px-0 h-auto text-sm"
-                  type="button"
-                  onClick={() => window.open('/terms', '_blank')}
-                >
-                  {t.auth.termsOfService}
-                </Button>
-              </label>
-            </div>
-
             {/* 错误/成功提示 */}
             {error && (
               <Alert variant="destructive">
@@ -1134,6 +1101,39 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
                 t.auth.loginButton
               )}
             </Button>
+
+            {/* 隐私政策同意 */}
+            <div className="flex items-center justify-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <Checkbox
+                id="login-agree-terms"
+                checked={agreeTerms}
+                onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
+                disabled={isLoading}
+              />
+              <label
+                htmlFor="login-agree-terms"
+                className="text-sm text-muted-foreground cursor-pointer"
+              >
+                {t.auth.iAgreeTo}{" "}
+                <Button
+                  variant="link"
+                  className="px-0 h-auto text-sm"
+                  type="button"
+                  onClick={() => window.open('/privacy', '_blank')}
+                >
+                  {t.auth.privacyPolicy}
+                </Button>{" "}
+                {t.common.and}{" "}
+                <Button
+                  variant="link"
+                  className="px-0 h-auto text-sm"
+                  type="button"
+                  onClick={() => window.open('/terms', '_blank')}
+                >
+                  {t.auth.termsOfService}
+                </Button>
+              </label>
+            </div>
           </form>
         </TabsContent>
 

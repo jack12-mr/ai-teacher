@@ -61,10 +61,20 @@ export default function DashboardPage() {
         getPaymentTrends(days),
       ]);
 
-      if (users.success && users.data) setUserStats(users.data);
-      if (payments.success && payments.data) setPaymentStats(payments.data);
-      if (userTrendData.success && userTrendData.data) setUserTrends(userTrendData.data);
-      if (paymentTrendData.success && paymentTrendData.data) setPaymentTrends(paymentTrendData.data);
+      // Validate all responses before updating state
+      if (!users.success || !payments.success || !userTrendData.success || !paymentTrendData.success) {
+        throw new Error("部分数据加载失败");
+      }
+
+      // Atomic state update - all or nothing
+      if (users.data && payments.data && userTrendData.data && paymentTrendData.data) {
+        setUserStats(users.data);
+        setPaymentStats(payments.data);
+        setUserTrends(userTrendData.data);
+        setPaymentTrends(paymentTrendData.data);
+      } else {
+        throw new Error("数据验证失败");
+      }
 
       setLoading(false);
       setRefreshing(false);
@@ -80,16 +90,29 @@ export default function DashboardPage() {
     loadAllStats();
 
     return () => {
-      // Cleanup on unmount
-      setUserStats(null);
-      setPaymentStats(null);
-      setUserTrends(null);
-      setPaymentTrends(null);
+      // No cleanup needed - state persists across visibility changes
     };
   }, [timeRange]);
 
+  // Auto-refresh data when tab becomes visible after being idle
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !loading && !refreshing) {
+        loadAllStats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [loading, refreshing]);
+
   async function handleRefresh() {
     setRefreshing(true);
+    setError(null);
+    setUserStats(null);
+    setPaymentStats(null);
+    setUserTrends(null);
+    setPaymentTrends(null);
     await loadAllStats();
   }
 

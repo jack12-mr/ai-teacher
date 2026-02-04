@@ -200,13 +200,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      accessToken,
-      refreshToken,
-      user: {
-        id: userId,
-        email: `miniprogram_${openid}@local.wechat`,
-        name: "小程序用户",
-        openid: openid,
+      data: {
+        token: accessToken,
+        accessToken,
+        refreshToken,
+        userInfo: {
+          id: userId,
+          email: `miniprogram_${openid}@local.wechat`,
+          name: "小程序用户",
+          openid: openid,
+        },
       },
       tokenMeta: {
         accessTokenExpiresIn: 3600,

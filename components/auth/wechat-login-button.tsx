@@ -39,7 +39,6 @@ export function WechatLoginButton({
 
     // @ts-ignore
     window.onWeChatLoginSuccess = (code: string) => {
-      alert(`[调试] Android微信登录成功!\n授权码: ${code.substring(0, 20)}...`);
       console.log("[WECHAT BUTTON] ========== Android微信登录成功回调 ==========");
       console.log("[WECHAT BUTTON] 收到微信授权码:", code);
 
@@ -48,13 +47,11 @@ export function WechatLoginButton({
       // source=app 表示这是APP端登录
       const callbackUrl = `/api/auth/wechat/callback?code=${code}&state=/dashboard&source=app`;
       console.log("[WECHAT BUTTON] 准备跳转到回调URL:", callbackUrl);
-      alert(`[调试] 准备跳转到:\n${callbackUrl}`);
       window.location.href = callbackUrl;
     };
 
     // @ts-ignore
     window.onWeChatLoginError = (error: string) => {
-      alert(`[调试] Android微信登录失败!\n错误: ${error}`);
       console.error("[WECHAT BUTTON] ========== Android微信登录失败 ==========");
       console.error("[WECHAT BUTTON] 错误信息:", error);
 
@@ -87,6 +84,7 @@ export function WechatLoginButton({
 
       console.log('[WECHAT BUTTON] API响应状态:', response.status);
       const data = await response.json();
+      console.log('[WECHAT BUTTON] API响应数据:', data);
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || '小程序登录失败');
@@ -94,13 +92,22 @@ export function WechatLoginButton({
 
       console.log('[WECHAT BUTTON] 登录成功，保存tokens');
 
+      // 兼容两种响应格式
+      const token = data.data?.token || data.data?.accessToken || data.accessToken;
+      const refreshToken = data.data?.refreshToken || data.refreshToken;
+      const userInfo = data.data?.userInfo || data.user;
+
+      if (!token) {
+        throw new Error('未收到访问令牌');
+      }
+
       // 保存 tokens
       localStorage.setItem('auth_tokens', JSON.stringify({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
+        accessToken: token,
+        refreshToken: refreshToken,
         expiresAt: Date.now() + (data.tokenMeta?.accessTokenExpiresIn || 3600) * 1000
       }));
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      localStorage.setItem('auth_user', JSON.stringify(userInfo));
 
       console.log('[WECHAT BUTTON] 跳转到dashboard');
 
@@ -127,10 +134,14 @@ export function WechatLoginButton({
     const mpCode = urlParams.get('mp_code');
 
     if (mpCode) {
-      console.log('[WECHAT BUTTON] 从URL获取到小程序code，等待用户点击按钮');
-      // 不自动登录，等待用户点击按钮
+      console.log('[WECHAT BUTTON] 从URL获取到小程序code:', mpCode.substring(0, 20) + '...');
+      console.log('[WECHAT BUTTON] 等待用户点击登录按钮');
     } else {
       console.log('[WECHAT BUTTON] URL中没有mp_code参数');
+      console.log('[WECHAT BUTTON] 完整URL:', window.location.href);
+      if (onError) {
+        onError('登录失败，请重新打开小程序');
+      }
     }
   }, []);
 

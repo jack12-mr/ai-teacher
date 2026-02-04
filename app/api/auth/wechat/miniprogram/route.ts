@@ -125,6 +125,7 @@ export async function POST(request: NextRequest) {
       const now = new Date().toISOString();
       const newUser = {
         wechat_miniprogram_openid: openid,
+        wechat_session_key: sessionKey,
         email: `miniprogram_${openid}@local.wechat`,
         name: "小程序用户",
         pro: false,
@@ -149,6 +150,7 @@ export async function POST(request: NextRequest) {
 
       const now = new Date().toISOString();
       await usersCollection.doc(userId).update({
+        wechat_session_key: sessionKey,
         login_count: (existingUser?.login_count || 0) + 1,
         last_login_at: now,
         last_login_ip: clientIP,

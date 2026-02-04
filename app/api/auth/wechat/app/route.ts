@@ -219,22 +219,28 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error("WeChat app login error:", errorMessage);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    console.error("[APP LOGIN] ========== 发生错误 ==========");
+    console.error("[APP LOGIN] 错误消息:", errorMessage);
+    console.error("[APP LOGIN] 错误堆栈:", errorStack);
+
     logSecurityEvent(
       "wechat_app_login_error",
       undefined,
       request.headers.get("x-forwarded-for") || "unknown",
       {
         error: errorMessage,
+        stack: errorStack,
       }
     );
 
     return NextResponse.json(
       {
         success: false,
-        error: "WeChat app login failed",
+        error: errorMessage, // 返回具体的错误消息而不是通用消息
         code: "WECHAT_APP_LOGIN_FAILED",
-        details: errorMessage,
+        details: errorStack?.split('\n').slice(0, 3).join('\n'), // 返回前3行堆栈信息
       },
       { status: 500 }
     );

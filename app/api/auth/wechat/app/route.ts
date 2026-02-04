@@ -13,15 +13,20 @@ const appLoginSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  console.log("[APP LOGIN] ========== 开始处理APP端微信登录 ==========");
   try {
     const body = await request.json();
+    console.log("[APP LOGIN] 收到请求body:", JSON.stringify(body));
+
     const clientIP =
       request.headers.get("x-forwarded-for") ||
       request.headers.get("x-real-ip") ||
       "unknown";
+    console.log("[APP LOGIN] 客户端IP:", clientIP);
 
     const validationResult = appLoginSchema.safeParse(body);
     if (!validationResult.success) {
+      console.error("[APP LOGIN] 验证失败:", validationResult.error.errors);
       logSecurityEvent("app_login_validation_failed", undefined, clientIP, {
         errors: validationResult.error.errors,
       });
@@ -37,8 +42,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { code } = validationResult.data;
+    console.log("[APP LOGIN] 微信授权码:", code);
 
-    if (!isChinaRegion()) {
+    const region = isChinaRegion();
+    console.log("[APP LOGIN] 区域检查 - isChinaRegion:", region);
+    console.log("[APP LOGIN] NEXT_PUBLIC_DEPLOYMENT_REGION:", process.env.NEXT_PUBLIC_DEPLOYMENT_REGION);
+
+    if (!region) {
+      console.error("[APP LOGIN] 区域不支持");
       return NextResponse.json(
         {
           success: false,
@@ -51,8 +62,12 @@ export async function POST(request: NextRequest) {
 
     const appId = process.env.WECHAT_APP_APPID;
     const appSecret = process.env.WECHAT_APP_SECRET;
+    console.log("[APP LOGIN] 环境变量检查:");
+    console.log("[APP LOGIN] - WECHAT_APP_APPID:", appId ? `${appId.substring(0, 8)}...` : "未设置");
+    console.log("[APP LOGIN] - WECHAT_APP_SECRET:", appSecret ? "已设置" : "未设置");
 
     if (!appId || !appSecret) {
+      console.error("[APP LOGIN] 环境变量缺失!");
       logSecurityEvent("app_missing_config", undefined, clientIP, {
         hasAppId: !!appId,
         hasAppSecret: !!appSecret,
@@ -67,6 +82,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    console.log("[APP LOGIN] 准备调用微信API换取access_token...");
 
     logInfo("WeChat App OAuth: exchanging code for access_token", { code });
 

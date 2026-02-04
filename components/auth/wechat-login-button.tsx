@@ -35,20 +35,25 @@ export function WechatLoginButton({
 
   // 注册全局回调函数，用于接收 Android 端传回的登录数据
   useEffect(() => {
+    console.log("[WECHAT BUTTON] 注册全局回调函数");
+
     // @ts-ignore
     window.onWeChatLoginSuccess = (code: string) => {
-      console.log("Web端收到微信Code", code);
+      console.log("[WECHAT BUTTON] ========== Android微信登录成功回调 ==========");
+      console.log("[WECHAT BUTTON] 收到微信授权码:", code);
 
       // 把 code 传给后端 API，让后端去换取 accessToken
       // state=/dashboard 表示登录成功后跳转到 dashboard 页面
       // source=app 表示这是APP端登录
       const callbackUrl = `/api/auth/wechat/callback?code=${code}&state=/dashboard&source=app`;
+      console.log("[WECHAT BUTTON] 准备跳转到回调URL:", callbackUrl);
       window.location.href = callbackUrl;
     };
 
     // @ts-ignore
     window.onWeChatLoginError = (error: string) => {
-      console.error("微信登录失败", error);
+      console.error("[WECHAT BUTTON] ========== Android微信登录失败 ==========");
+      console.error("[WECHAT BUTTON] 错误信息:", error);
 
       // 调用错误回调
       if (onError) {

@@ -13,11 +13,18 @@ function WechatCallbackContent() {
 
   useEffect(() => {
     const processWechatLogin = async () => {
+      console.log("[CALLBACK PAGE] ========== 开始处理微信登录回调 ==========");
       const code = searchParams.get("code");
       const redirect = searchParams.get("redirect") || "/";
       const source = searchParams.get("source"); // 'app' 或 null
 
+      console.log("[CALLBACK PAGE] URL参数:");
+      console.log("[CALLBACK PAGE] - code:", code);
+      console.log("[CALLBACK PAGE] - redirect:", redirect);
+      console.log("[CALLBACK PAGE] - source:", source);
+
       if (!code) {
+        console.error("[CALLBACK PAGE] 缺少授权码!");
         setError("缺少授权码");
         setIsProcessing(false);
         return;
@@ -27,6 +34,9 @@ function WechatCallbackContent() {
         // 根据来源调用不同的微信登录 API
         // source=app 时调用 APP 端登录接口，否则调用网页端登录接口
         const apiEndpoint = source === "app" ? "/api/auth/wechat/app" : "/api/auth/wechat";
+        console.log("[CALLBACK PAGE] 选择的API端点:", apiEndpoint);
+        console.log("[CALLBACK PAGE] 准备发送请求...");
+
         const response = await fetch(apiEndpoint, {
           method: "POST",
           headers: {
@@ -34,6 +44,10 @@ function WechatCallbackContent() {
           },
           body: JSON.stringify({ code }),
         });
+
+        console.log("[CALLBACK PAGE] 收到响应:");
+        console.log("[CALLBACK PAGE] - status:", response.status);
+        console.log("[CALLBACK PAGE] - ok:", response.ok);
 
         const data = await response.json();
 

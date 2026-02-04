@@ -15,6 +15,7 @@ function WechatCallbackContent() {
     const processWechatLogin = async () => {
       const code = searchParams.get("code");
       const redirect = searchParams.get("redirect") || "/";
+      const source = searchParams.get("source"); // 'app' 或 null
 
       if (!code) {
         setError("缺少授权码");
@@ -23,8 +24,10 @@ function WechatCallbackContent() {
       }
 
       try {
-        // 调用微信登录 API
-        const response = await fetch("/api/auth/wechat", {
+        // 根据来源调用不同的微信登录 API
+        // source=app 时调用 APP 端登录接口，否则调用网页端登录接口
+        const apiEndpoint = source === "app" ? "/api/auth/wechat/app" : "/api/auth/wechat";
+        const response = await fetch(apiEndpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -108,6 +108,12 @@ export async function GET(request: NextRequest) {
           avatar = generateDefaultAvatar(user.name, user.email);
         }
       }
+      // 如果是过期的临时URL（包含签名参数），生成默认头像
+      else if (avatar.includes('sign=') && avatar.includes('t=')) {
+        console.warn('[/api/auth/me] Detected expired temporary URL, using default avatar');
+        avatar = generateDefaultAvatar(user.name, user.email);
+      }
+      // 否则使用原有的URL
     } else {
       // 如果没有头像，生成默认头像
       avatar = generateDefaultAvatar(user.name, user.email);

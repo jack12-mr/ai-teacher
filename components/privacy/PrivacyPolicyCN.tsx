@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect } from "react"
+import { useT } from "@/lib/i18n"
 
 export function PrivacyPolicyCN() {
+  const t = useT()
   // Set document language for accessibility
   useEffect(() => {
     document.documentElement.lang = "zh-CN"

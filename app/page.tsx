@@ -22,6 +22,38 @@ export default function LandingPage() {
 
   const isIntl = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION === 'INTL'
 
+  // Check if in mini-program environment
+  const isMiniProgram = () => {
+    if (typeof window === 'undefined') return false
+    return /miniProgram/i.test(navigator.userAgent) ||
+           // @ts-ignore
+           window.__wxjs_environment === 'miniprogram'
+  }
+
+  // Handle login button click
+  const handleLogin = () => {
+    if (isMiniProgram()) {
+      // In mini-program: send message to navigate to login page
+      // @ts-ignore
+      if (typeof wx !== 'undefined' && wx.miniProgram) {
+        // @ts-ignore
+        wx.miniProgram.postMessage({
+          data: {
+            type: 'REQUEST_WX_LOGIN',
+            returnUrl: window.location.href
+          }
+        })
+        // @ts-ignore
+        wx.miniProgram.navigateTo({
+          url: '/pages/webshell/login'
+        })
+      }
+    } else {
+      // In browser: navigate to web login page
+      router.push("/login")
+    }
+  }
+
   // Redirect authenticated users to dashboard
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -43,7 +75,7 @@ export default function LandingPage() {
             {isIntl ? 'AI Teaching Assistant' : '晨佑AI教学'}
           </div>
           <Button
-            onClick={() => router.push("/login")}
+            onClick={handleLogin}
             className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm md:text-base px-4 py-2 md:px-6 md:py-3 min-h-[44px]"
           >
             {isIntl ? 'Login/Register' : '登录/注册'}
@@ -66,7 +98,7 @@ export default function LandingPage() {
           }
         </p>
         <Button
-          onClick={() => router.push("/login")}
+          onClick={handleLogin}
           size="lg"
           className="bg-indigo-600 hover:bg-indigo-700 text-white text-base md:text-lg px-6 py-5 md:px-8 md:py-6 min-h-[48px]"
         >

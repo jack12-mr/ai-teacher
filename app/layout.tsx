@@ -26,6 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang={isChina ? "zh-CN" : "en"} suppressHydrationWarning>
+      <head>
+        <script
+          type="text/javascript"
+          src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"
+        ></script>
+      </head>
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <I18nProvider>

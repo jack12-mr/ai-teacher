@@ -70,6 +70,29 @@ export function WechatLoginButton({
     };
   }, [onSuccess, onError]);
 
+  // 处理桌面浏览器二维码登录
+  const handleQRCodeLogin = async () => {
+    setIsLoading(true);
+    try {
+      const next = encodeURIComponent('/dashboard');
+      const response = await fetch(`/api/auth/wechat/qrcode?next=${next}`);
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || '获取二维码失败');
+      }
+
+      // 跳转到微信二维码页面
+      window.location.href = data.qrcodeUrl;
+    } catch (err: any) {
+      console.error('二维码登录错误:', err);
+      if (onError) {
+        onError(err.message || '获取二维码失败，请重试');
+      }
+      setIsLoading(false);
+    }
+  };
+
   // 处理小程序登录
   const handleMiniprogramLogin = async (code: string) => {
     setIsLoading(true);
@@ -154,14 +177,28 @@ export function WechatLoginButton({
            window.__wxjs_environment === 'miniprogram';
   };
 
+  // 检测是否在微信内置浏览器中
+  const isWeChatBrowser = () => {
+    if (typeof window === 'undefined') return false;
+    return /MicroMessenger/i.test(navigator.userAgent);
+  };
+
+  // 检测是否为桌面浏览器（需要显示二维码）
+  const isDesktopBrowser = () => {
+    if (typeof window === 'undefined') return false;
+    // @ts-ignore
+    // 不是小程序、不是微信浏览器、不是Android原生应用
+    return !isMiniProgram() && !isWeChatBrowser() && !window.Android;
+  };
+
   const handleWechatLogin = async () => {
     // @ts-ignore
     if (typeof window !== 'undefined' && window.Android) {
-      // 调用原生安卓微信登录
+      // Android原生应用登录
       // @ts-ignore
       window.Android.login();
     } else if (isMiniProgram()) {
-      // 小程序环境：检查是否有 mp_code 参数
+      // 小程序环境登录
       const urlParams = new URLSearchParams(window.location.search);
       const mpCode = urlParams.get('mp_code');
 
@@ -174,23 +211,23 @@ export function WechatLoginButton({
           onError('登录失败，请重新打开小程序');
         }
       }
+    } else if (isDesktopBrowser()) {
+      // 桌面浏览器：显示二维码登录
+      handleQRCodeLogin();
     } else {
-      // 网页环境：使用公众号登录
-      setIsLoading(true)
+      // 微信内置浏览器：使用公众号授权登录
+      setIsLoading(true);
 
       try {
-        // 方法1：直接使用 GET 请求重定向到微信授权页
-        const callbackUrl = encodeURIComponent(`${window.location.origin}/api/auth/wechat/callback`)
-        const state = encodeURIComponent("/") // 登录成功后跳转到首页
-
-        // 直接跳转到微信授权获取 URL
-        window.location.href = `/api/auth/wechat?callback=${callbackUrl}&state=${state}`
+        const callbackUrl = encodeURIComponent(`${window.location.origin}/api/auth/wechat/callback`);
+        const state = encodeURIComponent('/dashboard');
+        window.location.href = `/api/auth/wechat?callback=${callbackUrl}&state=${state}`;
       } catch (err: any) {
-        console.error("微信登录错误:", err)
+        console.error('微信登录错误:', err);
         if (onError) {
-          onError(err.message || "微信登录失败，请重试")
+          onError(err.message || '微信登录失败，请重试');
         }
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
   }

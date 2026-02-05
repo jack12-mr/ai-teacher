@@ -44,14 +44,14 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # 复制构建产物
+# standalone 模式下，public 目录需要单独复制
 COPY --from=builder /app/public ./public
 
-# 自动分析构建产物，只复制必要文件
+# standalone 输出会在 .next/standalone 目录下生成完整的应用
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# 🔥 重要：复制 Server Actions 所需的 server 目录
-COPY --from=builder --chown=nextjs:nodejs /app/.next/server ./.next/server
+# 静态文件需要单独复制到正确位置
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 

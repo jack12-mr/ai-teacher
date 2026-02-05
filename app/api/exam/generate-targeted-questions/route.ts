@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTargetedQuestionsPrompts } from '@/lib/i18n/ai-prompts';
+import { getAIConfig } from '@/lib/ai/config';
 
 /**
  * AI 针对性出题 API
@@ -7,8 +8,6 @@ import { getTargetedQuestionsPrompts } from '@/lib/i18n/ai-prompts';
  * 根据用户评估结果的薄弱环节，生成针对性的练习题目
  * 题目分布：60%薄弱项 + 30%中等项 + 10%优势项
  */
-
-const DASHSCOPE_API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 // 请求参数类型
 interface WeakDimension {
@@ -82,15 +81,16 @@ export async function POST(request: NextRequest) {
       { weakCount, mediumCount, strongCount }
     );
 
-    // 调用通义千问 API 生成题目
-    const response = await fetch(DASHSCOPE_API_URL, {
+    // 调用 AI API 生成题目
+    const aiConfig = getAIConfig();
+    const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${aiConfig.apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.AI_MODEL_NAME || 'qwen-max',
+        model: aiConfig.modelName,
         messages: [
           {
             role: 'system',
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
       questions = Array.isArray(parsed) ? parsed : (parsed.questions || []);
 
       // 验证并修复题目数据
-      questions = questions.map((q, index) => ({
+      questions = questions.map((q: any, index) => ({
         id: q.id || `tq-${Date.now()}-${index}`,
         type: q.type || 'single',
         content: q.content || q.question || '题目加载失败',

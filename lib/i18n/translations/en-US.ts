@@ -199,6 +199,7 @@ export const enUS: Translations = {
     activity: "Activity",
     minutes: "minutes",
     questions: "questions",
+    aiGreeting: "Hello! I'm the AI Exam Preparation Planner. Please tell me what subject questions you want to practice?",
   },
 
   // Exam Setup Page
@@ -260,6 +261,22 @@ export const enUS: Translations = {
     extractingPoints: "Extracting key knowledge points",
     generatingBank: "Generating graded question bank",
     optimizingQuality: "Optimizing question quality",
+    // Search flow loading messages
+    searchingExamSyllabus: "🌐 Searching for '{examName}' exam syllabus online...",
+    parsingSearchResults: "🔎 Parsing search results...",
+    obtainedChapters: "📖 Obtained {count} syllabus chapters",
+    successfullyParsed: "✅ Successfully parsed '{name}'",
+    aiGeneratingQuestions: "🤖 AI is generating {count} curated questions...",
+    generatedQuestions: "📝 Generated {count} questions",
+    optimizingQuestions: "⚡ Optimizing question quality...",
+    generationCompleteWithCount: "🎉 Question bank complete! Total {count} curated questions",
+    generationFailed: "⚠️ Generation failed, please retry",
+    parsingDocument: "📄 Parsing '{fileName}'...",
+    documentParsedSuccess: "✅ Document parsed successfully",
+    extractingKnowledge: "🔍 Extracting core knowledge points...",
+    extractedContent: "📊 Extracted {wordCount} words of content",
+    aiGeneratingFromDoc: "🤖 AI is generating {count} curated questions from document...",
+    processingFailed: "⚠️ Processing failed, please re-upload file",
   },
 
   // Wrong Book Page

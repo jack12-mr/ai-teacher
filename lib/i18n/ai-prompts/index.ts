@@ -54,6 +54,27 @@ export function getDocumentQuestionsPrompts() {
   return getAIPrompts().documentQuestions;
 }
 
+/**
+ * Get prompts for answer explanation API
+ */
+export function getExplainAnswerPrompts() {
+  return getAIPrompts().explainAnswer;
+}
+
+/**
+ * Get prompts for document chat API
+ */
+export function getDocumentChatPrompts() {
+  return getAIPrompts().documentChat;
+}
+
+/**
+ * Get prompts for performance analysis API
+ */
+export function getAnalyzePerformancePrompts() {
+  return getAIPrompts().analyzePerformance;
+}
+
 // Export types for TypeScript support
 export type DeploymentRegion = 'CN' | 'INTL';
 export type AIPrompts = typeof zhCNPrompts;

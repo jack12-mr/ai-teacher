@@ -197,6 +197,7 @@ export const zhCN = {
     activity: "考点/活动",
     minutes: "分钟",
     questions: "题",
+    aiGreeting: "你好！我是 AI 备考规划师。请告诉我你想练习什么科目的题目？",
   },
 
   // 考试设置页面
@@ -259,6 +260,22 @@ export const zhCN = {
     extractingPoints: "提取核心知识点",
     generatingBank: "生成分级题库",
     optimizingQuality: "优化题目质量",
+    // Search flow loading messages
+    searchingExamSyllabus: "🌐 正在联网搜索「{examName}」考试大纲...",
+    parsingSearchResults: "🔎 正在解析搜索结果...",
+    obtainedChapters: "📖 已获取 {count} 个考纲章节",
+    successfullyParsed: "✅ 成功解析「{name}」",
+    aiGeneratingQuestions: "🤖 AI 正在生成 {count} 道精选题目...",
+    generatedQuestions: "📝 已生成 {count} 道题目",
+    optimizingQuestions: "⚡ 正在优化题目质量...",
+    generationCompleteWithCount: "🎉 题库生成完成！共 {count} 道精选题目",
+    generationFailed: "⚠️ 出题失败，请重试",
+    parsingDocument: "📄 正在解析「{fileName}」...",
+    documentParsedSuccess: "✅ 文档解析成功",
+    extractingKnowledge: "🔍 正在提取核心知识点...",
+    extractedContent: "📊 已提取 {wordCount} 字内容",
+    aiGeneratingFromDoc: "🤖 AI 正在基于文档生成 {count} 道精选题目...",
+    processingFailed: "⚠️ 处理失败，请重新上传文件",
   },
 
   // 错题本页面

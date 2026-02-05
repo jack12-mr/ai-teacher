@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  baseURL: process.env.OPENAI_BASE_URL,
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getAIConfig } from '@/lib/ai/config';
+import { getExplainAnswerPrompts } from '@/lib/i18n/ai-prompts';
 
 interface ExplainRequest {
   question: string;
@@ -16,22 +13,31 @@ interface ExplainRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    const aiConfig = getAIConfig();
+    const openai = new OpenAI({
+      baseURL: aiConfig.baseURL,
+      apiKey: aiConfig.apiKey,
+    });
+
     const body: ExplainRequest = await request.json();
     const { question, options, userAnswer, correctAnswer, isCorrect } = body;
 
     const userChoice = options[userAnswer];
     const correctChoice = options[correctAnswer];
 
+    // Get region-aware prompts
+    const prompts = getExplainAnswerPrompts();
+
     const prompt = isCorrect
-      ? `用户回答正确！题目是："${question}"，用户选择了"${userChoice}"。请用1-2句话简短表扬并解释为什么这是正确答案。`
-      : `用户回答错误。题目是："${question}"，用户选择了"${userChoice}"，但正确答案是"${correctChoice}"。请用2-3句话简短解释正确答案，帮助用户理解。`;
+      ? prompts.correctPrompt(question, userChoice)
+      : prompts.incorrectPrompt(question, userChoice, correctChoice);
 
     const completion = await openai.chat.completions.create({
-      model: process.env.AI_MODEL_NAME || 'qwen-max',
+      model: aiConfig.modelName,
       messages: [
         {
           role: 'system',
-          content: '你是一名友善的计算机老师，擅长用简洁易懂的语言解释概念。回复要简短、鼓励性强。'
+          content: prompts.systemPrompt
         },
         {
           role: 'user',

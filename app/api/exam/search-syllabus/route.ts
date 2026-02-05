@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSearchGuidancePrompts } from '@/lib/i18n/ai-prompts';
+import { getAIConfig } from '@/lib/ai/config';
 
 /**
  * 联网搜索考试大纲 API
  *
- * 使用阿里通义千问的联网搜索功能，获取最新的考试大纲和题型信息
+ * 使用 AI 的联网搜索功能，获取最新的考试大纲和题型信息
  */
-
-// 通义千问联网搜索需要使用原生 fetch，因为 OpenAI SDK 不支持 enable_search 参数
-const DASHSCOPE_API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,15 +25,16 @@ export async function POST(request: NextRequest) {
     // 构建搜索提示词
     const searchPrompt = buildSearchPrompt(examType, examName, requirements);
 
-    // 调用通义千问 API，启用联网搜索
-    const response = await fetch(DASHSCOPE_API_URL, {
+    // 调用 AI API，启用联网搜索
+    const aiConfig = getAIConfig();
+    const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${aiConfig.apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.AI_SEARCH_MODEL_NAME || 'qwen-turbo',
+        model: aiConfig.searchModelName || aiConfig.modelName,
         messages: [
           {
             role: 'system',

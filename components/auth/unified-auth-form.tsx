@@ -616,11 +616,6 @@ function IntlAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAut
           </div>
         )}
 
-        {/* 测试文本 - 如果你能看到这个，说明代码被加载了 */}
-        <div style={{color: 'red', fontSize: '20px', fontWeight: 'bold'}}>
-          测试：如果你能看到这个红色文字，说明代码被正确加载了
-        </div>
-
         {/* 隐私政策同意 */}
         <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
           <Checkbox

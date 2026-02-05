@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getQuestionGenerationPrompts } from '@/lib/i18n/ai-prompts';
+import { getAIConfig } from '@/lib/ai/config';
 
 /**
  * AI 动态出题 API
  *
  * 根据考试大纲信息，使用 AI 生成对应科目的选择题
  */
-
-const DASHSCOPE_API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
 // 题目类型定义
 interface GeneratedQuestion {
@@ -38,15 +37,16 @@ export async function POST(request: NextRequest) {
     // 构建出题提示词
     const prompt = buildQuestionPrompt(examType, examName, syllabus, count, requirements);
 
-    // 调用通义千问 API 生成题目
-    const response = await fetch(DASHSCOPE_API_URL, {
+    // 调用 AI API 生成题目
+    const aiConfig = getAIConfig();
+    const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${aiConfig.apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.AI_MODEL_NAME || 'qwen-max',
+        model: aiConfig.modelName,
         messages: [
           {
             role: 'system',

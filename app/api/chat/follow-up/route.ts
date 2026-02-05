@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  baseURL: process.env.OPENAI_BASE_URL,
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getAIConfig } from '@/lib/ai/config';
 
 interface Question {
   id: string;
@@ -30,6 +26,12 @@ interface FollowUpRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    const aiConfig = getAIConfig();
+    const openai = new OpenAI({
+      baseURL: aiConfig.baseURL,
+      apiKey: aiConfig.apiKey,
+    });
+
     const body: FollowUpRequest = await request.json();
     const { question, userMessage, chatHistory } = body;
 
@@ -89,7 +91,7 @@ ${optionsText}
     });
 
     const completion = await openai.chat.completions.create({
-      model: process.env.AI_MODEL_NAME || 'qwen-max',
+      model: aiConfig.modelName,
       messages,
       max_tokens: 800,
       temperature: 0.7

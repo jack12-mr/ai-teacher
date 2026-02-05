@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { getCloudBaseDatabase } from '@/lib/cloudbase/init';
 
-// 初始化 OpenAI 客户端（兼容阿里云通义千问）
-const openai = new OpenAI({
-  baseURL: process.env.OPENAI_BASE_URL,
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getAIConfig } from '@/lib/ai/config';
+import { getAnalyzePerformancePrompts } from '@/lib/i18n/ai-prompts';
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize OpenAI client with region-based configuration
+    const aiConfig = getAIConfig();
+    const openai = new OpenAI({
+      baseURL: aiConfig.baseURL,
+      apiKey: aiConfig.apiKey,
+    });
+
     const db = getCloudBaseDatabase();
 
     // 查询最新的评估记录
@@ -30,14 +34,17 @@ export async function POST(request: NextRequest) {
     const latestAssessment = assessmentResult.data[0];
     const skillsData = JSON.stringify(latestAssessment.skills);
 
+    // Get region-aware prompts
+    const prompts = getAnalyzePerformancePrompts();
+
     // 调用 AI 模型进行分析
     const completion = await openai.chat.completions.create({
-      model: process.env.AI_MODEL_NAME || 'qwen-max',
+      model: aiConfig.modelName,
       response_format: { type: 'json_object' },
       messages: [
         {
           role: 'system',
-          content: '你是一名计算机老师。分析学生的技能数据，找出弱项并出题。返回 JSON: { analysis: "...", question: { title: "...", options: [], answer: 0, explanation: "..." } }'
+          content: prompts.systemPrompt
         },
         {
           role: 'user',

@@ -5,6 +5,7 @@ import { Send, Bot, User } from 'lucide-react'
 import { Requirement, parseRequirements, mergeRequirements, hasSubject } from '@/lib/requirement-parser'
 import { RequirementTags } from './RequirementTags'
 import { QuickActionChips } from './QuickActionChips'
+import { useT } from '@/lib/i18n'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -16,9 +17,10 @@ interface AiRequirementAgentProps {
 }
 
 export function AiRequirementAgent({ onStartGeneration }: AiRequirementAgentProps) {
+  const t = useT()
   const [requirements, setRequirements] = useState<Requirement[]>([])
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: '你好！我是 AI 备考规划师。请告诉我你想练习什么科目的题目？' }
+    { role: 'assistant', content: t.exam.aiGreeting }
   ])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)

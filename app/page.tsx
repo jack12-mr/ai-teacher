@@ -1,13 +1,38 @@
 "use client"
 
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FileText, Brain, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/components/auth/auth-provider"
+import { useUserIntl } from "@/components/user-context-intl"
+import { isChinaRegion } from "@/lib/config/region"
 
 export default function LandingPage() {
   const router = useRouter()
+  const isChina = isChinaRegion()
+
+  // Use the appropriate auth hook based on region
+  const authChina = isChina ? useAuth() : { isAuthenticated: false, isLoading: false }
+  const authIntl = !isChina ? useUserIntl() : { isAuthenticated: false, isLoading: false }
+
+  const isAuthenticated = isChina ? authChina.isAuthenticated : authIntl.isAuthenticated
+  const isLoading = isChina ? authChina.isLoading : authIntl.isLoading
+
   const isIntl = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION === 'INTL'
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/dashboard")
+    }
+  }, [isLoading, isAuthenticated, router])
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-neutral-50 dark:from-black dark:to-neutral-950">

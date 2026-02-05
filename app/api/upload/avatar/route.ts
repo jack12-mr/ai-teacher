@@ -50,11 +50,12 @@ export async function POST(req: NextRequest) {
       console.warn("[avatar upload] failed to get temp url", err);
     }
 
+    // Return fileID as avatarUrl - it's permanent and can be used to generate temp URLs later
     return NextResponse.json({
       success: true,
       fileId: res.fileID,
       tempUrl,
-      avatarUrl: tempUrl || res.fileID
+      avatarUrl: res.fileID  // Use fileID instead of tempUrl
     });
   } catch (error) {
     console.error("[avatar upload] error", error);

@@ -89,8 +89,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 如果用户没有头像，生成默认头像
-    const avatar = user.avatar || generateDefaultAvatar(user.name, user.email);
+    // 处理头像URL
+    let avatar = user.avatar;
+
+    // 如果用户有头像
+    if (avatar) {
+      // 如果是 CloudBase fileID (以 cloud:// 开头)，生成新的临时URL
+      if (avatar.startsWith('cloud://')) {
+        try {
+          const db = getCloudBaseApp();
+          const tempUrlResult = await db.getTempFileURL({
+            fileList: [{ fileID: avatar, maxAge: 7 * 24 * 60 * 60 }], // 7 days
+          });
+          avatar = tempUrlResult?.fileList?.[0]?.tempFileURL || avatar;
+        } catch (err) {
+          console.warn('[/api/auth/me] Failed to generate temp URL for avatar:', err);
+          // 如果生成失败，使用默认头像
+          avatar = generateDefaultAvatar(user.name, user.email);
+        }
+      }
+    } else {
+      // 如果没有头像，生成默认头像
+      avatar = generateDefaultAvatar(user.name, user.email);
+    }
 
     return NextResponse.json({
       user: {

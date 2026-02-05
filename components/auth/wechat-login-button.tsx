@@ -93,80 +93,6 @@ export function WechatLoginButton({
     }
   };
 
-  // 处理小程序登录
-  const handleMiniprogramLogin = async (code: string) => {
-    setIsLoading(true);
-
-    try {
-      console.log('[WECHAT BUTTON] 调用小程序登录API...');
-      const response = await fetch('/api/auth/wechat/miniprogram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
-      });
-
-      console.log('[WECHAT BUTTON] API响应状态:', response.status);
-      const data = await response.json();
-      console.log('[WECHAT BUTTON] API响应数据:', data);
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || '小程序登录失败');
-      }
-
-      console.log('[WECHAT BUTTON] 登录成功，保存tokens');
-
-      // 兼容两种响应格式
-      const token = data.data?.token || data.data?.accessToken || data.accessToken;
-      const refreshToken = data.data?.refreshToken || data.refreshToken;
-      const userInfo = data.data?.userInfo || data.user;
-
-      if (!token) {
-        throw new Error('未收到访问令牌');
-      }
-
-      // 保存 tokens
-      localStorage.setItem('auth_tokens', JSON.stringify({
-        accessToken: token,
-        refreshToken: refreshToken,
-        expiresAt: Date.now() + (data.tokenMeta?.accessTokenExpiresIn || 3600) * 1000
-      }));
-      localStorage.setItem('auth_user', JSON.stringify(userInfo));
-
-      console.log('[WECHAT BUTTON] 跳转到dashboard');
-
-      // 跳转到 dashboard
-      window.location.href = '/dashboard';
-    } catch (error: any) {
-      console.error('[WECHAT BUTTON] 小程序登录失败:', error);
-      if (onError) {
-        onError(error.message || '小程序登录失败，请重试');
-      }
-      setIsLoading(false);
-    }
-  };
-
-  // 检测小程序环境并处理登录
-  useEffect(() => {
-    // 只在小程序环境中运行
-    if (!isMiniProgram()) return;
-
-    console.log('[WECHAT BUTTON] 检测到小程序环境');
-
-    // 检查 URL 中是否有 mp_code 参数
-    const urlParams = new URLSearchParams(window.location.search);
-    const mpCode = urlParams.get('mp_code');
-
-    if (mpCode) {
-      console.log('[WECHAT BUTTON] 从URL获取到小程序code:', mpCode.substring(0, 20) + '...');
-      console.log('[WECHAT BUTTON] 等待用户点击登录按钮');
-    } else {
-      console.log('[WECHAT BUTTON] URL中没有mp_code参数');
-      console.log('[WECHAT BUTTON] 完整URL:', window.location.href);
-      if (onError) {
-        onError('登录失败，请重新打开小程序');
-      }
-    }
-  }, []);
 
   // 检测是否在微信小程序环境中
   const isMiniProgram = () => {
@@ -198,18 +124,14 @@ export function WechatLoginButton({
       // @ts-ignore
       window.Android.login();
     } else if (isMiniProgram()) {
-      // 小程序环境登录
-      const urlParams = new URLSearchParams(window.location.search);
-      const mpCode = urlParams.get('mp_code');
-
-      if (mpCode) {
-        console.log('[WECHAT BUTTON] 用户点击登录按钮，使用URL中的code');
-        handleMiniprogramLogin(mpCode);
-      } else {
-        console.error('[WECHAT BUTTON] URL中没有mp_code参数');
-        if (onError) {
-          onError('登录失败，请重新打开小程序');
-        }
+      // 小程序环境：导航到小程序登录页面
+      // @ts-ignore
+      if (typeof wx !== 'undefined' && wx.miniProgram) {
+        console.log('[WECHAT BUTTON] 导航到小程序登录页面');
+        // @ts-ignore
+        wx.miniProgram.navigateTo({
+          url: '/pages/webshell/login'
+        });
       }
     } else if (isDesktopBrowser()) {
       // 桌面浏览器：显示二维码登录

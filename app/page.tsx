@@ -22,36 +22,10 @@ export default function LandingPage() {
 
   const isIntl = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION === 'INTL'
 
-  // Check if in mini-program environment
-  const isMiniProgram = () => {
-    if (typeof window === 'undefined') return false
-    return /miniProgram/i.test(navigator.userAgent) ||
-           // @ts-ignore
-           window.__wxjs_environment === 'miniprogram'
-  }
-
   // Handle login button click
   const handleLogin = () => {
-    if (isMiniProgram()) {
-      // In mini-program: send message to navigate to login page
-      // @ts-ignore
-      if (typeof wx !== 'undefined' && wx.miniProgram) {
-        // @ts-ignore
-        wx.miniProgram.postMessage({
-          data: {
-            type: 'REQUEST_WX_LOGIN',
-            returnUrl: window.location.href
-          }
-        })
-        // @ts-ignore
-        wx.miniProgram.navigateTo({
-          url: '/pages/webshell/login'
-        })
-      }
-    } else {
-      // In browser: navigate to web login page
-      router.push("/login")
-    }
+    // Always navigate to web login page, regardless of environment
+    router.push("/login")
   }
 
   // Redirect authenticated users to dashboard

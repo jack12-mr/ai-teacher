@@ -154,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const expiresInSeconds = expiresIn ? parseInt(expiresIn) : 3600;
         saveTokens(token, token, expiresInSeconds); // 使用同一个 token 作为 refreshToken
 
-        // 如果有用户信息，也保存
+        // 如果有用户信息，也保存并立即设置用户状态
         if (mpNickName || mpAvatarUrl) {
           const userData: User = {
             id: openid ?? "",
@@ -163,10 +163,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             avatar: mpAvatarUrl ?? undefined,
           };
           saveUser(userData);
+          // 立即设置用户状态，避免显示登录页面
+          setUser(userData);
         }
 
-        // 立即设置认证状态，避免显示登录页面
-        setIsAuthenticated(true);
+        // 立即设置加载完成，避免显示登录页面
         setIsLoading(false);
 
         // 清除 URL 参数

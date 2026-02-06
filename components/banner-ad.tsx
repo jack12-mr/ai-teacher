@@ -118,9 +118,27 @@ export function BannerAd({ onUpgrade, position = 'bottom' }: BannerAdProps) {
     }
   }
 
-  // 已关闭或加载中不显示（避免闪烁）
-  if (!isVisible || isLoading) {
+  // 已关闭不显示
+  if (!isVisible) {
     return null
+  }
+
+  // 加载中显示骨架屏（避免闪烁）
+  if (isLoading) {
+    return (
+      <Card className="relative mb-8 overflow-hidden animate-pulse">
+        <div className="flex items-center justify-between p-4 md:p-6">
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="w-12 h-12 bg-neutral-200 dark:bg-neutral-700 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4" />
+              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2" />
+            </div>
+          </div>
+          <div className="w-24 h-10 bg-neutral-200 dark:bg-neutral-700 rounded ml-4" />
+        </div>
+      </Card>
+    )
   }
 
   // 显示动态广告

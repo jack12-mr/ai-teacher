@@ -234,13 +234,13 @@ export function ProfileInfo() {
           {/* 邮箱 */}
           <div className="grid grid-cols-3 gap-2 items-center">
             <Label className="text-muted-foreground">{t.profile.email}</Label>
-            <span className="col-span-2 font-medium">{user?.email || t.profile.notSet}</span>
+            <span className="col-span-2 font-medium truncate overflow-hidden text-ellipsis">{user?.email || t.profile.notSet}</span>
           </div>
 
           {/* 用户ID */}
           <div className="grid grid-cols-3 gap-2 items-center">
             <Label className="text-muted-foreground">{t.profile.userId}</Label>
-            <span className="col-span-2 text-sm font-mono text-muted-foreground">
+            <span className="col-span-2 text-sm font-mono text-muted-foreground truncate overflow-hidden text-ellipsis">
               {user?.id || t.profile.unknown}
             </span>
           </div>

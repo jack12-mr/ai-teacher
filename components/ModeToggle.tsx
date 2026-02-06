@@ -26,9 +26,9 @@ export function ModeToggle() {
       <Button
         variant="outline"
         size="sm"
-        className="h-9 px-3 border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        className="h-8 px-2 border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
       >
-        <Sun className="h-4 w-4" />
+        <Sun className="h-3.5 w-3.5" />
       </Button>
     )
   }
@@ -41,12 +41,12 @@ export function ModeToggle() {
       size="sm"
       onClick={toggleTheme}
       title={isDark ? t.theme.light : t.theme.dark}
-      className="h-9 px-3 border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
+      className="h-8 px-2 border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
     >
       {isDark ? (
-        <Sun className="h-4 w-4 text-yellow-500" />
+        <Sun className="h-3.5 w-3.5 text-yellow-500" />
       ) : (
-        <Moon className="h-4 w-4 text-indigo-600" />
+        <Moon className="h-3.5 w-3.5 text-indigo-600" />
       )}
     </Button>
   )

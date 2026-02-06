@@ -12,7 +12,7 @@ import { BannerAd } from "@/components/banner-ad"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Crown, BookMarked, TrendingUp, Brain, Loader2, Home } from "lucide-react"
+import { Crown, BookMarked, TrendingUp, Brain, Loader2, Home, User, CreditCard, Receipt, Settings, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AiCoachModal } from "@/components/ai-coach-modal"
 import { isChinaRegion } from "@/lib/config/region"
@@ -156,7 +156,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo - always visible */}
-            <div className="text-2xl font-bold text-neutral-950 dark:text-white">
+            <div className="text-lg font-bold text-neutral-950 dark:text-white">
               晨佑AI教学
             </div>
 
@@ -199,14 +199,72 @@ export default function HomePage() {
 
             {/* Mobile Navigation */}
             {isMobile && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                <LanguageSwitcher />
+                <ModeToggle />
                 {userProfile.isPremium && (
-                  <Badge className="bg-indigo-600 text-white border-0 text-xs px-2 py-1">
-                    <Crown className="w-3 h-3 mr-1" />
+                  <Badge className="bg-indigo-600 text-white border-0 text-xs px-1.5 py-0.5">
+                    <Crown className="w-2.5 h-2.5 mr-0.5" />
                     Pro
                   </Badge>
                 )}
                 <MobileHeaderMenu>
+                  {/* User Info Section */}
+                  <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg font-medium">
+                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-neutral-950 dark:text-white truncate">
+                          {user?.name || "用户"}
+                        </p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                          {user?.email}
+                        </p>
+                        {userProfile.isPremium && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 mt-1 rounded text-xs font-medium bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                            Pro
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Menu Items */}
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/profile')}
+                    className="w-full justify-start min-h-[44px]"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    {t.userMenu.profile}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/profile/subscription')}
+                    className="w-full justify-start min-h-[44px]"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    {t.userMenu.subscription}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/profile/payments')}
+                    className="w-full justify-start min-h-[44px]"
+                  >
+                    <Receipt className="w-4 h-4 mr-2" />
+                    {t.userMenu.payments}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/profile/settings')}
+                    className="w-full justify-start min-h-[44px]"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    {t.userMenu.settings}
+                  </Button>
+
                   {!userProfile.isPremium && (
                     <Button
                       onClick={() => setShowUpgradeModal(true)}
@@ -224,10 +282,20 @@ export default function HomePage() {
                     <BookMarked className="w-4 h-4 mr-2" />
                     {t.home.viewWrongBook}
                   </Button>
-                  <div className="border-t border-neutral-200 dark:border-neutral-800 pt-3 mt-3 space-y-3">
-                    <LanguageSwitcher />
-                    <ModeToggle />
-                    <UserAvatarMenu />
+
+                  {/* Logout Button */}
+                  <div className="border-t border-neutral-200 dark:border-neutral-800 pt-3 mt-3">
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        await logout()
+                        router.push('/login')
+                      }}
+                      className="w-full justify-start min-h-[44px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {t.userMenu.logout}
+                    </Button>
                   </div>
                 </MobileHeaderMenu>
               </div>

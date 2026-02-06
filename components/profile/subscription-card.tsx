@@ -18,6 +18,8 @@ import {
 } from "lucide-react"
 import { useT } from "@/lib/i18n"
 import { useIsIOSApp } from "@/hooks/use-is-ios-app"
+import { LanguageSwitcher } from "@/components/navigation/language-switcher"
+import { ModeToggle } from "@/components/ModeToggle"
 
 // 根据区域选择正确的 hook
 const useAuth = isChinaRegion() ? useAuthCN : useUserIntl
@@ -122,8 +124,16 @@ export function SubscriptionCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t.subscription.subscriptionStatus}</CardTitle>
-        <CardDescription>{t.subscription.managePlan}</CardDescription>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <CardTitle>{t.subscription.subscriptionStatus}</CardTitle>
+            <CardDescription>{t.subscription.managePlan}</CardDescription>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <LanguageSwitcher />
+            <ModeToggle />
+          </div>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-6">

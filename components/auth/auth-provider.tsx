@@ -165,11 +165,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           saveUser(userData);
         }
 
-        // 清除 URL 参数并重新加载
+        // 立即设置认证状态，避免显示登录页面
+        setIsAuthenticated(true);
+        setIsLoading(false);
+
+        // 清除 URL 参数
         const cleanUrl = window.location.pathname;
         window.history.replaceState({}, "", cleanUrl);
 
-        console.log("[AUTH PROVIDER] Token 已保存，准备获取用户信息");
+        console.log("[AUTH PROVIDER] Token 已保存，用户已认证");
+
+        // 在后台获取最新用户信息，但不阻塞 UI
+        fetchCurrentUser().catch(() => {
+          console.log("[AUTH PROVIDER] 后台获取用户信息失败");
+        });
+
+        return; // 提前返回，不执行下面的 fetchCurrentUser
       }
     }
 

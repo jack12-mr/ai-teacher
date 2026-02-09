@@ -10,8 +10,8 @@ let pdfjsLib: typeof import('pdfjs-dist') | null = null
 if (typeof window !== 'undefined') {
   import('pdfjs-dist').then((module) => {
     pdfjsLib = module
-    // 设置 worker
-    module.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${module.version}/pdf.worker.min.js`
+    // 使用本地 worker (从 node_modules)
+    module.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/build/pdf.worker.min.js`
   })
 }
 
@@ -76,7 +76,7 @@ async function parsePDF(file: File): Promise<ParseResult> {
     // 确保 PDF.js 已加载
     if (!pdfjsLib) {
       pdfjsLib = await import('pdfjs-dist')
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `/pdfjs-dist/build/pdf.worker.min.js`
     }
 
     const arrayBuffer = await file.arrayBuffer()

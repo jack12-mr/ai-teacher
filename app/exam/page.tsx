@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { getExamPresets } from "@/lib/exam-mock-data"
 import { parseFile, validateFile, MAX_FILE_SIZE } from "@/lib/file-parser"
+import { parseFileEnhanced, validateFileEnhanced } from "@/lib/file-parser-enhanced"
 import { useT } from "@/lib/i18n"
 import { isChinaRegion } from "@/lib/config/region"
 import { AiRequirementAgent } from "@/components/exam/AiRequirementAgent"
@@ -123,7 +124,7 @@ function ExamSetupContent() {
 
     try {
       setProcessingProgress(10)
-      const parseResult = await parseFile(uploadedFile)
+      const parseResult = await parseFileEnhanced(uploadedFile)
 
       if (!parseResult.success || !parseResult.text) {
         setFileError(parseResult.error || '文件解析失败')
@@ -154,7 +155,7 @@ function ExamSetupContent() {
         // 文件上传：如果已选择题目数量，直接生成；否则进入AI对话
         try {
           setProcessingProgress(10)
-          const parseResult = await parseFile(uploadedFile)
+          const parseResult = await parseFileEnhanced(uploadedFile)
 
           if (!parseResult.success || !parseResult.text) {
             setFileError(parseResult.error || '文件解析失败')
@@ -375,7 +376,7 @@ function ExamSetupContent() {
       setProcessingProgress(10)
       await new Promise(resolve => setTimeout(resolve, 300))
 
-      const parseResult = await parseFile(uploadedFile)
+      const parseResult = await parseFileEnhanced(uploadedFile)
 
       if (!parseResult.success) {
         throw new Error(parseResult.error || '文件解析失败')

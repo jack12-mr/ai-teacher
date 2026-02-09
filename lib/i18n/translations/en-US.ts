@@ -6,6 +6,7 @@ import type { Translations } from "./zh-CN"
 export const enUS: Translations = {
   // Common
   common: {
+    appName: "AI Teaching Assistant",
     login: "Login",
     register: "Register",
     logout: "Logout",
@@ -787,6 +788,28 @@ export const enUS: Translations = {
     generatingTargeted: "Generating Targeted Questions",
     generatingBasedOnWeakness: "AI is generating custom practice questions based on your weak points",
     initializing: "Initializing...",
+  },
+
+  // Landing page
+  landing: {
+    subtitle: "Your Intelligent AI Tutor",
+    description: "AI-powered document analysis, intelligent question generation, and personalized learning paths",
+    getStarted: "Get Started",
+    features: {
+      documentAnalysis: {
+        title: "Smart Document Analysis",
+        description: "Support multiple formats, accurately extract knowledge points"
+      },
+      aiQuestions: {
+        title: "AI Auto Question Generation",
+        description: "Generate quiz papers based on document content with one click"
+      },
+      personalizedLearning: {
+        title: "Personalized Learning",
+        description: "Generate personalized learning recommendations based on quiz performance"
+      }
+    },
+    footer: "© 2026 AI Teaching Assistant | 粤ICP备2024281756号-3"
   },
 
   // Success messages

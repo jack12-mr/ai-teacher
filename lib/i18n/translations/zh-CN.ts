@@ -4,6 +4,7 @@
 export const zhCN = {
   // 通用
   common: {
+    appName: "晨佑AI教学",
     login: "登录",
     register: "注册",
     logout: "登出",
@@ -787,6 +788,28 @@ export const zhCN = {
     generatingTargeted: "正在生成针对性题目",
     generatingBasedOnWeakness: "AI 正在根据您的弱点生成专属练习题",
     initializing: "正在初始化...",
+  },
+
+  // 首页
+  landing: {
+    subtitle: "您的智能AI助教",
+    description: "AI驱动的文档解析、智能出题与个性化学习路径",
+    getStarted: "立即开始",
+    features: {
+      documentAnalysis: {
+        title: "智能文档解析",
+        description: "支持多格式上传，精准提取知识点"
+      },
+      aiQuestions: {
+        title: "AI 自动出题",
+        description: "基于文档内容，一键生成测验试卷"
+      },
+      personalizedLearning: {
+        title: "个性化学习",
+        description: "根据答题情况生成专属学习建议"
+      }
+    },
+    footer: "© 2026 晨佑AI教学 | 粤ICP备2024281756号-3"
   },
 
   // 成功消息

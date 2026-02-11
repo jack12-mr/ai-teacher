@@ -17,27 +17,37 @@ import type {
   ConfigCategory,
   AdminDatabaseAdapter,
 } from "./types";
+import { CloudBaseAdapter } from "./cloudbase-adapter";
+import { SupabaseAdapter } from "./supabase-adapter";
 
 // ==================== 数据库适配器工厂 ====================
 
 /**
  * 获取数据库适配器实例
  *
- * 返回双数据库适配器，同时连接 Supabase 和 CloudBase
+ * 根据 NEXT_PUBLIC_DEPLOYMENT_REGION 环境变量选择对应的数据库适配器
  * 使用单例模式避免重复初始化
  *
  * @returns 数据库适配器实例
  */
 let adapterInstance: AdminDatabaseAdapter | null = null;
 
-export async function getDatabaseAdapter(): Promise<AdminDatabaseAdapter> {
+export function getDatabaseAdapter(): AdminDatabaseAdapter {
   if (adapterInstance) {
     return adapterInstance;
   }
 
-  // 使用双数据库适配器，同时查询 Supabase 和 CloudBase
-  const { DualDatabaseAdapter } = await import("./dual-database-adapter");
-  adapterInstance = new DualDatabaseAdapter();
+  const region = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION;
+
+  if (region === "CN") {
+    adapterInstance = new CloudBaseAdapter();
+  } else if (region === "INTL") {
+    adapterInstance = new SupabaseAdapter();
+  } else {
+    throw new Error(
+      `Invalid DEPLOYMENT_REGION: ${region}. Must be 'CN' or 'INTL'`
+    );
+  }
 
   return adapterInstance;
 }

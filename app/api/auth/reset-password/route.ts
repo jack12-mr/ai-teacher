@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { isChinaRegion } from '@/lib/config/region';
-import { getCloudBaseDB } from '@/lib/cloudbase/cloudbase-service';
+import { getDatabase } from '@/lib/cloudbase/cloudbase-service';
 import { CLOUDBASE_COLLECTIONS, PasswordResetToken } from '@/lib/database/cloudbase-schema';
 
 const schema = z.object({
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, resetToken, password } = validationResult.data;
-    const db = await getCloudBaseDB();
+    const db = getDatabase();
     const now = new Date().toISOString();
 
     const result = await db

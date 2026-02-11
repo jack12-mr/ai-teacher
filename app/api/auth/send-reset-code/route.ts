@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { isChinaRegion } from '@/lib/config/region';
-import { getCloudBaseDB } from '@/lib/cloudbase/cloudbase-service';
+import { getDatabase } from '@/lib/cloudbase/cloudbase-service';
 import { CLOUDBASE_COLLECTIONS } from '@/lib/database/cloudbase-schema';
 import { verificationCodeService } from '@/lib/email/verification-code-service';
 import { emailService } from '@/lib/email/email-service';
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const { email } = validationResult.data;
     const clientIP = request.headers.get('x-forwarded-for') || undefined;
 
-    const db = await getCloudBaseDB();
+    const db = getDatabase();
     const existingUser = await db
       .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
       .where({ email })

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { isChinaRegion } from '@/lib/config/region';
-import { getCloudBaseDB } from '@/lib/cloudbase/cloudbase-service';
+import { getDatabase } from '@/lib/cloudbase/cloudbase-service';
 import { CLOUDBASE_COLLECTIONS } from '@/lib/database/cloudbase-schema';
 import { verificationCodeService } from '@/lib/email/verification-code-service';
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 5 * 60 * 1000);
 
-    const db = await getCloudBaseDB();
+    const db = getDatabase();
     await db.collection(CLOUDBASE_COLLECTIONS.PASSWORD_RESET_TOKENS).add({
       email,
       token: hashedToken,

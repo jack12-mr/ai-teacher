@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { getCloudBaseDB } from '@/lib/cloudbase/cloudbase-service';
+import { getDatabase } from '@/lib/cloudbase/cloudbase-service';
 import { CLOUDBASE_COLLECTIONS, EmailVerificationCode } from '@/lib/database/cloudbase-schema';
 
 export class VerificationCodeService {
@@ -24,7 +24,7 @@ export class VerificationCodeService {
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
 
-      const db = await getCloudBaseDB();
+      const db = getDatabase();
       await db.collection(CLOUDBASE_COLLECTIONS.EMAIL_VERIFICATION_CODES).add({
         email,
         code: hashedCode,
@@ -49,7 +49,7 @@ export class VerificationCodeService {
     type: 'register' | 'reset_password'
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const db = await getCloudBaseDB();
+      const db = getDatabase();
       const now = new Date().toISOString();
 
       const result = await db
@@ -107,7 +107,7 @@ export class VerificationCodeService {
     type: 'register' | 'reset_password'
   ): Promise<{ allowed: boolean; error?: string }> {
     try {
-      const db = await getCloudBaseDB();
+      const db = getDatabase();
       const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
 
       const result = await db

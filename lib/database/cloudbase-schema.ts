@@ -17,6 +17,10 @@ export interface WebUser {
   wechat_openid?: string;
   wechat_unionid?: string;
 
+  // 邮箱验证
+  email_verified?: boolean;
+  email_verified_at?: string;
+
   // 订阅信息
   pro: boolean;
   subscription_plan?: "free" | "pro" | "enterprise";
@@ -128,6 +132,34 @@ export interface WrongQuestion {
 }
 
 /**
+ * email_verification_codes 集合 - 邮箱验证码
+ */
+export interface EmailVerificationCode {
+  _id?: string;
+  email: string;
+  code: string; // bcrypt 加密后的验证码
+  type: "register" | "reset_password";
+  attempts: number;
+  ip_address?: string;
+  created_at: string;
+  expires_at: string;
+  verified: boolean;
+  verified_at?: string;
+}
+
+/**
+ * password_reset_tokens 集合 - 密码重置令牌
+ */
+export interface PasswordResetToken {
+  _id?: string;
+  email: string;
+  token: string; // bcrypt 加密后的 token
+  created_at: string;
+  expires_at: string;
+  used: boolean;
+}
+
+/**
  * CloudBase 集合列表
  */
 export const CLOUDBASE_COLLECTIONS = {
@@ -138,4 +170,6 @@ export const CLOUDBASE_COLLECTIONS = {
   ASSESSMENTS: "assessments",
   CHAT_HISTORY: "chat_history",
   WRONG_QUESTIONS: "wrong_questions",
+  EMAIL_VERIFICATION_CODES: "email_verification_codes",
+  PASSWORD_RESET_TOKENS: "password_reset_tokens",
 } as const;

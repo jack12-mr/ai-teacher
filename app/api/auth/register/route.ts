@@ -3,12 +3,14 @@ import { z } from "zod";
 import { isChinaRegion } from "@/lib/config/region";
 import { logSecurityEvent } from "@/lib/utils/logger";
 import { signupUser } from "@/lib/cloudbase/cloudbase-service";
+import { verificationCodeService } from "@/lib/email/verification-code-service";
 
 const registerSchema = z.object({
   email: z.string().email("邮箱格式不正确"),
   password: z.string().min(6, "密码至少需要6个字符"),
   confirmPassword: z.string(),
   name: z.string().optional(),
+  verificationCode: z.string().length(6, "验证码必须是6位数字"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "两次输入的密码不一致",
   path: ["confirmPassword"],
@@ -33,10 +35,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, name } = validationResult.data;
+    const { email, password, name, verificationCode } = validationResult.data;
 
     if (isChinaRegion()) {
       console.log("[/api/auth/register] 中国区注册:", email);
+
+      const verifyResult = await verificationCodeService.verifyCode(
+        email,
+        verificationCode,
+        'register'
+      );
+
+      if (!verifyResult.success) {
+        logSecurityEvent("register_verification_failed", undefined, clientIP, {
+          email,
+          error: verifyResult.error,
+        });
+        return NextResponse.json(
+          { error: verifyResult.error || "验证码验证失败" },
+          { status: 400 }
+        );
+      }
 
       const userAgent = request.headers.get("user-agent") || undefined;
       const ipAddress = clientIP !== "unknown" ? clientIP : undefined;

@@ -10,7 +10,7 @@ const registerSchema = z.object({
   password: z.string().min(6, "密码至少需要6个字符"),
   confirmPassword: z.string(),
   name: z.string().optional(),
-  verificationCode: z.string().length(6, "验证码必须是6位数字"),
+  verificationCode: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "两次输入的密码不一致",
   path: ["confirmPassword"],
@@ -39,6 +39,13 @@ export async function POST(request: NextRequest) {
 
     if (isChinaRegion()) {
       console.log("[/api/auth/register] 中国区注册:", email);
+
+      if (!verificationCode || verificationCode.length !== 6) {
+        return NextResponse.json(
+          { error: "请输入6位验证码" },
+          { status: 400 }
+        );
+      }
 
       const verifyResult = await verificationCodeService.verifyCode(
         email,

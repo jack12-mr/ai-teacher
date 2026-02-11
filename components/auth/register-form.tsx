@@ -29,8 +29,12 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [codeSuccess, setCodeSuccess] = useState("");
 
   // 密码强度检查
   const getPasswordStrength = (pwd: string) => {
@@ -50,6 +54,47 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
 
   const passwordStrength = getPasswordStrength(password);
 
+  const handleSendCode = async () => {
+    if (!email) {
+      setError("请先输入邮箱");
+      return;
+    }
+
+    setError("");
+    setCodeSuccess("");
+    setIsSendingCode(true);
+
+    try {
+      const response = await fetch("/api/auth/send-register-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCodeSuccess("验证码已发送，请查收邮件");
+        setCountdown(60);
+        const timer = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        setError(data.error || "发送验证码失败");
+      }
+    } catch (err) {
+      setError("发送验证码失败，请稍后重试");
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -65,10 +110,15 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
       return;
     }
 
+    if (!verificationCode) {
+      setError("请输入验证码");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await register(email, password, confirmPassword, name || undefined);
+      const result = await register(email, password, confirmPassword, name || undefined, verificationCode);
       if (result.success) {
         router.push(redirectTo);
         router.refresh();
@@ -96,6 +146,13 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {codeSuccess && (
+            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-600">{codeSuccess}</AlertDescription>
             </Alert>
           )}
 
@@ -187,6 +244,37 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
               {confirmPassword && password === confirmPassword && (
                 <CheckCircle className="absolute right-3 top-3 h-4 w-4 text-green-500" />
               )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="verificationCode">验证码</Label>
+            <div className="flex gap-2">
+              <Input
+                id="verificationCode"
+                type="text"
+                placeholder="请输入6位验证码"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                maxLength={6}
+                required
+                disabled={isLoading}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSendCode}
+                disabled={isSendingCode || countdown > 0 || !email || isLoading}
+                className="whitespace-nowrap"
+              >
+                {isSendingCode ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : countdown > 0 ? (
+                  `${countdown}秒`
+                ) : (
+                  "获取验证码"
+                )}
+              </Button>
             </div>
           </div>
 

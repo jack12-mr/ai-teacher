@@ -18,7 +18,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (email: string, password: string, confirmPassword: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  register: (email: string, password: string, confirmPassword: string, name?: string, verificationCode?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
   refetchUser: () => Promise<void>;
@@ -237,13 +237,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     confirmPassword: string,
-    name?: string
+    name?: string,
+    verificationCode?: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, confirmPassword, name }),
+        body: JSON.stringify({ email, password, confirmPassword, name, verificationCode }),
       });
 
       const data = await response.json();

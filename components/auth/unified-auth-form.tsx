@@ -1065,7 +1065,13 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
                   {t.auth.rememberMe}
                 </Label>
               </div>
-              <Button variant="link" className="px-0 text-sm" type="button" disabled={isLoading}>
+              <Button
+                variant="link"
+                className="px-0 text-sm"
+                type="button"
+                disabled={isLoading}
+                onClick={() => router.push('/forgot-password')}
+              >
                 {t.auth.forgotPassword}
               </Button>
             </div>

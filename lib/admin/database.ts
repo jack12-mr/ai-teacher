@@ -17,8 +17,8 @@ import type {
   ConfigCategory,
   AdminDatabaseAdapter,
 } from "./types";
-import { CloudBaseAdapter } from "./cloudbase-adapter";
-import { SupabaseAdapter } from "./supabase-adapter";
+import { CloudBaseAdminAdapter } from "./cloudbase-adapter";
+import { SupabaseAdminAdapter } from "./supabase-adapter";
 
 // ==================== 数据库适配器工厂 ====================
 
@@ -40,9 +40,9 @@ export function getDatabaseAdapter(): AdminDatabaseAdapter {
   const region = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION;
 
   if (region === "CN") {
-    adapterInstance = new CloudBaseAdapter();
+    adapterInstance = new CloudBaseAdminAdapter();
   } else if (region === "INTL") {
-    adapterInstance = new SupabaseAdapter();
+    adapterInstance = new SupabaseAdminAdapter();
   } else {
     throw new Error(
       `Invalid DEPLOYMENT_REGION: ${region}. Must be 'CN' or 'INTL'`

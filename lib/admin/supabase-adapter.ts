@@ -335,6 +335,45 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
     return result.count || 0;
   }
 
+  /**
+   * 更新管理员密码
+   */
+  async updateAdminPassword(username: string, hashedPassword: string): Promise<void> {
+    const admin = await this.getAdminByUsername(username);
+
+    if (!admin) {
+      // 如果管理员不存在，创建新管理员
+      const now = toISOString(new Date());
+      const result = await this.supabase
+        .from("admin_users")
+        .insert({
+          username,
+          password_hash: hashedPassword,
+          role: "super_admin",
+          status: "active",
+          created_at: now,
+          updated_at: now,
+        });
+
+      if (result.error) {
+        throw handleDatabaseError(result.error);
+      }
+    } else {
+      // 如果管理员存在，更新密码
+      const result = await this.supabase
+        .from("admin_users")
+        .update({
+          password_hash: hashedPassword,
+          updated_at: toISOString(new Date()),
+        })
+        .eq("id", admin.id);
+
+      if (result.error) {
+        throw handleDatabaseError(result.error);
+      }
+    }
+  }
+
   // ==================== 日志操作 ====================
 
   /**

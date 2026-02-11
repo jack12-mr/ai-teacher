@@ -284,6 +284,11 @@ export interface AdminDatabaseAdapter {
    */
   countAdmins(filters?: AdminFilters): Promise<number>;
 
+  /**
+   * 更新管理员密码
+   */
+  updateAdminPassword(username: string, hashedPassword: string): Promise<void>;
+
   // ==================== 日志操作 ====================
   /**
    * 创建操作日志

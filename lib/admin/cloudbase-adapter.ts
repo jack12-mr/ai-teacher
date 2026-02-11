@@ -354,6 +354,38 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     }
   }
 
+  /**
+   * 更新管理员密码
+   */
+  async updateAdminPassword(username: string, hashedPassword: string): Promise<void> {
+    await this.ensureInitialized();
+
+    const admin = await this.getAdminByUsername(username);
+
+    if (!admin) {
+      // 如果管理员不存在，创建新管理员
+      const now = toISOString(new Date());
+      await this.db.collection("admin_users").add({
+        username,
+        password_hash: hashedPassword,
+        role: "super_admin",
+        status: "active",
+        created_at: now,
+        updated_at: now,
+      });
+    } else {
+      // 如果管理员存在，更新密码
+      try {
+        await this.db.collection("admin_users").doc(admin.id).update({
+          password_hash: hashedPassword,
+          updated_at: toISOString(new Date()),
+        });
+      } catch (error: any) {
+        throw handleDatabaseError(error);
+      }
+    }
+  }
+
   // ==================== 日志操作 ====================
 
   /**

@@ -36,6 +36,12 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
   const [countdown, setCountdown] = useState(0);
   const [codeSuccess, setCodeSuccess] = useState("");
 
+  // 调试日志：组件挂载
+  useEffect(() => {
+    console.log('[RegisterForm] 组件已挂载');
+    console.log('[RegisterForm] 验证码输入框应该可见');
+  }, []);
+
   // 密码强度检查
   const getPasswordStrength = (pwd: string) => {
     if (!pwd) return { level: 0, text: "", color: "" };
@@ -60,11 +66,13 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
       return;
     }
 
+    console.log('[RegisterForm] 开始发送验证码，邮箱:', email);
     setError("");
     setCodeSuccess("");
     setIsSendingCode(true);
 
     try {
+      console.log('[RegisterForm] 调用 /api/auth/send-register-code');
       const response = await fetch("/api/auth/send-register-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,6 +80,7 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
       });
 
       const data = await response.json();
+      console.log('[RegisterForm] 发送验证码响应:', { status: response.status, data });
 
       if (response.ok) {
         setCodeSuccess("验证码已发送，请查收邮件");
@@ -86,9 +95,11 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
           });
         }, 1000);
       } else {
+        console.error('[RegisterForm] 发送验证码失败:', data.error);
         setError(data.error || "发送验证码失败");
       }
     } catch (err) {
+      console.error('[RegisterForm] 发送验证码异常:', err);
       setError("发送验证码失败，请稍后重试");
     } finally {
       setIsSendingCode(false);
@@ -99,18 +110,30 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
     e.preventDefault();
     setError("");
 
+    console.log('[RegisterForm] 开始提交注册表单');
+    console.log('[RegisterForm] 表单数据:', {
+      email,
+      name,
+      hasPassword: !!password,
+      hasConfirmPassword: !!confirmPassword,
+      verificationCode: verificationCode ? `${verificationCode.length}位` : '未填写'
+    });
+
     // 验证密码
     if (password.length < 6) {
+      console.error('[RegisterForm] 密码长度不足');
       setError("密码长度至少为6位");
       return;
     }
 
     if (password !== confirmPassword) {
+      console.error('[RegisterForm] 两次密码不一致');
       setError("两次输入的密码不一致");
       return;
     }
 
     if (!verificationCode) {
+      console.error('[RegisterForm] 验证码未填写');
       setError("请输入验证码");
       return;
     }
@@ -118,14 +141,20 @@ export function RegisterForm({ redirectTo = "/" }: RegisterFormProps) {
     setIsLoading(true);
 
     try {
+      console.log('[RegisterForm] 调用注册 API');
       const result = await register(email, password, confirmPassword, name || undefined, verificationCode);
+      console.log('[RegisterForm] 注册结果:', result);
+
       if (result.success) {
+        console.log('[RegisterForm] 注册成功，跳转到:', redirectTo);
         router.push(redirectTo);
         router.refresh();
       } else {
+        console.error('[RegisterForm] 注册失败:', result.error);
         setError(result.error || "注册失败，请稍后重试");
       }
     } catch (err: any) {
+      console.error('[RegisterForm] 注册异常:', err);
       setError(err.message || "注册失败，请稍后重试");
     } finally {
       setIsLoading(false);

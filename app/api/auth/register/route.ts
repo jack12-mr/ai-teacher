@@ -21,9 +21,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const clientIP = request.headers.get("x-forwarded-for") || "unknown";
 
+    console.log('[register] 收到注册请求');
+    console.log('[register] 请求数据:', {
+      email: body.email,
+      name: body.name,
+      hasPassword: !!body.password,
+      hasConfirmPassword: !!body.confirmPassword,
+      verificationCode: body.verificationCode ? `${body.verificationCode.length}位` : '未提供'
+    });
+
     // 验证输入
     const validationResult = registerSchema.safeParse(body);
     if (!validationResult.success) {
+      console.error('[register] 输入验证失败:', validationResult.error.errors);
       logSecurityEvent("register_validation_failed", undefined, clientIP, {
         errors: validationResult.error.errors,
       });
@@ -38,15 +48,17 @@ export async function POST(request: NextRequest) {
     const { email, password, name, verificationCode } = validationResult.data;
 
     if (isChinaRegion()) {
-      console.log("[/api/auth/register] 中国区注册:", email);
+      console.log("[register] 中国区注册:", email);
 
       if (!verificationCode || verificationCode.length !== 6) {
+        console.error('[register] 验证码格式错误:', verificationCode);
         return NextResponse.json(
           { error: "请输入6位验证码" },
           { status: 400 }
         );
       }
 
+      console.log('[register] 开始验证验证码');
       const verifyResult = await verificationCodeService.verifyCode(
         email,
         verificationCode,
@@ -54,6 +66,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (!verifyResult.success) {
+        console.error('[register] 验证码验证失败:', verifyResult.error);
         logSecurityEvent("register_verification_failed", undefined, clientIP, {
           email,
           error: verifyResult.error,
@@ -64,6 +77,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      console.log('[register] 验证码验证成功，开始创建用户');
       const userAgent = request.headers.get("user-agent") || undefined;
       const ipAddress = clientIP !== "unknown" ? clientIP : undefined;
 
@@ -74,6 +88,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!result.success) {
+        console.error('[register] 用户创建失败:', result.error);
         logSecurityEvent("register_failed", undefined, clientIP, {
           email,
           error: result.error,
@@ -84,6 +99,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      console.log('[register] 注册成功:', email);
       logSecurityEvent("register_success", result.userId, clientIP, { email });
 
       return NextResponse.json({
@@ -97,13 +113,14 @@ export async function POST(request: NextRequest) {
         tokenMeta: result.tokenMeta,
       });
     } else {
+      console.log('[register] 非中国区，拒绝注册');
       return NextResponse.json(
         { error: "当前区域不支持" },
         { status: 400 }
       );
     }
   } catch (error: any) {
-    console.error("[/api/auth/register] Error:", error);
+    console.error("[register] 异常:", error);
     return NextResponse.json(
       { error: "服务器内部错误" },
       { status: 500 }

@@ -905,7 +905,13 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
   const [registerEmail, setRegisterEmail] = useState("")
   const [registerPassword, setRegisterPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
   const [agreeTerms, setAgreeTerms] = useState(false)
+
+  // 验证码相关状态
+  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  const [codeSuccess, setCodeSuccess] = useState("")
 
   // 通用状态
   const [isLoading, setIsLoading] = useState(false)
@@ -942,6 +948,48 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
     }
   }
 
+  // 处理发送验证码
+  const handleSendCode = async () => {
+    if (!registerEmail) {
+      setError("请先输入邮箱")
+      return
+    }
+
+    setError("")
+    setCodeSuccess("")
+    setIsSendingCode(true)
+
+    try {
+      const response = await fetch("/api/auth/send-register-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: registerEmail }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setCodeSuccess("验证码已发送，请查收邮件")
+        setCountdown(60)
+        const timer = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      } else {
+        setError(data.error || "发送验证码失败")
+      }
+    } catch (err) {
+      setError("发送验证码失败，请稍后重试")
+    } finally {
+      setIsSendingCode(false)
+    }
+  }
+
   // 处理注册
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -958,6 +1006,12 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
     // 验证密码确认
     if (registerPassword !== confirmPassword) {
       setError(t.auth.passwordMismatch)
+      return
+    }
+
+    // 验证验证码
+    if (!verificationCode) {
+      setError("请输入验证码")
       return
     }
 
@@ -978,6 +1032,7 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
           password: registerPassword,
           confirmPassword: confirmPassword,
           name: registerName,
+          verificationCode: verificationCode,
         }),
       })
 
@@ -1214,6 +1269,41 @@ function CNAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAuthF
               </div>
               {confirmPassword && registerPassword !== confirmPassword && (
                 <p className="text-xs text-red-500">{t.auth.passwordMismatch}</p>
+              )}
+            </div>
+
+            {/* 验证码 */}
+            <div className="space-y-2">
+              <Label htmlFor="verification-code">验证码</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="verification-code"
+                  type="text"
+                  placeholder="请输入6位验证码"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  maxLength={6}
+                  required
+                  disabled={isLoading}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSendCode}
+                  disabled={isSendingCode || countdown > 0 || !registerEmail || isLoading}
+                  className="whitespace-nowrap"
+                >
+                  {isSendingCode ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : countdown > 0 ? (
+                    `${countdown}秒`
+                  ) : (
+                    "获取验证码"
+                  )}
+                </Button>
+              </div>
+              {codeSuccess && (
+                <p className="text-xs text-green-600">{codeSuccess}</p>
               )}
             </div>
 

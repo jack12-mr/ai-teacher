@@ -16,13 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatAmountWithCurrency, formatMultiCurrencyAmount, formatTrendMultiCurrency } from "@/lib/utils/currency";
 import { isValidPaymentStats } from "@/lib/utils/validation";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Loader2,
   Users,
   DollarSign,
@@ -42,7 +35,6 @@ export default function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState("30"); // 时间范围（天）
-  const [dataFilter, setDataFilter] = useState<'all' | 'intl' | 'domestic'>('all'); // 数据筛选
 
   const [userStats, setUserStats] = useState<any>(null);
   const [paymentStats, setPaymentStats] = useState<any>(null);
@@ -128,61 +120,6 @@ export default function DashboardPage() {
     return new Intl.NumberFormat("zh-CN").format(num);
   }
 
-  // 获取筛选后的用户数
-  function getFilteredUserCount() {
-    if (dataFilter === 'all') return userStats?.total || 0;
-    if (dataFilter === 'intl') return userStats?.byRegion?.international || 0;
-    if (dataFilter === 'domestic') return userStats?.byRegion?.domestic || 0;
-    return userStats?.total || 0;
-  }
-
-  // 获取筛选后的付费用户数
-  function getFilteredPaidUsers() {
-    if (dataFilter === 'all') return userStats?.paidUsers || 0;
-    if (dataFilter === 'intl') return userStats?.paidUsersByRegion?.international || 0;
-    if (dataFilter === 'domestic') return userStats?.paidUsersByRegion?.domestic || 0;
-    return userStats?.paidUsers || 0;
-  }
-
-  // 获取筛选后的转化率
-  function getFilteredConversionRate() {
-    const userCount = getFilteredUserCount();
-    const paidCount = getFilteredPaidUsers();
-    return userCount > 0 ? Math.round((paidCount / userCount) * 100 * 10) / 10 : 0;
-  }
-
-  // 获取筛选后的月活用户数（暂时使用全部数据）
-  function getFilteredMonthlyActive() {
-    return userStats?.monthlyActive || 0;
-  }
-
-  // 获取筛选后的收入趋势数据
-  function getFilteredRevenueTrends() {
-    if (!paymentTrends?.daily) return [];
-
-    return paymentTrends.daily.map(item => ({
-      date: item.date,
-      revenue: dataFilter === 'all'
-        ? item.revenue
-        : dataFilter === 'intl'
-        ? item.revenueUSD
-        : item.revenueCNY,
-    }));
-  }
-
-  // 获取筛选后的用户趋势数据
-  function getFilteredUserTrends() {
-    if (!userTrends?.daily) return [];
-
-    return userTrends.daily.map(item => ({
-      date: item.date,
-      activeUsers: dataFilter === 'all'
-        ? item.activeUsers
-        : dataFilter === 'intl'
-        ? item.activeUsersInternational || 0
-        : item.activeUsersDomestic || 0,
-    }));
-  }
 
   // ==================== 渲染 ====================
   return (
@@ -197,18 +134,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* 数据筛选下拉菜单 */}
-          <Select value={dataFilter} onValueChange={(v: any) => setDataFilter(v)}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">全部数据</SelectItem>
-              <SelectItem value="intl">国际版</SelectItem>
-              <SelectItem value="domestic">国内版</SelectItem>
-            </SelectContent>
-          </Select>
-
           {/* 刷新按钮 */}
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
             <Loader2 className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
@@ -242,13 +167,9 @@ export default function DashboardPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{formatNumber(getFilteredUserCount())}</div>
+                <div className="text-3xl font-bold text-foreground">{formatNumber(userStats?.total || 0)}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {dataFilter === 'all' ? (
-                    <>今日新增 <span className="font-semibold text-green-600">+{userStats?.newToday || 0}</span></>
-                  ) : (
-                    <span className="text-muted-foreground">筛选模式下不显示新增</span>
-                  )}
+                  今日新增 <span className="font-semibold text-green-600">+{userStats?.newToday || 0}</span>
                 </p>
               </CardContent>
             </Card>
@@ -275,40 +196,24 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-foreground leading-tight">
-                  {dataFilter === 'all' && paymentStats?.totalRevenueByCurrency ? (
+                  {paymentStats?.totalRevenueByCurrency ? (
                     formatMultiCurrencyAmount(
                       paymentStats.totalRevenueByCurrency.USD,
                       paymentStats.totalRevenueByCurrency.CNY
                     )
-                  ) : dataFilter === 'intl' ? (
-                    formatAmountWithCurrency(
-                      (paymentStats?.byMethod?.stripe ?? 0) + (paymentStats?.byMethod?.paypal ?? 0),
-                      'USD'
-                    )
                   ) : (
-                    formatAmountWithCurrency(
-                      (paymentStats?.byMethod?.wechat ?? 0) + (paymentStats?.byMethod?.alipay ?? 0),
-                      'CNY'
-                    )
+                    formatAmount(paymentStats?.totalRevenue || 0)
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   今日: <span className="font-semibold text-green-600">
-                    {dataFilter === 'all' && paymentTrends?.todayRevenueByCurrency ? (
+                    {paymentTrends?.todayRevenueByCurrency ? (
                       formatTrendMultiCurrency(
                         paymentTrends.todayRevenueByCurrency.USD,
                         paymentTrends.todayRevenueByCurrency.CNY
                       )
-                    ) : dataFilter === 'intl' ? (
-                      `+${formatAmountWithCurrency(
-                        paymentTrends?.todayRevenueByCurrency?.USD || 0,
-                        'USD'
-                      )}`
                     ) : (
-                      `+${formatAmountWithCurrency(
-                        paymentTrends?.todayRevenueByCurrency?.CNY || 0,
-                        'CNY'
-                      )}`
+                      `+${formatAmount(paymentTrends?.todayRevenue || 0)}`
                     )}
                   </span>
                 </p>
@@ -322,9 +227,9 @@ export default function DashboardPage() {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{formatNumber(getFilteredPaidUsers())}</div>
+                <div className="text-3xl font-bold text-foreground">{formatNumber(userStats?.paidUsers || 0)}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  转化率 <span className="font-semibold text-primary">{getFilteredConversionRate()}%</span>
+                  转化率 <span className="font-semibold text-primary">{userStats?.conversionRate || 0}%</span>
                 </p>
               </CardContent>
             </Card>
@@ -399,7 +304,7 @@ export default function DashboardPage() {
                 <CardContent>
                   <ChartContainer config={{}} className="min-h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={getFilteredUserTrends()}>
+                      <BarChart data={userTrends?.daily || []}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="date" />
                         <YAxis width={40} tick={{ fontSize: 12 }} />
@@ -421,7 +326,7 @@ export default function DashboardPage() {
                 <CardContent>
                   <ChartContainer config={{}} className="min-h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={getFilteredRevenueTrends()}>
+                      <LineChart data={paymentTrends?.daily || []}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="date" />
                         <YAxis width={50} tick={{ fontSize: 12 }} />

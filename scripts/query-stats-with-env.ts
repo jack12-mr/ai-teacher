@@ -94,13 +94,13 @@ async function querySupabaseStats() {
 
     console.log(`\nStripe:`);
     console.log(`  订单数: ${stripePayments.length}`);
-    console.log(`  金额: $${(stripeTotal / 100).toFixed(2)} USD`);
+    console.log(`  金额: $${stripeTotal.toFixed(2)} USD`);
 
     console.log(`\nPayPal:`);
     console.log(`  订单数: ${paypalPayments.length}`);
-    console.log(`  金额: $${(paypalTotal / 100).toFixed(2)} USD`);
+    console.log(`  金额: $${paypalTotal.toFixed(2)} USD`);
 
-    console.log(`\n总收入: $${(totalRevenue / 100).toFixed(2)} USD`);
+    console.log(`\n总收入: $${totalRevenue.toFixed(2)} USD`);
 
     // 🔍 数据一致性检查
     console.log(`\n\n🔍 数据一致性分析:`);
@@ -110,7 +110,7 @@ async function querySupabaseStats() {
       console.log(`\n订单 ${index + 1}:`);
       console.log(`  ID: ${payment.id}`);
       console.log(`  用户ID: ${payment.user_id || '未关联'}`);
-      console.log(`  金额: $${((payment.amount || 0) / 100).toFixed(2)}`);
+      console.log(`  金额: $${(payment.amount || 0).toFixed(2)}`);
       console.log(`  支付方式: ${payment.method}`);
       console.log(`  状态: ${payment.status}`);
       console.log(`  创建时间: ${payment.created_at}`);

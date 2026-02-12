@@ -689,7 +689,23 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
       throw handleDatabaseError(result.error);
     }
 
-    return result.data.map((doc: any) => this.dbToUser(doc));
+    // 获取所有用户的 auth metadata 来读取真实的订阅信息
+    const { data: authUsers, error: authError } = await this.supabase.auth.admin.listUsers();
+
+    if (authError) {
+      console.error('Failed to fetch auth users:', authError);
+      // 如果获取失败，仍然返回 profiles 数据，但订阅信息会是默认值
+      return result.data.map((doc: any) => this.dbToUser(doc));
+    }
+
+    // 创建一个 userId -> user_metadata 的映射
+    const authMetadataMap = new Map();
+    authUsers.users.forEach((authUser: any) => {
+      authMetadataMap.set(authUser.id, authUser.user_metadata || {});
+    });
+
+    // 合并 profiles 数据和 auth metadata
+    return result.data.map((doc: any) => this.dbToUser(doc, authMetadataMap.get(doc.id)));
   }
 
   /**
@@ -776,14 +792,14 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
   /**
    * 辅助方法：从数据库格式转换为 User
    */
-  private dbToUser(doc: any): User {
+  private dbToUser(doc: any, authMetadata?: any): User {
     return {
       id: doc.id,
       email: doc.email || "",
       name: doc.name || "",
       avatar: doc.avatar,
       role: "free", // profiles 表默认没有 role 字段
-      subscription_plan: "free", // profiles 表默认没有 subscription_plan 字段
+      subscription_plan: authMetadata?.subscription_plan || "free", // 从 auth metadata 读取订阅信息
       region: doc.region || "US",
       status: "active", // profiles 表默认没有 status 字段
       created_at: doc.created_at,

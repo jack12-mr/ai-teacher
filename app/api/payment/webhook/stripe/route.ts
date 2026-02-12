@@ -57,7 +57,21 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        console.log(`✅ [Stripe Webhook] Updated subscription and user metadata for user ${userId}`);
+        // Update web_users table to sync subscription_plan
+        const { error: updateError } = await supabase
+          .from("web_users")
+          .update({
+            subscription_plan: session.metadata?.paymentType || "monthly",
+            subscription_status: "active",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userId);
+
+        if (updateError) {
+          console.error(`❌ [Stripe Webhook] Failed to update web_users for user ${userId}:`, updateError);
+        } else {
+          console.log(`✅ [Stripe Webhook] Updated subscription, user metadata, and web_users for user ${userId}`);
+        }
       }
     }
 

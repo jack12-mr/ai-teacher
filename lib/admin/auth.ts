@@ -56,50 +56,11 @@ export async function adminLogin(
   }
 
   try {
-    let admin: any = null;
-    let supabase: any = null;
+    // 使用数据库适配器获取管理员信息
+    const { getDatabaseAdapter } = await import("@/lib/admin/database");
+    const db = await getDatabaseAdapter();
 
-    // 尝试从 Supabase 查询
-    try {
-      const { getSupabaseAdmin } = await import("@/lib/integrations/supabase-admin");
-      supabase = getSupabaseAdmin();
-
-      const { data, error } = await supabase
-        .from("admin_users")
-        .select("id, username, password_hash, role, status")
-        .eq("username", username)
-        .maybeSingle();
-
-      if (!error && data) {
-        admin = data;
-      } else {
-        console.warn("[adminLogin] Supabase query failed, trying CloudBase:", error);
-      }
-    } catch (supabaseError) {
-      console.warn("[adminLogin] Supabase connection failed, trying CloudBase:", supabaseError);
-    }
-
-    // 如果 Supabase 失败，尝试从 CloudBase 查询
-    if (!admin) {
-      try {
-        const { getCloudBaseDatabase } = await import("@/lib/cloudbase/init");
-        const db = getCloudBaseDatabase();
-        const result = await db.collection("admin_users").where({ username }).get();
-
-        if (result.data && result.data.length > 0) {
-          admin = {
-            id: result.data[0]._id,
-            username: result.data[0].username,
-            password_hash: result.data[0].password_hash,
-            role: result.data[0].role || "admin",
-            status: result.data[0].status || "active",
-          };
-          console.log("[adminLogin] Using CloudBase data");
-        }
-      } catch (cloudbaseError) {
-        console.error("[adminLogin] CloudBase query failed:", cloudbaseError);
-      }
-    }
+    const admin = await db.getAdminByUsername(username);
 
     if (!admin) {
       await logFailedLoginAttempt(username, "user_not_found", ipAddress, userAgent);
@@ -130,12 +91,11 @@ export async function adminLogin(
     }
 
     // 更新最后登录时间
-    const { error: updateError } = await supabase
-      .from("admin_users")
-      .update({ last_login_at: new Date().toISOString() })
-      .eq("id", admin.id);
-
-    if (updateError) {
+    try {
+      await db.updateAdmin(admin.id, {
+        last_login_at: new Date().toISOString(),
+      });
+    } catch (updateError) {
       console.error("[adminLogin] Update last_login_at failed:", updateError);
     }
 
@@ -144,9 +104,8 @@ export async function adminLogin(
     await setAdminSessionCookie(session);
 
     // 记录登录日志
-    const { error: logError } = await supabase
-      .from("admin_logs")
-      .insert({
+    try {
+      await db.createLog({
         admin_id: admin.id,
         admin_username: admin.username,
         action: "admin.login",
@@ -157,8 +116,7 @@ export async function adminLogin(
         user_agent: userAgent,
         status: "success",
       });
-
-    if (logError) {
+    } catch (logError) {
       console.error("[adminLogin] Log creation failed:", logError);
     }
 

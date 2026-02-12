@@ -954,6 +954,9 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     await this.ensureInitialized();
     const where: any = {};
 
+    // 国内版只查询 wechat 和 alipay
+    where.payment_method = this.db.command.in(["wechat", "alipay"]);
+
     if (filters?.user_id) {
       where.user_id = filters.user_id;
     }
@@ -1009,6 +1012,9 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
   async countPayments(filters?: PaymentFilters): Promise<number> {
     await this.ensureInitialized();
     const where: any = {};
+
+    // 国内版只查询 wechat 和 alipay
+    where.payment_method = this.db.command.in(["wechat", "alipay"]);
 
     if (filters?.user_id) {
       where.user_id = filters.user_id;

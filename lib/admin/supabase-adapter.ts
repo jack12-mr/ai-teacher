@@ -937,6 +937,9 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
   async listPayments(filters?: PaymentFilters): Promise<Payment[]> {
     let query = this.supabase.from("payments").select("*");
 
+    // 国际版只查询 stripe 和 paypal
+    query = query.in("method", ["stripe", "paypal"]);
+
     if (filters?.user_id) {
       query = query.eq("user_id", filters.user_id);
     }
@@ -983,6 +986,9 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
    */
   async countPayments(filters?: PaymentFilters): Promise<number> {
     let query = this.supabase.from("payments").select("*", { count: "exact", head: true });
+
+    // 国际版只查询 stripe 和 paypal
+    query = query.in("method", ["stripe", "paypal"]);
 
     if (filters?.user_id) {
       query = query.eq("user_id", filters.user_id);

@@ -133,6 +133,7 @@ export const zhCN = {
     aiCoach: "AI教练",
     shareResults: "分享成果",
     viewWrongBook: "查看错题集",
+    viewDemo: "操作演示",
     skillAssessment: "技能评估",
     rolePositioning: "搜索出题",
     learningPath: "上传文件出题",

@@ -13,8 +13,9 @@ import { getPaymentStats, getPaymentTrends } from "@/actions/admin-payments";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatAmountWithCurrency, formatMultiCurrencyAmount, formatTrendMultiCurrency } from "@/lib/utils/currency";
+import { formatAmountWithCurrency } from "@/lib/utils/currency";
 import { isValidPaymentStats } from "@/lib/utils/validation";
+import { RegionConfig, isChinaRegion } from "@/lib/config/region";
 import {
   Loader2,
   Users,
@@ -196,25 +197,11 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-foreground leading-tight">
-                  {paymentStats?.totalRevenueByCurrency ? (
-                    formatMultiCurrencyAmount(
-                      paymentStats.totalRevenueByCurrency.USD,
-                      paymentStats.totalRevenueByCurrency.CNY
-                    )
-                  ) : (
-                    formatAmount(paymentStats?.totalRevenue || 0)
-                  )}
+                  {formatAmount(paymentStats?.totalRevenue || 0)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   今日: <span className="font-semibold text-green-600">
-                    {paymentTrends?.todayRevenueByCurrency ? (
-                      formatTrendMultiCurrency(
-                        paymentTrends.todayRevenueByCurrency.USD,
-                        paymentTrends.todayRevenueByCurrency.CNY
-                      )
-                    ) : (
-                      `+${formatAmount(paymentTrends?.todayRevenue || 0)}`
-                    )}
+                    +{formatAmount(paymentTrends?.todayRevenue || 0)}
                   </span>
                 </p>
               </CardContent>
@@ -236,54 +223,56 @@ export default function DashboardPage() {
           </div>
 
           {/* 版本对比区域 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 国际版 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">国际版</CardTitle>
-                <p className="text-xs text-muted-foreground">数据概览</p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-3xl font-bold text-foreground">
-                      {formatNumber(userStats?.byRegion?.international || 0)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">用户数</p>
+          <div className="grid grid-cols-1 gap-4">
+            {isChinaRegion() ? (
+              /* 国内版 */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base font-semibold">国内版</CardTitle>
+                  <p className="text-xs text-muted-foreground">数据概览</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-3xl font-bold text-foreground">
+                        {formatNumber(userStats?.byRegion?.domestic || 0)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">用户数</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-foreground">
+                        {formatAmount((paymentStats?.byMethod?.wechat ?? 0) + (paymentStats?.byMethod?.alipay ?? 0))}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">总收入</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-3xl font-bold text-foreground">
-                      ${formatNumber((paymentStats?.byMethod?.stripe ?? 0) + (paymentStats?.byMethod?.paypal ?? 0))}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">总收入</p>
+                </CardContent>
+              </Card>
+            ) : (
+              /* 国际版 */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base font-semibold">国际版</CardTitle>
+                  <p className="text-xs text-muted-foreground">数据概览</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-3xl font-bold text-foreground">
+                        {formatNumber(userStats?.byRegion?.international || 0)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">用户数</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-foreground">
+                        ${formatNumber((paymentStats?.byMethod?.stripe ?? 0) + (paymentStats?.byMethod?.paypal ?? 0))}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">总收入</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* 国内版 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">国内版</CardTitle>
-                <p className="text-xs text-muted-foreground">数据概览</p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-3xl font-bold text-foreground">
-                      {formatNumber(userStats?.byRegion?.domestic || 0)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">用户数</p>
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold text-foreground">
-                      {formatAmount((paymentStats?.byMethod?.wechat ?? 0) + (paymentStats?.byMethod?.alipay ?? 0))}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">总收入</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* 趋势图表 */}
@@ -309,7 +298,7 @@ export default function DashboardPage() {
                         <XAxis dataKey="date" />
                         <YAxis width={40} tick={{ fontSize: 12 }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="activeUsers" fill="hsl(var(--primary))" />
+                        <Bar dataKey={isChinaRegion() ? "activeUsersDomestic" : "activeUsersInternational"} fill="hsl(var(--primary))" />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -333,7 +322,7 @@ export default function DashboardPage() {
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Line
                           type="monotone"
-                          dataKey="revenue"
+                          dataKey={isChinaRegion() ? "revenueCNY" : "revenueUSD"}
                           stroke="hsl(var(--primary))"
                           strokeWidth={2}
                         />

@@ -135,6 +135,7 @@ export const enUS: Translations = {
     aiCoach: "AI Coach",
     shareResults: "Share Results",
     viewWrongBook: "Wrong Book",
+    viewDemo: "Demo",
     skillAssessment: "Skill Assessment",
     rolePositioning: "Role Positioning",
     learningPath: "Learning Path",

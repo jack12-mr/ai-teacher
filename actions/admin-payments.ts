@@ -17,6 +17,7 @@ import type {
 } from "@/lib/admin/types";
 import { revalidatePath } from "next/cache";
 import { unstable_noStore } from "next/cache";
+import { RegionConfig } from "@/lib/config/region";
 
 /**
  * 获取支付记录列表
@@ -93,12 +94,7 @@ export async function getPaymentStats(): Promise<ApiResponse<{
   thisMonth: number;
   today: number;
   totalRevenue: number;
-  byMethod: {
-    wechat: number;
-    alipay: number;
-    stripe: number;
-    paypal: number;
-  };
+  byMethod: Record<string, number>;
 }>> {
   // 禁用 Next.js 缓存，确保每次都获取最新数据
   unstable_noStore();
@@ -129,26 +125,18 @@ export async function getPaymentStats(): Promise<ApiResponse<{
     // 计算总收入
     const totalRevenue = paidPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
-    // 按支付方式统计 - 确保所有支付方式都初始化为数字
-    const byMethod = {
-      wechat: paidPayments
-        .filter((p) => p.method === "wechat")
-        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0,
-      alipay: paidPayments
-        .filter((p) => p.method === "alipay")
-        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0,
-      stripe: paidPayments
-        .filter((p) => p.method === "stripe")
-        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0,
-      paypal: paidPayments
-        .filter((p) => p.method === "paypal")
-        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0,
-    };
+    // 只统计当前环境支持的支付方式
+    const byMethod: Record<string, number> = {};
+    RegionConfig.payment.methods.forEach((method) => {
+      byMethod[method] = paidPayments
+        .filter((p) => p.method === method)
+        .reduce((sum, p) => sum + (p.amount ?? 0), 0) || 0;
+    });
 
     // 按币种统计（国际版 USD，国内版 CNY）
     const totalRevenueByCurrency = {
-      USD: byMethod.stripe + byMethod.paypal,
-      CNY: byMethod.wechat + byMethod.alipay,
+      USD: (byMethod.stripe ?? 0) + (byMethod.paypal ?? 0),
+      CNY: (byMethod.wechat ?? 0) + (byMethod.alipay ?? 0),
     };
 
     return {

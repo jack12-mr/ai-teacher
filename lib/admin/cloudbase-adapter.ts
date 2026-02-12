@@ -932,6 +932,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 根据 ID 获取支付记录
    */
   async getPaymentById(id: string): Promise<Payment | null> {
+    await this.ensureInitialized();
     try {
       const result = await this.db.collection("payments").doc(id).get();
       if (!result.data || result.data.length === 0) {
@@ -950,6 +951,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 列出支付记录
    */
   async listPayments(filters?: PaymentFilters): Promise<Payment[]> {
+    await this.ensureInitialized();
     const where: any = {};
 
     if (filters?.user_id) {
@@ -1005,6 +1007,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 统计支付记录数量
    */
   async countPayments(filters?: PaymentFilters): Promise<number> {
+    await this.ensureInitialized();
     const where: any = {};
 
     if (filters?.user_id) {

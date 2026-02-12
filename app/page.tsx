@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { FileText, Brain, TrendingUp } from "lucide-react"
+import { FileText, Brain, TrendingUp, PlayCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth/auth-provider"
 import { useUserIntl } from "@/components/user-context-intl"
@@ -11,11 +11,13 @@ import { isChinaRegion } from "@/lib/config/region"
 import { LanguageSwitcher } from "@/components/navigation/language-switcher"
 import { ModeToggle } from "@/components/ModeToggle"
 import { useT } from "@/lib/i18n"
+import { RunbookVideoModal } from "@/components/runbook-video-modal"
 
 export default function LandingPage() {
   const router = useRouter()
   const isChina = isChinaRegion()
   const t = useT()
+  const [showRunbookVideoModal, setShowRunbookVideoModal] = useState(false)
 
   // Use the appropriate auth hook based on region
   const authChina = isChina ? useAuth() : { isAuthenticated: false, isLoading: false }
@@ -53,6 +55,14 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 md:gap-3">
             <LanguageSwitcher />
             <ModeToggle />
+            <Button
+              variant="outline"
+              onClick={() => setShowRunbookVideoModal(true)}
+              className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-sm md:text-base px-3 py-2 md:px-4 md:py-3 min-h-[44px]"
+            >
+              <PlayCircle className="w-4 h-4 mr-1 md:mr-2" />
+              {t.home.viewDemo}
+            </Button>
             <Button
               onClick={handleLogin}
               className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm md:text-base px-4 py-2 md:px-6 md:py-3 min-h-[44px]"
@@ -124,6 +134,12 @@ export default function LandingPage() {
           <p dangerouslySetInnerHTML={{ __html: t.landing.footer.replace('|', '| <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="hover:underline">') + '</a>' }} />
         </div>
       </footer>
+
+      {/* Runbook Video Modal */}
+      <RunbookVideoModal
+        isOpen={showRunbookVideoModal}
+        onClose={() => setShowRunbookVideoModal(false)}
+      />
     </div>
   )
 }

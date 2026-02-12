@@ -18,6 +18,8 @@ import {
   getPaymentStats,
   type Payment,
 } from "@/actions/admin-payments";
+import { getAvailablePaymentMethods, getPaymentMethodConfig } from "@/lib/utils/payment-methods";
+import { RegionConfig } from "@/lib/config/region";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -339,7 +341,7 @@ export default function PaymentsManagementPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {formatAmount(stats.totalRevenue, "CNY")}
+                  {formatAmount(stats.totalRevenue, RegionConfig.payment.currency)}
                 </div>
               </CardContent>
             </Card>
@@ -358,8 +360,8 @@ export default function PaymentsManagementPage() {
         <CardContent>
           {statsLoading ? (
             // 骨架屏：加载时显示
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
+            <div className="grid grid-cols-2 gap-4">
+              {getAvailablePaymentMethods().map((method, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="flex-1">
@@ -371,43 +373,25 @@ export default function PaymentsManagementPage() {
             </div>
           ) : stats ? (
             // 数据加载完成：显示实际数据
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                <div className="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center text-white">
-                  💚
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">微信支付</div>
-                  <div className="font-semibold">{formatAmount(stats.byMethod.wechat, "CNY")}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white">
-                  💙
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">支付宝</div>
-                  <div className="font-semibold">{formatAmount(stats.byMethod.alipay, "CNY")}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
-                <div className="h-10 w-10 rounded-full bg-purple-600 flex items-center justify-center text-white">
-                  💳
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Stripe</div>
-                  <div className="font-semibold">{formatAmount(stats.byMethod.stripe, "USD")}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                <div className="h-10 w-10 rounded-full bg-yellow-600 flex items-center justify-center text-white">
-                  🅿️
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">PayPal</div>
-                  <div className="font-semibold">{formatAmount(stats.byMethod.paypal, "USD")}</div>
-                </div>
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+              {getAvailablePaymentMethods().map((method) => {
+                const config = getPaymentMethodConfig(method);
+                const amount = stats.byMethod[method] || 0;
+                const currency = RegionConfig.payment.currency;
+                const colorClass = config.color.replace('bg-', '');
+
+                return (
+                  <div key={method} className={`flex items-center gap-3 p-3 bg-${colorClass.split('-')[0]}-50 dark:bg-${colorClass.split('-')[0]}-950 rounded-lg`}>
+                    <div className={`h-10 w-10 rounded-full ${config.color} flex items-center justify-center text-white`}>
+                      {config.icon}
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">{config.label}</div>
+                      <div className="font-semibold">{formatAmount(amount, currency)}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : null}
         </CardContent>
@@ -446,10 +430,14 @@ export default function PaymentsManagementPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部方式</SelectItem>
-                <SelectItem value="wechat">微信支付</SelectItem>
-                <SelectItem value="alipay">支付宝</SelectItem>
-                <SelectItem value="stripe">Stripe</SelectItem>
-                <SelectItem value="paypal">PayPal</SelectItem>
+                {getAvailablePaymentMethods().map((method) => {
+                  const config = getPaymentMethodConfig(method);
+                  return (
+                    <SelectItem key={method} value={method}>
+                      {config.label}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 

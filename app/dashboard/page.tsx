@@ -48,7 +48,7 @@ interface UserProfile {
 
 export default function HomePage() {
   const router = useRouter()
-  const { isAuthenticated, isLoading, user } = useAuth()
+  const { isAuthenticated, isLoading, user, logout } = useAuth()
   const t = useT()
   const isMobile = useIsMobile()
   const [currentStep, setCurrentStep] = useState<"assessment" | "results" | "paths">("assessment")
@@ -193,7 +193,7 @@ export default function HomePage() {
                   className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 >
                   <PlayCircle className="w-4 h-4 mr-2" />
-                  操作演示
+                  {t.home.viewDemo}
                 </Button>
                 <Button
                   variant="outline"
@@ -290,7 +290,7 @@ export default function HomePage() {
                     className="w-full justify-start min-h-[44px]"
                   >
                     <PlayCircle className="w-4 h-4 mr-2" />
-                    操作演示
+                    {t.home.viewDemo}
                   </Button>
                   <Button
                     variant="outline"

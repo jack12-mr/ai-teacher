@@ -1,0 +1,14 @@
+{
+  "disabledMcpjsonServers": [
+    "playwright",
+    "cloudbase",
+    "sequential-thinking",
+    "supabase-db",
+    "superpowers"
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(npm run init-admin:*)"
+    ]
+  }
+}

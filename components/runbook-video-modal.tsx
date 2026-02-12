@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useRunbookVideoUrl } from "@/hooks/use-runbook-video-url"
 import { PlayCircle } from "lucide-react"
+import { useT } from "@/lib/i18n"
 
 interface RunbookVideoModalProps {
   isOpen: boolean
@@ -11,6 +12,7 @@ interface RunbookVideoModalProps {
 
 export function RunbookVideoModal({ isOpen, onClose }: RunbookVideoModalProps) {
   const videoUrl = useRunbookVideoUrl()
+  const t = useT()
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -18,7 +20,7 @@ export function RunbookVideoModal({ isOpen, onClose }: RunbookVideoModalProps) {
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
           <DialogTitle className="flex items-center text-neutral-950 dark:text-white text-base sm:text-lg">
             <PlayCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-indigo-600 dark:text-indigo-400" />
-            操作演示
+            {t.home.viewDemo}
           </DialogTitle>
         </DialogHeader>
         <div className="px-4 sm:px-6 pb-4 sm:pb-6">

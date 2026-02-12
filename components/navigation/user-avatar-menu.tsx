@@ -45,8 +45,16 @@ export function UserAvatarMenu() {
     return "U"
   }
 
-  // 处理鼠标进入
+  // 处理点击头像（移动端和桌面端通用）
+  const handleAvatarClick = () => {
+    console.log("[UserAvatarMenu] 头像被点击, 当前 isOpen:", isOpen)
+    setIsOpen(!isOpen)
+    console.log("[UserAvatarMenu] 设置 isOpen 为:", !isOpen)
+  }
+
+  // 处理鼠标进入（仅桌面端）
   const handleMouseEnter = () => {
+    console.log("[UserAvatarMenu] 鼠标进入")
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
       timeoutRef.current = null
@@ -56,6 +64,7 @@ export function UserAvatarMenu() {
 
   // 处理鼠标离开（延迟关闭，避免移动到菜单时意外关闭）
   const handleMouseLeave = () => {
+    console.log("[UserAvatarMenu] 鼠标离开")
     timeoutRef.current = setTimeout(() => {
       setIsOpen(false)
     }, 150)
@@ -63,9 +72,18 @@ export function UserAvatarMenu() {
 
   // 处理退出登录
   const handleLogout = async () => {
+    console.log("[UserAvatarMenu] 退出登录按钮被点击")
     setIsOpen(false)
-    await logout()
-    router.push("/login")
+    console.log("[UserAvatarMenu] 开始执行 logout 函数")
+    try {
+      await logout()
+      console.log("[UserAvatarMenu] logout 函数执行完成")
+      console.log("[UserAvatarMenu] 准备跳转到 /login")
+      router.push("/login")
+      console.log("[UserAvatarMenu] router.push 已调用")
+    } catch (error) {
+      console.error("[UserAvatarMenu] 退出登录失败:", error)
+    }
   }
 
   // 处理菜单项点击
@@ -107,7 +125,7 @@ export function UserAvatarMenu() {
       {/* 头像按钮 */}
       <button
         className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-indigo-500 dark:hover:ring-indigo-400 transition-all duration-200 focus:outline-none focus:ring-indigo-500 cursor-pointer"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleAvatarClick}
         aria-label="用户菜单"
       >
         <Avatar className="w-full h-full">

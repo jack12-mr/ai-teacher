@@ -78,6 +78,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     queryFn: (collection: any) => Promise<any>
   ) {
     try {
+      await this.ensureInitialized();
       const collection = this.db.collection(collectionName);
       const result = await queryFn(collection);
 

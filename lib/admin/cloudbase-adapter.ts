@@ -121,6 +121,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     return {
       id: doc._id || doc.id,
       username: doc.username,
+      password_hash: doc.password_hash || doc.password, // 兼容旧字段名
       role: doc.role,
       status: doc.status,
       created_at: doc.created_at,
@@ -170,9 +171,23 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    * 根据用户名获取管理员
    */
   async getAdminByUsername(username: string): Promise<AdminUser | null> {
+    console.log("[CloudBaseAdapter] 查询管理员, username:", username);
     const results = await this.executeQuery("admin_users", async (collection) => {
       return collection.where({ username }).get();
     });
+
+    console.log("[CloudBaseAdapter] 查询结果数量:", results.length);
+    if (results.length > 0) {
+      console.log("[CloudBaseAdapter] 原始数据库记录:", {
+        _id: results[0]._id,
+        username: results[0].username,
+        role: results[0].role,
+        status: results[0].status,
+        hasPassword: !!results[0].password,
+        hasPasswordHash: !!results[0].password_hash,
+        allFields: Object.keys(results[0])
+      });
+    }
 
     if (results.length === 0) {
       return null;

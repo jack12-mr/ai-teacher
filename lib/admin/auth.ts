@@ -57,12 +57,23 @@ export async function adminLogin(
 
   try {
     // 使用数据库适配器获取管理员信息
+    console.log("[adminLogin] 开始登录流程, username:", username);
     const { getDatabaseAdapter } = await import("@/lib/admin/database");
     const db = await getDatabaseAdapter();
+    console.log("[adminLogin] 数据库适配器已获取");
 
     const admin = await db.getAdminByUsername(username);
+    console.log("[adminLogin] 查询管理员结果:", admin ? {
+      id: admin.id,
+      username: admin.username,
+      role: admin.role,
+      status: admin.status,
+      hasPasswordHash: !!admin.password_hash,
+      passwordHashLength: admin.password_hash?.length
+    } : null);
 
     if (!admin) {
+      console.log("[adminLogin] 管理员不存在");
       await logFailedLoginAttempt(username, "user_not_found", ipAddress, userAgent);
       return {
         success: false,
@@ -72,6 +83,7 @@ export async function adminLogin(
 
     // 检查账户状态
     if (admin.status !== "active") {
+      console.log("[adminLogin] 账户状态异常:", admin.status);
       await logFailedLoginAttempt(username, "account_disabled", ipAddress, userAgent);
       return {
         success: false,
@@ -80,7 +92,9 @@ export async function adminLogin(
     }
 
     // 验证密码
+    console.log("[adminLogin] 开始验证密码");
     const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
+    console.log("[adminLogin] 密码验证结果:", isPasswordValid);
 
     if (!isPasswordValid) {
       await logFailedLoginAttempt(username, "invalid_password", ipAddress, userAgent);

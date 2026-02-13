@@ -107,7 +107,7 @@ async function createCloudBaseAdmin(
   console.log("正在创建管理员账户...");
   const result = await db.collection("admin_users").add({
     username,
-    password: hashedPassword,
+    password_hash: hashedPassword,
     role,
     status: "active",
     created_at: now,

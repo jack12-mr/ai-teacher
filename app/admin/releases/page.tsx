@@ -141,7 +141,6 @@ export default function ReleasesManagementPage() {
 
   // 筛选状态
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterSource, setFilterSource] = useState<string>("all");
   const [filterPlatform, setFilterPlatform] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -149,9 +148,6 @@ export default function ReleasesManagementPage() {
   const filteredReleases = useMemo(() => {
     return releases.filter((release) => {
       if (searchQuery && !release.version.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      if (filterSource !== "all" && release.source !== filterSource) {
         return false;
       }
       if (filterPlatform !== "all" && release.platform !== filterPlatform) {
@@ -165,17 +161,16 @@ export default function ReleasesManagementPage() {
       }
       return true;
     });
-  }, [releases, searchQuery, filterSource, filterPlatform, filterStatus]);
+  }, [releases, searchQuery, filterPlatform, filterStatus]);
 
   // 清除筛选
   function clearFilters() {
     setSearchQuery("");
-    setFilterSource("all");
     setFilterPlatform("all");
     setFilterStatus("all");
   }
 
-  const hasFilters = searchQuery || filterSource !== "all" || filterPlatform !== "all" || filterStatus !== "all";
+  const hasFilters = searchQuery || filterPlatform !== "all" || filterStatus !== "all";
 
   // 格式化文件大小
   function formatFileSize(bytes?: number) {
@@ -217,7 +212,6 @@ export default function ReleasesManagementPage() {
     try {
       const formData = new FormData(e.currentTarget);
       const file = formData.get("file") as File;
-      const uploadTarget = (formData.get("uploadTarget") as string) || "both";
 
       if (!file || file.size === 0) {
         setError("请选择要上传的文件");
@@ -352,7 +346,7 @@ export default function ReleasesManagementPage() {
               <DialogHeader>
                 <DialogTitle>新增发布版本</DialogTitle>
                 <DialogDescription>
-                  上传新版本安装包，可选择存储到国际版、国内版或双端同步
+                  上传新版本安装包
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4">
@@ -412,37 +406,6 @@ export default function ReleasesManagementPage() {
                     </p>
                   </div>
                 )}
-
-                {/* 上传目标选择 */}
-                <div className="space-y-2">
-                  <Label>上传目标 *</Label>
-                  <Select name="uploadTarget" defaultValue="both">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="both">
-                        <span className="flex items-center gap-2">
-                          <Database className="h-4 w-4" />
-                          <Cloud className="h-4 w-4" />
-                          双端同步 (Supabase + CloudBase)
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="supabase">
-                        <span className="flex items-center gap-2">
-                          <Database className="h-4 w-4" />
-                          仅 Supabase (国际版)
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="cloudbase">
-                        <span className="flex items-center gap-2">
-                          <Cloud className="h-4 w-4" />
-                          仅 CloudBase (国内版)
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="file">安装包文件 *</Label>
@@ -557,32 +520,6 @@ export default function ReleasesManagementPage() {
               />
             </div>
 
-            {/* 数据源筛选 */}
-            <Select value={filterSource} onValueChange={setFilterSource}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="数据源" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部数据源</SelectItem>
-                <SelectItem value="supabase">
-                  <span className="flex items-center gap-2">
-                    <Database className="h-4 w-4" /> Supabase
-                  </span>
-                </SelectItem>
-                <SelectItem value="cloudbase">
-                  <span className="flex items-center gap-2">
-                    <Cloud className="h-4 w-4" /> CloudBase
-                  </span>
-                </SelectItem>
-                <SelectItem value="both">
-                  <span className="flex items-center gap-2">
-                    <Database className="h-4 w-4" />
-                    <Cloud className="h-4 w-4" /> 双端
-                  </span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
             {/* 平台筛选 */}
             <Select value={filterPlatform} onValueChange={setFilterPlatform}>
               <SelectTrigger className="w-[140px]">
@@ -651,7 +588,6 @@ export default function ReleasesManagementPage() {
                 <TableRow>
                   <TableHead className="w-28">版本号</TableHead>
                   <TableHead className="w-24">平台</TableHead>
-                  <TableHead className="w-28">数据源</TableHead>
                   <TableHead className="w-24">大小</TableHead>
                   <TableHead className="w-36">发布时间</TableHead>
                   <TableHead className="w-24">强制更新</TableHead>
@@ -677,22 +613,6 @@ export default function ReleasesManagementPage() {
                           </span>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {release.source === "supabase" ? (
-                        <Badge variant="secondary" className="gap-1">
-                          <Database className="h-3 w-3" /> Supabase
-                        </Badge>
-                      ) : release.source === "cloudbase" ? (
-                        <Badge variant="secondary" className="gap-1">
-                          <Cloud className="h-3 w-3" /> CloudBase
-                        </Badge>
-                      ) : (
-                        <Badge variant="default" className="gap-1">
-                          <Database className="h-3 w-3" />
-                          <Cloud className="h-3 w-3" /> 双端
-                        </Badge>
-                      )}
                     </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1 text-sm text-muted-foreground">

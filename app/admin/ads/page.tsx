@@ -100,7 +100,6 @@ export default function AdsManagementPage() {
   // 筛选状态
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterType, setFilterType] = useState<string>("all");
   const [filterPosition, setFilterPosition] = useState<string>("all");
 
   // 对话框状态
@@ -122,7 +121,6 @@ export default function AdsManagementPage() {
     status: "active" as "active" | "inactive",
     startDate: "",
     endDate: "",
-    uploadTarget: "both" as "both" | "supabase" | "cloudbase",
     fileSize: 0 as number,
     file: null as File | null,
   });
@@ -131,9 +129,6 @@ export default function AdsManagementPage() {
   const filteredAds = useMemo(() => {
     return ads.filter((ad) => {
       if (filterStatus !== "all" && ad.status !== filterStatus) {
-        return false;
-      }
-      if (filterType !== "all" && ad.source !== filterType) {
         return false;
       }
       if (filterPosition !== "all" && ad.position !== filterPosition) {
@@ -145,7 +140,7 @@ export default function AdsManagementPage() {
       }
       return true;
     });
-  }, [ads, filterStatus, filterType, filterPosition, searchQuery]);
+  }, [ads, filterStatus, filterPosition, searchQuery]);
 
   // ==================== 数据加载 ====================
   async function loadAds() {
@@ -208,7 +203,6 @@ export default function AdsManagementPage() {
       formDataToSend.append("linkUrl", formData.linkUrl || "");
       formDataToSend.append("priority", String(formData.priority));
       formDataToSend.append("status", formData.status);
-      formDataToSend.append("uploadTarget", formData.uploadTarget);
 
       // 添加文件
       if (formData.file) {
@@ -542,27 +536,14 @@ export default function AdsManagementPage() {
               </SelectContent>
             </Select>
 
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="数据源" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部数据源</SelectItem>
-                <SelectItem value="supabase">Supabase</SelectItem>
-                <SelectItem value="cloudbase">CloudBase</SelectItem>
-                <SelectItem value="both">Both</SelectItem>
-              </SelectContent>
-            </Select>
-
             {/* 清除筛选 */}
-            {(searchQuery || filterStatus !== "all" || filterType !== "all" || filterPosition !== "all") && (
+            {(searchQuery || filterStatus !== "all" || filterPosition !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   setSearchQuery("");
                   setFilterStatus("all");
-                  setFilterType("all");
                   setFilterPosition("all");
                 }}
               >
@@ -585,7 +566,7 @@ export default function AdsManagementPage() {
             </div>
           ) : filteredAds.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              {searchQuery || filterStatus !== "all" || filterType !== "all" || filterPosition !== "all"
+              {searchQuery || filterStatus !== "all" || filterPosition !== "all"
                 ? "没有符合筛选条件的广告"
                 : "暂无广告"}
             </div>
@@ -597,7 +578,6 @@ export default function AdsManagementPage() {
                     <TableRow>
                       <TableHead className="w-[100px]">预览</TableHead>
                       <TableHead>标题</TableHead>
-                      <TableHead className="w-[100px]">数据源</TableHead>
                       <TableHead className="w-[100px]">位置</TableHead>
                       <TableHead className="w-[80px]">类型</TableHead>
                       <TableHead className="w-[100px]">大小</TableHead>
@@ -636,13 +616,6 @@ export default function AdsManagementPage() {
                           <div className="text-xs text-muted-foreground">
                             ID: {ad.id.slice(0, 8)}...
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={ad.source === "both" ? "default" : "outline"}>
-                            {ad.source === "supabase" ? "Supabase" :
-                             ad.source === "cloudbase" ? "CloudBase" :
-                             ad.source === "both" ? "Both" : "Unknown"}
-                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">{getPositionLabel(ad.position)}</Badge>
@@ -870,27 +843,7 @@ export default function AdsManagementPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="uploadTarget">数据源 *</Label>
-                <Select
-                  value={formData.uploadTarget}
-                  onValueChange={(value: any) => setFormData({ ...formData, uploadTarget: value })}
-                >
-                  <SelectTrigger id="uploadTarget">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="both">Both (Supabase + CloudBase)</SelectItem>
-                    <SelectItem value="supabase">Supabase (国际版)</SelectItem>
-                    <SelectItem value="cloudbase">CloudBase (国内版)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  选择广告存储到哪个数据库
-                </p>
-              </div>
-              <div className="space-y-2">
+            <div className="space-y-2">
                 <Label htmlFor="status">状态</Label>
                 <Select
                   value={formData.status}

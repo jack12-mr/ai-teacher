@@ -210,8 +210,44 @@ function IntlAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAut
     setError("")
 
     try {
-      await signInWithGoogle()
-      // OAuth 会自动重定向
+      // 动态导入 bridge
+      const { isAndroidWebView, signInWithGoogle: nativeSignIn } = await import('@/lib/google-signin-bridge')
+
+      if (isAndroidWebView()) {
+        // Android WebView 环境，使用原生登录
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
+        const result = await nativeSignIn(clientId)
+
+        // 调用后端验证 token
+        const response = await fetch('/api/auth/google-native', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: result.idToken })
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || t.auth.loginFailed)
+        }
+
+        const { user, session } = await response.json()
+
+        // 保存认证信息
+        localStorage.setItem('supabase.auth.token', session)
+        localStorage.setItem('user', JSON.stringify(user))
+
+        setSuccess(t.auth.loginSuccess)
+        setTimeout(() => {
+          if (onSuccess) {
+            onSuccess()
+          } else {
+            router.push("/dashboard")
+          }
+        }, 500)
+      } else {
+        // 浏览器环境，使用 Supabase OAuth
+        await signInWithGoogle()
+      }
     } catch (err: any) {
       setError(err.message || t.auth.loginFailed)
       setIsLoading(false)

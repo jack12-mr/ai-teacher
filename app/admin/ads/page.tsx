@@ -858,7 +858,6 @@ export default function AdsManagementPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="linkUrl">跳转链接</Label>

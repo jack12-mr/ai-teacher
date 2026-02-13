@@ -682,7 +682,6 @@ export interface Advertisement {
   endDate?: string; // 保留字段，暂时不使用
   created_at: string;
   updated_at: string;
-  source?: "supabase" | "cloudbase" | "both"; // 数据源标识
   file_size?: number; // 文件大小（字节）
 }
 
@@ -701,7 +700,6 @@ export interface CreateAdData {
   status?: AdStatus;
   startDate?: string; // 保留字段，暂时不使用
   endDate?: string; // 保留字段，暂时不使用
-  uploadTarget?: "both" | "supabase" | "cloudbase"; // 上传目标
   fileSize?: number; // 文件大小（字节）
 }
 

@@ -21,6 +21,7 @@ import type {
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { CloudBaseConnector } from "@/lib/cloudbase/connector";
+import { RegionConfig } from "@/lib/config/region";
 
 // ============================================================
 // 文件上传辅助函数
@@ -256,7 +257,6 @@ export async function createAd(
       const linkUrl = formData.get("linkUrl") as string;
       const priority = parseInt(formData.get("priority") as string) || 0;
       const status = formData.get("status") as "active" | "inactive";
-      const uploadTarget = formData.get("uploadTarget") as "both" | "supabase" | "cloudbase";
       const file = formData.get("file") as File;
 
       if (!title || !type || !position) {
@@ -277,34 +277,30 @@ export async function createAd(
       const ext = file.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      // 根据选择上传到对应存储
+      // 根据当前环境自动选择上传目标
       let fileUrl = "";
       let fileSize = file.size;
 
-      if (uploadTarget === "both" || uploadTarget === "supabase") {
+      if (RegionConfig.region === "INTL") {
+        // 国际版：上传到 Supabase
         const supabaseUrl = await uploadFileToSupabase(file, fileName);
-        if (!supabaseUrl && uploadTarget === "supabase") {
+        if (!supabaseUrl) {
           return {
             success: false,
             error: "上传到 Supabase 失败",
           };
         }
-        if (supabaseUrl) {
-          fileUrl = supabaseUrl;
-        }
-      }
-
-      if (uploadTarget === "both" || uploadTarget === "cloudbase") {
+        fileUrl = supabaseUrl;
+      } else {
+        // 国内版：上传到 CloudBase
         const cloudbaseFileId = await uploadFileToCloudBase(file, fileName);
-        if (!cloudbaseFileId && uploadTarget === "cloudbase") {
+        if (!cloudbaseFileId) {
           return {
             success: false,
             error: "上传到 CloudBase 失败",
           };
         }
-        if (cloudbaseFileId) {
-          fileUrl = cloudbaseFileId;
-        }
+        fileUrl = cloudbaseFileId;
       }
 
       // 构造 CreateAdData
@@ -316,7 +312,6 @@ export async function createAd(
         linkUrl,
         priority,
         status,
-        uploadTarget,
         fileSize,
       };
     } else {
@@ -598,8 +593,7 @@ export interface StorageFile {
 export interface ListFilesResult {
   success: boolean;
   error?: string;
-  supabaseFiles?: StorageFile[];
-  cloudbaseFiles?: StorageFile[];
+  files?: StorageFile[];
 }
 
 export interface FileOperationResult {
@@ -616,170 +610,170 @@ export interface DownloadResult {
 }
 
 /**
- * 列出存储文件 - 两个云存储
+ * 列出存储文件 - 根据当前环境只列出对应的云存储文件
  */
 export async function listStorageFiles(): Promise<ListFilesResult> {
   try {
     await requireAdminSession();
 
-    const supabaseFiles: StorageFile[] = [];
-    const cloudbaseFiles: StorageFile[] = [];
+    const files: StorageFile[] = [];
 
-    // 获取 Supabase Storage 文件
-    if (supabaseAdmin) {
+    if (RegionConfig.region === "INTL") {
+      // 国际版：只获取 Supabase Storage 文件
+      if (supabaseAdmin) {
+        try {
+          const { data, error } = await supabaseAdmin.storage
+            .from("ads")
+            .list("", { limit: 100 });
+
+          if (!error && data) {
+            for (const file of data) {
+              const { data: urlData } = supabaseAdmin.storage
+                .from("ads")
+                .getPublicUrl(file.name);
+
+              files.push({
+                name: file.name,
+                url: urlData.publicUrl,
+                size: file.metadata?.size,
+                lastModified: file.updated_at,
+                source: "supabase",
+              });
+            }
+          }
+        } catch (err) {
+          console.warn("List Supabase files warning:", err);
+        }
+      }
+    } else {
+      // 国内版：只获取 CloudBase Storage 文件
       try {
-        const { data, error } = await supabaseAdmin.storage
-          .from("ads")
-          .list("", { limit: 100 });
+        const connector = new CloudBaseConnector();
+        await connector.initialize();
+        const db = connector.getClient();
+        const app = connector.getApp();
 
-        if (!error && data) {
-          for (const file of data) {
-            const { data: urlData } = supabaseAdmin.storage
-              .from("ads")
-              .getPublicUrl(file.name);
+        const { data } = await db.collection("advertisements").get();
 
-            supabaseFiles.push({
-              name: file.name,
-              url: urlData.publicUrl,
-              size: file.metadata?.size,
-              lastModified: file.updated_at,
-              source: "supabase",
-            });
+        if (data && Array.isArray(data)) {
+          const fileIdList: string[] = [];
+          const adMap: Map<string, { ad: any; fileName: string }> = new Map();
+
+          for (const ad of data) {
+            // 兼容多种字段名：media_url, file_url, fileUrl
+            const mediaUrl = ad.media_url || ad.file_url || ad.fileUrl;
+
+            if (mediaUrl) {
+              let fileId: string | null = null;
+              let fileName: string;
+
+              if (mediaUrl.startsWith("cloud://")) {
+                // 已经是 fileID 格式（新上传的文件）
+                fileId = mediaUrl;
+                // 从 fileID 提取文件名: cloud://env.xxx/ads/filename.ext
+                const pathParts = mediaUrl.split("/");
+                fileName = pathParts[pathParts.length - 1] || ad._id;
+              } else if (mediaUrl.includes("tcb.qcloud.la") && mediaUrl.includes("/ads/")) {
+                // CloudBase 临时 URL 格式（旧上传的文件）
+                const urlParts = mediaUrl.split("/");
+                fileName = urlParts[urlParts.length - 1]?.split("?")[0] || ad._id;
+
+                // 使用广告记录中的文件大小和创建时间
+                const fileSize = ad.file_size;
+                const lastModified = ad.created_at;
+
+                files.push({
+                  name: fileName,
+                  url: mediaUrl,
+                  size: fileSize,
+                  lastModified: lastModified,
+                  source: "cloudbase",
+                  fileId: undefined,
+                  adId: ad._id || ad.id,
+                });
+                continue;
+              } else {
+                // 外部URL（非CloudBase文件），跳过不显示
+                console.log("Skipping external URL:", mediaUrl);
+                continue;
+              }
+
+              if (fileId) {
+                fileIdList.push(fileId);
+                adMap.set(fileId, { ad, fileName });
+              }
+            }
+          }
+
+          if (fileIdList.length > 0) {
+            try {
+              const urlResult = await app.getTempFileURL({
+                fileList: fileIdList,
+              });
+
+              if (urlResult.fileList && Array.isArray(urlResult.fileList)) {
+                for (const fileInfo of urlResult.fileList) {
+                  const mapEntry = adMap.get(fileInfo.fileID);
+                  if (mapEntry) {
+                    const { ad, fileName } = mapEntry;
+                    const isSuccess = fileInfo.code === "SUCCESS" && fileInfo.tempFileURL;
+                    // 使用兼容的字段名获取原始URL
+                    const originalUrl = ad.media_url || ad.file_url || ad.fileUrl;
+                    // 如果获取临时URL成功，使用临时URL；否则保存fileID用于后续获取
+                    const displayUrl = isSuccess ? fileInfo.tempFileURL : originalUrl;
+
+                    files.push({
+                      name: fileName,
+                      url: displayUrl,
+                      size: ad.file_size,
+                      lastModified: ad.created_at,
+                      source: "cloudbase",
+                      fileId: fileInfo.fileID,
+                      adId: ad._id || ad.id,
+                    });
+
+                    adMap.delete(fileInfo.fileID);
+                  }
+                }
+              }
+
+              for (const [fileId, { ad, fileName }] of adMap) {
+                const originalUrl = ad.media_url || ad.file_url || ad.fileUrl;
+                files.push({
+                  name: fileName,
+                  url: originalUrl,
+                  size: ad.file_size,
+                  lastModified: ad.created_at,
+                  source: "cloudbase",
+                  fileId: fileId,
+                  adId: ad._id || ad.id,
+                });
+              }
+            } catch (urlErr) {
+              console.error("CloudBase getTempFileURL error:", urlErr);
+              for (const [fileId, { ad, fileName }] of adMap) {
+                const originalUrl = ad.media_url || ad.file_url || ad.fileUrl;
+                files.push({
+                  name: fileName,
+                  url: originalUrl,
+                  size: ad.file_size,
+                  lastModified: ad.created_at,
+                  source: "cloudbase",
+                  fileId: fileId,
+                  adId: ad._id || ad.id,
+                });
+              }
+            }
           }
         }
       } catch (err) {
-        console.warn("List Supabase files warning:", err);
+        console.error("List CloudBase files error:", err);
       }
-    }
-
-    // 获取 CloudBase Storage 文件
-    try {
-      const connector = new CloudBaseConnector();
-      await connector.initialize();
-      const db = connector.getClient();
-      const app = connector.getApp();
-
-      const { data } = await db.collection("advertisements").get();
-
-      if (data && Array.isArray(data)) {
-        const fileIdList: string[] = [];
-        const adMap: Map<string, { ad: any; fileName: string }> = new Map();
-
-        for (const ad of data) {
-          // 兼容多种字段名：media_url, file_url, fileUrl
-          const mediaUrl = ad.media_url || ad.file_url || ad.fileUrl;
-
-          if (mediaUrl) {
-            let fileId: string | null = null;
-            let fileName: string;
-
-            if (mediaUrl.startsWith("cloud://")) {
-              // 已经是 fileID 格式（新上传的文件）
-              fileId = mediaUrl;
-              // 从 fileID 提取文件名: cloud://env.xxx/ads/filename.ext
-              const pathParts = mediaUrl.split("/");
-              fileName = pathParts[pathParts.length - 1] || ad._id;
-            } else if (mediaUrl.includes("tcb.qcloud.la") && mediaUrl.includes("/ads/")) {
-              // CloudBase 临时 URL 格式（旧上传的文件）
-              const urlParts = mediaUrl.split("/");
-              fileName = urlParts[urlParts.length - 1]?.split("?")[0] || ad._id;
-
-              // 使用广告记录中的文件大小和创建时间
-              const fileSize = ad.file_size;
-              const lastModified = ad.created_at;
-
-              cloudbaseFiles.push({
-                name: fileName,
-                url: mediaUrl,
-                size: fileSize,
-                lastModified: lastModified,
-                source: "cloudbase",
-                fileId: undefined,
-                adId: ad._id || ad.id,
-              });
-              continue;
-            } else {
-              // 外部URL（非CloudBase文件），跳过不显示
-              console.log("Skipping external URL:", mediaUrl);
-              continue;
-            }
-
-            if (fileId) {
-              fileIdList.push(fileId);
-              adMap.set(fileId, { ad, fileName });
-            }
-          }
-        }
-
-        if (fileIdList.length > 0) {
-          try {
-            const urlResult = await app.getTempFileURL({
-              fileList: fileIdList,
-            });
-
-            if (urlResult.fileList && Array.isArray(urlResult.fileList)) {
-              for (const fileInfo of urlResult.fileList) {
-                const mapEntry = adMap.get(fileInfo.fileID);
-                if (mapEntry) {
-                  const { ad, fileName } = mapEntry;
-                  const isSuccess = fileInfo.code === "SUCCESS" && fileInfo.tempFileURL;
-                  // 使用兼容的字段名获取原始URL
-                  const originalUrl = ad.media_url || ad.file_url || ad.fileUrl;
-                  // 如果获取临时URL成功，使用临时URL；否则保存fileID用于后续获取
-                  const displayUrl = isSuccess ? fileInfo.tempFileURL : originalUrl;
-
-                  cloudbaseFiles.push({
-                    name: fileName,
-                    url: displayUrl,
-                    size: ad.file_size,
-                    lastModified: ad.created_at,
-                    source: "cloudbase",
-                    fileId: fileInfo.fileID,
-                    adId: ad._id || ad.id,
-                  });
-
-                  adMap.delete(fileInfo.fileID);
-                }
-              }
-            }
-
-            for (const [fileId, { ad, fileName }] of adMap) {
-              const originalUrl = ad.media_url || ad.file_url || ad.fileUrl;
-              cloudbaseFiles.push({
-                name: fileName,
-                url: originalUrl,
-                size: ad.file_size,
-                lastModified: ad.created_at,
-                source: "cloudbase",
-                fileId: fileId,
-                adId: ad._id || ad.id,
-              });
-            }
-          } catch (urlErr) {
-            console.error("CloudBase getTempFileURL error:", urlErr);
-            for (const [fileId, { ad, fileName }] of adMap) {
-              const originalUrl = ad.media_url || ad.file_url || ad.fileUrl;
-              cloudbaseFiles.push({
-                name: fileName,
-                url: originalUrl,
-                size: ad.file_size,
-                lastModified: ad.created_at,
-                source: "cloudbase",
-                fileId: fileId,
-                adId: ad._id || ad.id,
-              });
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error("List CloudBase files error:", err);
     }
 
     return {
       success: true,
-      supabaseFiles,
-      cloudbaseFiles,
+      files,
     };
   } catch (err) {
     console.error("List storage files error:", err);

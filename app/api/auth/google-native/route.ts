@@ -18,13 +18,19 @@ export async function POST(request: NextRequest) {
   try {
     const { idToken } = await request.json()
 
+    console.log('=== Google Native Auth API 调试 ===')
+    console.log('收到 ID Token:', idToken ? `${idToken.substring(0, 50)}...` : 'null')
+    console.log('客户端 ID:', process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
+
     if (!idToken) {
+      console.error('错误: ID Token 为空')
       return NextResponse.json(
         { error: 'ID token is required' },
         { status: 400 }
       )
     }
 
+    console.log('开始验证 ID Token...')
     const client = new OAuth2Client()
     const ticket = await client.verifyIdToken({
       idToken,
@@ -32,13 +38,19 @@ export async function POST(request: NextRequest) {
     })
 
     const payload = ticket.getPayload()
+    console.log('ID Token 验证成功')
+    console.log('用户邮箱:', payload?.email)
+    console.log('用户名称:', payload?.name)
+
     if (!payload || !payload.email) {
+      console.error('错误: Token payload 无效')
       return NextResponse.json(
         { error: 'Invalid token payload' },
         { status: 400 }
       )
     }
 
+    console.log('查询现有用户...')
     const { data: existingUser, error: fetchError } = await supabaseAdmin.auth.admin.listUsers()
 
     if (fetchError) {
@@ -52,6 +64,7 @@ export async function POST(request: NextRequest) {
     let user = existingUser.users.find(u => u.email === payload.email)
 
     if (!user) {
+      console.log('用户不存在,创建新用户...')
       const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: payload.email!,
         email_confirm: true,
@@ -71,10 +84,14 @@ export async function POST(request: NextRequest) {
       }
 
       user = newUser.user
+      console.log('新用户创建成功:', user.id)
+    } else {
+      console.log('找到现有用户:', user.id)
     }
 
     await new Promise(resolve => setTimeout(resolve, 1000))
 
+    console.log('等待 profile 创建...')
     let profile = null
     for (let i = 0; i < 5; i++) {
       const { data, error } = await supabaseAdmin
@@ -85,14 +102,17 @@ export async function POST(request: NextRequest) {
 
       if (data) {
         profile = data
+        console.log('Profile 找到:', profile.id)
         break
       }
 
       if (i < 4) {
+        console.log(`Profile 未找到,重试 ${i + 1}/4...`)
         await new Promise(resolve => setTimeout(resolve, 500))
       }
     }
 
+    console.log('生成 JWT session...')
     const session = jwt.sign(
       {
         sub: user.id,
@@ -103,6 +123,7 @@ export async function POST(request: NextRequest) {
       jwtSecret
     )
 
+    console.log('=== 登录成功 ===')
     return NextResponse.json({
       user: {
         id: user.id,
@@ -114,7 +135,10 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Google native auth error:', error)
+    console.error('=== Google Native Auth 错误 ===')
+    console.error('错误类型:', error.constructor.name)
+    console.error('错误消息:', error.message)
+    console.error('错误堆栈:', error.stack)
     return NextResponse.json(
       { error: error.message || 'Authentication failed' },
       { status: 500 }

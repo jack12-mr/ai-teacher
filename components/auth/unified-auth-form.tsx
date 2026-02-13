@@ -230,20 +230,37 @@ function IntlAuthForm({ defaultTab = "login", onSuccess, className }: UnifiedAut
           throw new Error(data.error || t.auth.loginFailed)
         }
 
-        const { user, session } = await response.json()
+        const { user, profile } = await response.json()
 
-        // 保存认证信息
-        localStorage.setItem('supabase.auth.token', session)
-        localStorage.setItem('user', JSON.stringify(user))
+        // 手动触发用户上下文更新
+        const userProfile = {
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+          avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
+          subscription_plan: profile?.subscription_plan,
+          subscription_status: profile?.subscription_status,
+          membership_expires_at: profile?.membership_expires_at
+        }
+
+        // 保存到缓存并触发自定义事件
+        const { saveSupabaseUserCache } = await import('@/lib/auth/auth-state-manager-intl')
+        saveSupabaseUserCache(userProfile)
+
+        // 触发同标签页内的用户状态更新事件
+        window.dispatchEvent(new CustomEvent('supabase-user-changed', { detail: userProfile }))
 
         setSuccess(t.auth.loginSuccess)
+
+        // 等待状态更新完成后再跳转
         setTimeout(() => {
+          setIsLoading(false)
           if (onSuccess) {
             onSuccess()
           } else {
             router.push("/dashboard")
           }
-        }, 500)
+        }, 100)
       } else {
         // 浏览器环境，使用 Supabase OAuth
         await signInWithGoogle()

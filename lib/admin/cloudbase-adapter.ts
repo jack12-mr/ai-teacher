@@ -68,6 +68,22 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     }
   }
 
+  /**
+   * 测试数据库连接
+   */
+  async testConnection(): Promise<boolean> {
+    try {
+      console.log('[CloudBase] 测试数据库连接...');
+      await this.ensureInitialized();
+      const result = await this.db.collection('admin_users').limit(1).get();
+      console.log('[CloudBase] 连接测试成功');
+      return true;
+    } catch (error) {
+      console.error('[CloudBase] 连接测试失败:', error);
+      return false;
+    }
+  }
+
   // ==================== 辅助方法 ====================
 
   /**
@@ -1104,6 +1120,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    */
   async getAdById(id: string): Promise<Advertisement | null> {
     try {
+      await this.ensureInitialized();
       const result = await this.db.collection("advertisements").doc(id).get();
       if (!result.data || result.data.length === 0) {
         return null;
@@ -1153,6 +1170,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     const offset = filters?.offset || 0;
 
     try {
+      await this.ensureInitialized();
       const result = await this.db
         .collection("advertisements")
         .where(where)
@@ -1201,6 +1219,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     }
 
     try {
+      await this.ensureInitialized();
       const result = await this.db.collection("advertisements").where(where).count();
       return result.total;
     } catch (error: any) {
@@ -1232,6 +1251,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     };
 
     try {
+      await this.ensureInitialized();
       const result = await this.db.collection("advertisements").add(doc);
       const created = await this.db.collection("advertisements").doc(result.id).get();
       return this.dbToAd(created.data[0]);
@@ -1262,6 +1282,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     if (data.fileSize !== undefined || data.file_size !== undefined) update.file_size = data.fileSize || data.file_size;
 
     try {
+      await this.ensureInitialized();
       await this.db.collection("advertisements").doc(id).update(update);
       const result = await this.db.collection("advertisements").doc(id).get();
       return this.dbToAd(result.data[0]);
@@ -1275,6 +1296,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
    */
   async deleteAd(id: string): Promise<void> {
     try {
+      await this.ensureInitialized();
       await this.db.collection("advertisements").doc(id).remove();
     } catch (error: any) {
       throw handleDatabaseError(error);

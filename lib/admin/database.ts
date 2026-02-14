@@ -19,6 +19,7 @@ import type {
 } from "./types";
 import { CloudBaseAdminAdapter } from "./cloudbase-adapter";
 import { SupabaseAdminAdapter } from "./supabase-adapter";
+import { validateEnvironmentConfig } from "../config/validate-env";
 
 // ==================== 数据库适配器工厂 ====================
 
@@ -34,21 +35,38 @@ let adapterInstance: AdminDatabaseAdapter | null = null;
 
 export function getDatabaseAdapter(): AdminDatabaseAdapter {
   if (adapterInstance) {
+    console.log('[Database] 使用缓存的适配器实例');
     return adapterInstance;
   }
 
   const region = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION;
+  console.log('[Database] 初始化数据库适配器');
+  console.log('[Database] 区域配置:', region);
+  console.log('[Database] 时间戳:', new Date().toISOString());
+
+  // 验证环境配置
+  const validation = validateEnvironmentConfig();
+  if (!validation.valid) {
+    console.error('[Database] 环境配置验证失败');
+    throw new Error(
+      `环境配置错误: ${validation.errors.join('; ')}`
+    );
+  }
 
   if (region === "CN") {
+    console.log('[Database] 创建 CloudBase 适配器');
     adapterInstance = new CloudBaseAdminAdapter();
   } else if (region === "INTL") {
+    console.log('[Database] 创建 Supabase 适配器');
     adapterInstance = new SupabaseAdminAdapter();
   } else {
+    console.error('[Database] 无效的区域配置:', region);
     throw new Error(
       `Invalid DEPLOYMENT_REGION: ${region}. Must be 'CN' or 'INTL'`
     );
   }
 
+  console.log('[Database] 适配器类型:', adapterInstance.constructor.name);
   return adapterInstance;
 }
 
@@ -81,25 +99,30 @@ export class DatabaseError extends Error {
  * 统一的错误处理逻辑
  */
 export function handleDatabaseError(error: any): never {
-  console.error("数据库操作失败:", error);
+  console.error('[Database Error] 完整错误详情:', {
+    message: error.message,
+    code: error.code,
+    name: error.name,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    details: error
+  });
 
-  // 根据错误类型返回友好的错误信息
-  if (error.code === "DUPLICATE_KEY") {
-    throw new DatabaseError("数据已存在", "DUPLICATE_KEY", error);
-  }
+  // 错误代码映射
+  const errorMap: Record<string, string> = {
+    'DUPLICATE_KEY': '数据已存在',
+    'NOT_FOUND': '数据不存在',
+    'INVALID_INPUT': '输入数据无效',
+    'PERMISSION_DENIED': '权限不足',
+    'CONNECTION_FAILED': '数据库连接失败',
+    'TIMEOUT': '数据库操作超时'
+  };
 
-  if (error.code === "NOT_FOUND") {
-    throw new DatabaseError("数据不存在", "NOT_FOUND", error);
-  }
+  const userMessage = errorMap[error.code] || '数据库操作失败，请稍后重试';
+  const errorCode = error.code || 'DATABASE_ERROR';
 
-  if (error.code === "INVALID_INPUT") {
-    throw new DatabaseError("输入数据无效", "INVALID_INPUT", error);
-  }
-
-  // 默认错误
   throw new DatabaseError(
-    "数据库操作失败，请稍后重试",
-    "DATABASE_ERROR",
+    `${userMessage} (错误代码: ${errorCode})`,
+    errorCode,
     error
   );
 }

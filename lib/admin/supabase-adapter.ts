@@ -55,6 +55,22 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
     this.supabase = getSupabaseAdmin();
   }
 
+  /**
+   * 测试数据库连接
+   */
+  async testConnection(): Promise<boolean> {
+    try {
+      console.log('[Supabase] 测试数据库连接...');
+      const { error } = await this.supabase.from('admin_users').select('id').limit(1);
+      if (error) throw error;
+      console.log('[Supabase] 连接测试成功');
+      return true;
+    } catch (error) {
+      console.error('[Supabase] 连接测试失败:', error);
+      return false;
+    }
+  }
+
   // ==================== 辅助方法 ====================
 
   /**

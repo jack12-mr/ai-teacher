@@ -396,20 +396,30 @@ export async function deleteAd(
   adId: string
 ): Promise<ApiResponse<void>> {
   try {
+    console.log('[DeleteAd] 开始删除广告，ID:', adId);
+
     const session = await requireAdminSession();
+    console.log('[DeleteAd] 管理员会话验证成功:', session.username);
 
     const db = await getDatabaseAdapter();
+    console.log('[DeleteAd] 获取数据库适配器:', db.constructor.name);
 
     // 先获取广告信息用于日志
+    console.log('[DeleteAd] 查询广告信息...');
     const ad = await db.getAdById(adId);
+    console.log('[DeleteAd] 广告查询结果:', ad ? '找到' : '未找到');
+
     if (!ad) {
+      console.warn('[DeleteAd] 广告不存在，ID:', adId);
       return {
         success: false,
-        error: "广告不存在",
+        error: "广告不存在 - 请确认广告ID是否正确",
       };
     }
 
+    console.log('[DeleteAd] 准备删除广告:', { id: adId, title: ad.title });
     await db.deleteAd(adId);
+    console.log('[DeleteAd] 广告删除成功');
 
     // 记录操作日志
     await db.createLog({
@@ -429,7 +439,13 @@ export async function deleteAd(
       success: true,
     };
   } catch (error: any) {
-    console.error("删除广告失败:", error);
+    console.error('[DeleteAd] 删除失败，详细错误:', {
+      adId,
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
     return {
       success: false,
       error: error.message || "删除广告失败",

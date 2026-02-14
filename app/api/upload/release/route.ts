@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CloudBaseConnector } from "@/lib/cloudbase/connector";
 import { getAdminSession } from "@/lib/admin/session";
+import { RegionConfig } from "@/lib/config/region";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,51 +73,102 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const fileName = form.get("fileName") as string;
-    const cloudPath = `releases/${fileName}`;
 
-    console.log("[release upload] 开始上传到CloudBase:", cloudPath);
+    console.log("[release upload] ========== 开始上传流程 ==========");
+    console.log("[release upload] 环境区域:", RegionConfig.region);
+    console.log("[release upload] 文件名:", fileName);
 
-    // 初始化 CloudBase
-    let connector, app;
-    try {
-      connector = new CloudBaseConnector();
-      await connector.initialize();
-      app = connector.getApp();
-      console.log("[release upload] CloudBase 初始化成功");
-    } catch (initError) {
-      console.error("[release upload] CloudBase 初始化失败:", initError);
-      return NextResponse.json(
-        { error: initError instanceof Error ? initError.message : "CloudBase 初始化失败" },
-        { status: 500 }
-      );
+    let fileUrl: string;
+
+    if (RegionConfig.region === "INTL") {
+      // 国际版：上传到 Supabase Storage
+      console.log("[release upload] 使用 Supabase Storage");
+
+      if (!supabaseAdmin) {
+        console.error("[release upload] Supabase 未配置");
+        return NextResponse.json(
+          { error: "Supabase 未配置" },
+          { status: 500 }
+        );
+      }
+
+      try {
+        const filePath = `releases/${fileName}`;
+        console.log("[release upload] 上传到 Supabase:", filePath);
+
+        const { error } = await supabaseAdmin.storage
+          .from("releases")
+          .upload(filePath, buffer, {
+            contentType: file.type,
+            upsert: true,
+          });
+
+        if (error) {
+          console.error("[release upload] Supabase 上传失败:", error);
+          return NextResponse.json(
+            { error: `Supabase 上传失败: ${error.message}` },
+            { status: 500 }
+          );
+        }
+
+        // 获取公开 URL
+        const { data: urlData } = supabaseAdmin.storage
+          .from("releases")
+          .getPublicUrl(filePath);
+
+        fileUrl = urlData.publicUrl;
+        console.log("[release upload] Supabase 上传成功:", fileUrl);
+      } catch (uploadError) {
+        console.error("[release upload] Supabase 上传异常:", uploadError);
+        return NextResponse.json(
+          { error: uploadError instanceof Error ? uploadError.message : "Supabase 上传失败" },
+          { status: 500 }
+        );
+      }
+    } else {
+      // 国内版：上传到 CloudBase Storage
+      console.log("[release upload] 使用 CloudBase Storage");
+
+      const cloudPath = `releases/${fileName}`;
+
+      try {
+        const connector = new CloudBaseConnector();
+        await connector.initialize();
+        const app = connector.getApp();
+        console.log("[release upload] CloudBase 初始化成功");
+
+        const uploadResult = await app.uploadFile({
+          cloudPath,
+          fileContent: buffer,
+        });
+
+        console.log("[release upload] CloudBase 上传结果:", uploadResult);
+
+        if (!uploadResult.fileID) {
+          console.error("[release upload] CloudBase 上传失败: 未返回 fileID");
+          return NextResponse.json(
+            { error: "CloudBase 上传失败: 未返回 fileID" },
+            { status: 500 }
+          );
+        }
+
+        fileUrl = uploadResult.fileID;
+        console.log("[release upload] CloudBase 上传成功:", fileUrl);
+      } catch (uploadError) {
+        console.error("[release upload] CloudBase 上传异常:", uploadError);
+        return NextResponse.json(
+          { error: uploadError instanceof Error ? uploadError.message : "CloudBase 上传失败" },
+          { status: 500 }
+        );
+      }
     }
 
-    // 上传文件
-    let uploadResult;
-    try {
-      uploadResult = await app.uploadFile({
-        cloudPath,
-        fileContent: buffer,
-      });
-      console.log("[release upload] 上传结果:", uploadResult);
-    } catch (uploadError) {
-      console.error("[release upload] 上传失败:", uploadError);
-      return NextResponse.json(
-        { error: uploadError instanceof Error ? uploadError.message : "上传失败" },
-        { status: 500 }
-      );
-    }
-
-    if (!uploadResult.fileID) {
-      console.error("[release upload] 上传结果中没有 fileID");
-      return NextResponse.json({ error: "上传失败: 未返回 fileID" }, { status: 500 });
-    }
-
-    console.log("[release upload] 上传成功:", uploadResult.fileID);
+    console.log("[release upload] ✅ 上传完成:", fileUrl);
 
     return NextResponse.json({
       success: true,
-      fileID: uploadResult.fileID
+      fileID: fileUrl,
+      fileUrl: fileUrl,
     });
   } catch (error) {
     console.error("[release upload] 未捕获的错误:", error);

@@ -460,20 +460,35 @@ export async function toggleAdStatus(
   adId: string
 ): Promise<ApiResponse<Advertisement>> {
   try {
+    console.log('[ToggleAdStatus] 开始切换广告状态，ID:', adId);
+
     const session = await requireAdminSession();
+    console.log('[ToggleAdStatus] 管理员会话验证成功:', session.username);
 
     const db = await getDatabaseAdapter();
+    console.log('[ToggleAdStatus] 获取数据库适配器:', db.constructor.name);
+
+    console.log('[ToggleAdStatus] 查询广告信息...');
     const ad = await db.getAdById(adId);
+    console.log('[ToggleAdStatus] 广告查询结果:', ad ? `找到 (当前状态: ${ad.status})` : '未找到');
 
     if (!ad) {
+      console.warn('[ToggleAdStatus] 广告不存在，ID:', adId);
       return {
         success: false,
-        error: "广告不存在",
+        error: "广告不存在 - 请确认广告ID是否正确",
       };
     }
 
     const newStatus = ad.status === "active" ? "inactive" : "active";
+    console.log('[ToggleAdStatus] 准备更新状态:', {
+      adId,
+      currentStatus: ad.status,
+      newStatus
+    });
+
     const updatedAd = await db.updateAd(adId, { status: newStatus });
+    console.log('[ToggleAdStatus] 状态更新成功');
 
     // 记录操作日志
     await db.createLog({
@@ -489,12 +504,19 @@ export async function toggleAdStatus(
     revalidatePath("/admin/ads");
     revalidatePath("/");
 
+    console.log('[ToggleAdStatus] 操作完成');
     return {
       success: true,
       data: updatedAd,
     };
   } catch (error: any) {
-    console.error("切换广告状态失败:", error);
+    console.error('[ToggleAdStatus] 切换失败，详细错误:', {
+      adId,
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
     return {
       success: false,
       error: error.message || "切换广告状态失败",

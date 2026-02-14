@@ -267,8 +267,7 @@ export interface SocialLinkFile {
 export interface ListSocialLinkFilesResult {
   success: boolean;
   error?: string;
-  supabaseFiles?: SocialLinkFile[];
-  cloudbaseFiles?: SocialLinkFile[];
+  files?: SocialLinkFile[];
 }
 
 /**
@@ -298,145 +297,145 @@ export async function listSocialLinkFiles(): Promise<ListSocialLinkFilesResult> 
   try {
     await requireAdminForFiles();
 
-    const supabaseFiles: SocialLinkFile[] = [];
-    const cloudbaseFiles: SocialLinkFile[] = [];
+    const files: SocialLinkFile[] = [];
 
-    // Supabase
-    if (supabaseAdmin) {
+    if (RegionConfig.region === "INTL") {
+      // 国际版：只获取 Supabase Storage 文件
+      if (supabaseAdmin) {
+        try {
+          const { data, error } = await supabaseAdmin.storage
+            .from("social-icons")
+            .list("", { limit: 100 });
+
+          if (!error && data) {
+            for (const file of data) {
+              const { data: urlData } = supabaseAdmin.storage
+                .from("social-icons")
+                .getPublicUrl(file.name);
+
+              files.push({
+                name: file.name,
+                url: urlData.publicUrl,
+                size: file.metadata?.size,
+                lastModified: file.updated_at,
+                source: "supabase",
+              });
+            }
+          }
+        } catch (err) {
+          console.warn("List Supabase social icon files warning:", err);
+        }
+      }
+    } else {
+      // 国内版：只获取 CloudBase Storage 文件
       try {
-        const { data, error } = await supabaseAdmin.storage
-          .from("social-icons")
-          .list("", { limit: 100 });
+        const connector = new CloudBaseConnector();
+        await connector.initialize();
+        const db = connector.getClient();
+        const app = connector.getApp();
 
-        if (!error && data) {
-          for (const file of data) {
-            const { data: urlData } = supabaseAdmin.storage
-              .from("social-icons")
-              .getPublicUrl(file.name);
+        const { data } = await db.collection("social_links").get();
 
-            supabaseFiles.push({
-              name: file.name,
-              url: urlData.publicUrl,
-              size: file.metadata?.size,
-              lastModified: file.updated_at,
-              source: "supabase",
-            });
+        if (data && Array.isArray(data)) {
+          const fileIdList: string[] = [];
+          const linkMap: Map<string, { link: any; fileName: string }> = new Map();
+
+          for (const link of data) {
+            if (link.icon_url) {
+              let fileId: string | null = null;
+              let fileName: string;
+
+              if (link.icon_url.startsWith("cloud://")) {
+                fileId = link.icon_url;
+                const pathParts = link.icon_url.split("/");
+                fileName = pathParts[pathParts.length - 1] || link._id;
+              } else {
+                const urlParts = link.icon_url.split("/");
+                fileName = urlParts[urlParts.length - 1]?.split("?")[0] || link._id;
+
+                files.push({
+                  name: fileName,
+                  url: link.icon_url,
+                  size: link.file_size,
+                  lastModified: link.created_at,
+                  source: "cloudbase",
+                  fileId: undefined,
+                  linkId: link._id || link.id,
+                });
+                continue;
+              }
+
+              if (fileId) {
+                fileIdList.push(fileId);
+                linkMap.set(fileId, { link, fileName });
+              }
+            }
+          }
+
+          if (fileIdList.length > 0) {
+            try {
+              const urlResult = await app.getTempFileURL({
+                fileList: fileIdList,
+              });
+
+              if (urlResult.fileList && Array.isArray(urlResult.fileList)) {
+                for (const fileInfo of urlResult.fileList) {
+                  const mapEntry = linkMap.get(fileInfo.fileID);
+                  if (mapEntry) {
+                    const { link, fileName } = mapEntry;
+                    const isSuccess = fileInfo.code === "SUCCESS" && fileInfo.tempFileURL;
+                    const displayUrl = isSuccess ? fileInfo.tempFileURL : link.icon_url;
+
+                    files.push({
+                      name: fileName,
+                      url: displayUrl,
+                      size: link.file_size,
+                      lastModified: link.created_at,
+                      source: "cloudbase",
+                      fileId: fileInfo.fileID,
+                      linkId: link._id || link.id,
+                    });
+
+                    linkMap.delete(fileInfo.fileID);
+                  }
+                }
+              }
+
+              for (const [fileId, { link, fileName }] of linkMap) {
+                files.push({
+                  name: fileName,
+                  url: link.icon_url,
+                  size: link.file_size,
+                  lastModified: link.created_at,
+                  source: "cloudbase",
+                  fileId: fileId,
+                  linkId: link._id || link.id,
+                });
+              }
+            } catch (urlErr) {
+              console.error("CloudBase getTempFileURL error:", urlErr);
+              for (const [fileId, { link, fileName }] of linkMap) {
+                files.push({
+                  name: fileName,
+                  url: link.icon_url,
+                  size: link.file_size,
+                  lastModified: link.created_at,
+                  source: "cloudbase",
+                  fileId: fileId,
+                  linkId: link._id || link.id,
+                });
+              }
+            }
           }
         }
       } catch (err) {
-        console.warn("List Supabase social icon files warning:", err);
+        console.error("List CloudBase social icon files error:", err);
       }
-    }
-
-    // CloudBase
-    try {
-      const connector = new CloudBaseConnector();
-      await connector.initialize();
-      const db = connector.getClient();
-      const app = connector.getApp();
-
-      const { data } = await db.collection("social_links").get();
-
-      if (data && Array.isArray(data)) {
-        const fileIdList: string[] = [];
-        const linkMap: Map<string, { link: any; fileName: string }> = new Map();
-
-        for (const link of data) {
-          if (link.icon_url) {
-            let fileId: string | null = null;
-            let fileName: string;
-
-            if (link.icon_url.startsWith("cloud://")) {
-              fileId = link.icon_url;
-              const pathParts = link.icon_url.split("/");
-              fileName = pathParts[pathParts.length - 1] || link._id;
-            } else {
-              const urlParts = link.icon_url.split("/");
-              fileName = urlParts[urlParts.length - 1]?.split("?")[0] || link._id;
-
-              cloudbaseFiles.push({
-                name: fileName,
-                url: link.icon_url,
-                size: link.file_size,
-                lastModified: link.created_at,
-                source: "cloudbase",
-                fileId: undefined,
-                linkId: link._id || link.id,
-              });
-              continue;
-            }
-
-            if (fileId) {
-              fileIdList.push(fileId);
-              linkMap.set(fileId, { link, fileName });
-            }
-          }
-        }
-
-        if (fileIdList.length > 0) {
-          try {
-            const urlResult = await app.getTempFileURL({
-              fileList: fileIdList,
-            });
-
-            if (urlResult.fileList && Array.isArray(urlResult.fileList)) {
-              for (const fileInfo of urlResult.fileList) {
-                const mapEntry = linkMap.get(fileInfo.fileID);
-                if (mapEntry) {
-                  const { link, fileName } = mapEntry;
-                  const isSuccess = fileInfo.code === "SUCCESS" && fileInfo.tempFileURL;
-                  const displayUrl = isSuccess ? fileInfo.tempFileURL : link.icon_url;
-
-                  cloudbaseFiles.push({
-                    name: fileName,
-                    url: displayUrl,
-                    size: link.file_size,
-                    lastModified: link.created_at,
-                    source: "cloudbase",
-                    fileId: fileInfo.fileID,
-                    linkId: link._id || link.id,
-                  });
-
-                  linkMap.delete(fileInfo.fileID);
-                }
-              }
-            }
-
-            for (const [fileId, { link, fileName }] of linkMap) {
-              cloudbaseFiles.push({
-                name: fileName,
-                url: link.icon_url,
-                size: link.file_size,
-                lastModified: link.created_at,
-                source: "cloudbase",
-                fileId: fileId,
-                linkId: link._id || link.id,
-              });
-            }
-          } catch (urlErr) {
-            console.error("CloudBase getTempFileURL error:", urlErr);
-            for (const [fileId, { link, fileName }] of linkMap) {
-              cloudbaseFiles.push({
-                name: fileName,
-                url: link.icon_url,
-                size: link.file_size,
-                lastModified: link.created_at,
-                source: "cloudbase",
-                fileId: fileId,
-                linkId: link._id || link.id,
-              });
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error("List CloudBase social icon files error:", err);
     }
 
     return {
       success: true,
-      supabaseFiles,
-      cloudbaseFiles,
+      files,
     };
   } catch (err) {
     console.error("List social link files error:", err);

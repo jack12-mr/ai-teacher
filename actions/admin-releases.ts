@@ -752,8 +752,7 @@ export interface ReleaseFile {
 export interface ListReleaseFilesResult {
   success: boolean;
   error?: string;
-  supabaseFiles?: ReleaseFile[];
-  cloudbaseFiles?: ReleaseFile[];
+  files?: ReleaseFile[];
 }
 
 export interface FileOperationResult {
@@ -770,188 +769,188 @@ export interface DownloadResult {
 }
 
 /**
- * 列出发布版本文件 - 两个云存储
+ * 列出发布版本文件 - 根据当前环境只列出对应的云存储文件
  */
 export async function listReleaseFiles(): Promise<ListReleaseFilesResult> {
   try {
     await requireAdmin();
 
-    const supabaseFiles: ReleaseFile[] = [];
-    const cloudbaseFiles: ReleaseFile[] = [];
+    const files: ReleaseFile[] = [];
 
-    // 获取 Supabase Storage 文件
-    if (supabaseAdmin) {
-      try {
-        // 获取 releases bucket 文件列表
-        const { data: files, error } = await supabaseAdmin.storage
-          .from("releases")
-          .list("", { limit: 100 });
-
-        if (!error && files) {
-          // 同时获取数据库中的版本信息
-          const { data: releases } = await supabaseAdmin
+    if (RegionConfig.region === "INTL") {
+      // 国际版：只获取 Supabase Storage 文件
+      if (supabaseAdmin) {
+        try {
+          // 获取 releases bucket 文件列表
+          const { data: storageFiles, error } = await supabaseAdmin.storage
             .from("releases")
-            .select("id, version, platform, file_url, file_size, created_at");
+            .list("", { limit: 100 });
 
-          // 创建 URL -> release 映射
-          const urlToRelease = new Map<string, any>();
-          if (releases) {
-            for (const release of releases) {
-              if (release.file_url) {
-                const urlParts = release.file_url.split("/releases/");
-                if (urlParts.length > 1) {
-                  const fileName = decodeURIComponent(urlParts[1].split("?")[0]);
-                  urlToRelease.set(fileName, release);
+          if (!error && storageFiles) {
+            // 同时获取数据库中的版本信息
+            const { data: releases } = await supabaseAdmin
+              .from("releases")
+              .select("id, version, platform, file_url, file_size, created_at");
+
+            // 创建 URL -> release 映射
+            const urlToRelease = new Map<string, any>();
+            if (releases) {
+              for (const release of releases) {
+                if (release.file_url) {
+                  const urlParts = release.file_url.split("/releases/");
+                  if (urlParts.length > 1) {
+                    const fileName = decodeURIComponent(urlParts[1].split("?")[0]);
+                    urlToRelease.set(fileName, release);
+                  }
                 }
+              }
+            }
+
+            for (const file of storageFiles) {
+              if (file.name === ".emptyFolderPlaceholder") continue;
+
+              const { data: urlData } = supabaseAdmin.storage
+                .from("releases")
+                .getPublicUrl(file.name);
+
+              const release = urlToRelease.get(file.name);
+
+              files.push({
+                name: file.name,
+                url: urlData.publicUrl,
+                size: release?.file_size || file.metadata?.size,
+                lastModified: release?.created_at || file.updated_at,
+                source: "supabase",
+                releaseId: release?.id,
+                version: release?.version,
+                platform: release?.platform,
+              });
+            }
+          }
+        } catch (err) {
+          console.warn("List Supabase release files warning:", err);
+        }
+      }
+    } else {
+      // 国内版：只获取 CloudBase Storage 文件
+      try {
+        const connector = new CloudBaseConnector();
+        await connector.initialize();
+        const db = connector.getClient();
+        const app = connector.getApp();
+
+        const { data } = await db.collection("releases").get();
+
+        if (data && Array.isArray(data)) {
+          const fileIdList: string[] = [];
+          const releaseMap: Map<string, { release: any; fileName: string }> = new Map();
+
+          for (const release of data) {
+            if (release.file_url) {
+              let fileId: string | null = null;
+              let fileName: string;
+
+              if (release.file_url.startsWith("cloud://")) {
+                fileId = release.file_url;
+                const pathParts = release.file_url.split("/");
+                fileName = pathParts[pathParts.length - 1] || release._id;
+              } else {
+                const urlParts = release.file_url.split("/");
+                fileName = urlParts[urlParts.length - 1]?.split("?")[0] || release._id;
+
+                files.push({
+                  name: fileName,
+                  url: release.file_url,
+                  size: release.file_size,
+                  lastModified: release.created_at,
+                  source: "cloudbase",
+                  fileId: undefined,
+                  releaseId: release._id || release.id,
+                  version: release.version,
+                  platform: release.platform,
+                });
+                continue;
+              }
+
+              if (fileId) {
+                fileIdList.push(fileId);
+                releaseMap.set(fileId, { release, fileName });
               }
             }
           }
 
-          for (const file of files) {
-            if (file.name === ".emptyFolderPlaceholder") continue;
+          // 批量获取临时访问 URL
+          if (fileIdList.length > 0) {
+            try {
+              const urlResult = await app.getTempFileURL({
+                fileList: fileIdList,
+              });
 
-            const { data: urlData } = supabaseAdmin.storage
-              .from("releases")
-              .getPublicUrl(file.name);
+              if (urlResult.fileList && Array.isArray(urlResult.fileList)) {
+                for (const fileInfo of urlResult.fileList) {
+                  const mapEntry = releaseMap.get(fileInfo.fileID);
+                  if (mapEntry) {
+                    const { release, fileName } = mapEntry;
+                    const isSuccess = fileInfo.code === "SUCCESS" && fileInfo.tempFileURL;
+                    const displayUrl = isSuccess ? fileInfo.tempFileURL : release.file_url;
 
-            const release = urlToRelease.get(file.name);
+                    files.push({
+                      name: fileName,
+                      url: displayUrl,
+                      size: release.file_size,
+                      lastModified: release.created_at,
+                      source: "cloudbase",
+                      fileId: fileInfo.fileID,
+                      releaseId: release._id || release.id,
+                      version: release.version,
+                      platform: release.platform,
+                    });
 
-            supabaseFiles.push({
-              name: file.name,
-              url: urlData.publicUrl,
-              size: release?.file_size || file.metadata?.size,
-              lastModified: release?.created_at || file.updated_at,
-              source: "supabase",
-              releaseId: release?.id,
-              version: release?.version,
-              platform: release?.platform,
-            });
+                    releaseMap.delete(fileInfo.fileID);
+                  }
+                }
+              }
+
+              // 处理未能获取临时 URL 的文件
+              for (const [fileId, { release, fileName }] of releaseMap) {
+                files.push({
+                  name: fileName,
+                  url: release.file_url,
+                  size: release.file_size,
+                  lastModified: release.created_at,
+                  source: "cloudbase",
+                  fileId: fileId,
+                  releaseId: release._id || release.id,
+                  version: release.version,
+                  platform: release.platform,
+                });
+              }
+            } catch (urlErr) {
+              console.error("CloudBase getTempFileURL error:", urlErr);
+              for (const [fileId, { release, fileName }] of releaseMap) {
+                files.push({
+                  name: fileName,
+                  url: release.file_url,
+                  size: release.file_size,
+                  lastModified: release.created_at,
+                  source: "cloudbase",
+                  fileId: fileId,
+                  releaseId: release._id || release.id,
+                  version: release.version,
+                  platform: release.platform,
+                });
+              }
+            }
           }
         }
       } catch (err) {
-        console.warn("List Supabase release files warning:", err);
+        console.error("List CloudBase release files error:", err);
       }
-    }
-
-    // 获取 CloudBase Storage 文件
-    try {
-      const connector = new CloudBaseConnector();
-      await connector.initialize();
-      const db = connector.getClient();
-      const app = connector.getApp();
-
-      const { data } = await db.collection("releases").get();
-
-      if (data && Array.isArray(data)) {
-        const fileIdList: string[] = [];
-        const releaseMap: Map<string, { release: any; fileName: string }> = new Map();
-
-        for (const release of data) {
-          if (release.file_url) {
-            let fileId: string | null = null;
-            let fileName: string;
-
-            if (release.file_url.startsWith("cloud://")) {
-              fileId = release.file_url;
-              const pathParts = release.file_url.split("/");
-              fileName = pathParts[pathParts.length - 1] || release._id;
-            } else {
-              const urlParts = release.file_url.split("/");
-              fileName = urlParts[urlParts.length - 1]?.split("?")[0] || release._id;
-
-              cloudbaseFiles.push({
-                name: fileName,
-                url: release.file_url,
-                size: release.file_size,
-                lastModified: release.created_at,
-                source: "cloudbase",
-                fileId: undefined,
-                releaseId: release._id || release.id,
-                version: release.version,
-                platform: release.platform,
-              });
-              continue;
-            }
-
-            if (fileId) {
-              fileIdList.push(fileId);
-              releaseMap.set(fileId, { release, fileName });
-            }
-          }
-        }
-
-        // 批量获取临时访问 URL
-        if (fileIdList.length > 0) {
-          try {
-            const urlResult = await app.getTempFileURL({
-              fileList: fileIdList,
-            });
-
-            if (urlResult.fileList && Array.isArray(urlResult.fileList)) {
-              for (const fileInfo of urlResult.fileList) {
-                const mapEntry = releaseMap.get(fileInfo.fileID);
-                if (mapEntry) {
-                  const { release, fileName } = mapEntry;
-                  const isSuccess = fileInfo.code === "SUCCESS" && fileInfo.tempFileURL;
-                  const displayUrl = isSuccess ? fileInfo.tempFileURL : release.file_url;
-
-                  cloudbaseFiles.push({
-                    name: fileName,
-                    url: displayUrl,
-                    size: release.file_size,
-                    lastModified: release.created_at,
-                    source: "cloudbase",
-                    fileId: fileInfo.fileID,
-                    releaseId: release._id || release.id,
-                    version: release.version,
-                    platform: release.platform,
-                  });
-
-                  releaseMap.delete(fileInfo.fileID);
-                }
-              }
-            }
-
-            // 处理未能获取临时 URL 的文件
-            for (const [fileId, { release, fileName }] of releaseMap) {
-              cloudbaseFiles.push({
-                name: fileName,
-                url: release.file_url,
-                size: release.file_size,
-                lastModified: release.created_at,
-                source: "cloudbase",
-                fileId: fileId,
-                releaseId: release._id || release.id,
-                version: release.version,
-                platform: release.platform,
-              });
-            }
-          } catch (urlErr) {
-            console.error("CloudBase getTempFileURL error:", urlErr);
-            for (const [fileId, { release, fileName }] of releaseMap) {
-              cloudbaseFiles.push({
-                name: fileName,
-                url: release.file_url,
-                size: release.file_size,
-                lastModified: release.created_at,
-                source: "cloudbase",
-                fileId: fileId,
-                releaseId: release._id || release.id,
-                version: release.version,
-                platform: release.platform,
-              });
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error("List CloudBase release files error:", err);
     }
 
     return {
       success: true,
-      supabaseFiles,
-      cloudbaseFiles,
+      files,
     };
   } catch (err) {
     console.error("List release files error:", err);

@@ -78,16 +78,9 @@ import {
 export default function FilesManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [supabaseFiles, setSupabaseFiles] = useState<StorageFile[]>([]);
-  const [cloudbaseFiles, setCloudbaseFiles] = useState<StorageFile[]>([]);
-
-  // 发布版本文件
-  const [supabaseReleaseFiles, setSupabaseReleaseFiles] = useState<ReleaseFile[]>([]);
-  const [cloudbaseReleaseFiles, setCloudbaseReleaseFiles] = useState<ReleaseFile[]>([]);
-
-  // 社交链接图标文件
-  const [supabaseSocialFiles, setSupabaseSocialFiles] = useState<SocialLinkFile[]>([]);
-  const [cloudbaseSocialFiles, setCloudbaseSocialFiles] = useState<SocialLinkFile[]>([]);
+  const [adsFiles, setAdsFiles] = useState<StorageFile[]>([]);
+  const [releaseFiles, setReleaseFiles] = useState<ReleaseFile[]>([]);
+  const [socialFiles, setSocialFiles] = useState<SocialLinkFile[]>([]);
 
   // 预览状态
   const [previewFile, setPreviewFile] = useState<StorageFile | null>(null);
@@ -117,18 +110,15 @@ export default function FilesManagementPage() {
       ]);
 
       if (adsResult.success) {
-        setSupabaseFiles(adsResult.supabaseFiles || []);
-        setCloudbaseFiles(adsResult.cloudbaseFiles || []);
+        setAdsFiles(adsResult.files || []);
       }
 
       if (releasesResult.success) {
-        setSupabaseReleaseFiles(releasesResult.supabaseFiles || []);
-        setCloudbaseReleaseFiles(releasesResult.cloudbaseFiles || []);
+        setReleaseFiles(releasesResult.files || []);
       }
 
       if (socialResult.success) {
-        setSupabaseSocialFiles(socialResult.supabaseFiles || []);
-        setCloudbaseSocialFiles(socialResult.cloudbaseFiles || []);
+        setSocialFiles(socialResult.files || []);
       }
 
       if (!adsResult.success && !releasesResult.success && !socialResult.success) {
@@ -761,7 +751,7 @@ export default function FilesManagementPage() {
         <div>
           <h1 className="text-2xl font-bold">文件管理</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            查看和管理 Supabase 和 CloudBase 存储中的文件
+            查看和管理当前环境的云存储文件
           </p>
         </div>
         <Button variant="outline" onClick={loadFiles} disabled={loading}>
@@ -796,128 +786,74 @@ export default function FilesManagementPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">广告 (Supabase)</CardTitle>
-              <Database className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">广告文件</CardTitle>
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{supabaseFiles.length}</div>
-              <p className="text-xs text-muted-foreground">ads bucket</p>
+              <div className="text-2xl font-bold">{adsFiles.length}</div>
+              <p className="text-xs text-muted-foreground">当前环境</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">广告 (CloudBase)</CardTitle>
-              <Cloud className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{cloudbaseFiles.length}</div>
-              <p className="text-xs text-muted-foreground">ads/ 目录</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">应用 (Supabase)</CardTitle>
+              <CardTitle className="text-sm font-medium">应用文件</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{supabaseReleaseFiles.length}</div>
-              <p className="text-xs text-muted-foreground">releases bucket</p>
+              <div className="text-2xl font-bold">{releaseFiles.length}</div>
+              <p className="text-xs text-muted-foreground">当前环境</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">应用 (CloudBase)</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{cloudbaseReleaseFiles.length}</div>
-              <p className="text-xs text-muted-foreground">releases/ 目录</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">图标 (Supabase)</CardTitle>
+              <CardTitle className="text-sm font-medium">图标文件</CardTitle>
               <LinkIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{supabaseSocialFiles.length}</div>
-              <p className="text-xs text-muted-foreground">social-icons bucket</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">图标 (CloudBase)</CardTitle>
-              <LinkIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{cloudbaseSocialFiles.length}</div>
-              <p className="text-xs text-muted-foreground">social-icons/ 目录</p>
+              <div className="text-2xl font-bold">{socialFiles.length}</div>
+              <p className="text-xs text-muted-foreground">当前环境</p>
             </CardContent>
           </Card>
         </div>
       )}
 
       {/* 文件列表 */}
-      <Tabs defaultValue="ads-supabase">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2">
-          <TabsTrigger value="ads-supabase" className="gap-1 text-xs">
-            <ImageIcon className="h-3 w-3" />
-            广告 (S)
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {supabaseFiles.length}
+      <Tabs defaultValue="ads">
+        <TabsList className="grid w-full grid-cols-3 gap-2">
+          <TabsTrigger value="ads" className="gap-1">
+            <ImageIcon className="h-4 w-4" />
+            广告文件
+            <Badge variant="secondary" className="ml-1">
+              {adsFiles.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="ads-cloudbase" className="gap-1 text-xs">
-            <ImageIcon className="h-3 w-3" />
-            广告 (C)
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {cloudbaseFiles.length}
+          <TabsTrigger value="releases" className="gap-1">
+            <Package className="h-4 w-4" />
+            应用文件
+            <Badge variant="secondary" className="ml-1">
+              {releaseFiles.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="releases-supabase" className="gap-1 text-xs">
-            <Package className="h-3 w-3" />
-            应用 (S)
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {supabaseReleaseFiles.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="releases-cloudbase" className="gap-1 text-xs">
-            <Package className="h-3 w-3" />
-            应用 (C)
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {cloudbaseReleaseFiles.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="social-supabase" className="gap-1 text-xs">
-            <LinkIcon className="h-3 w-3" />
-            图标 (S)
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {supabaseSocialFiles.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="social-cloudbase" className="gap-1 text-xs">
-            <LinkIcon className="h-3 w-3" />
-            图标 (C)
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {cloudbaseSocialFiles.length}
+          <TabsTrigger value="social" className="gap-1">
+            <LinkIcon className="h-4 w-4" />
+            图标文件
+            <Badge variant="secondary" className="ml-1">
+              {socialFiles.length}
             </Badge>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="ads-supabase">
+        <TabsContent value="ads">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Supabase 广告文件
+                <ImageIcon className="h-5 w-5" />
+                广告文件
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -926,18 +862,18 @@ export default function FilesManagementPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <FileTable files={supabaseFiles} source="supabase" />
+                <FileTable files={adsFiles} source={adsFiles[0]?.source || "supabase"} />
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="ads-cloudbase">
+        <TabsContent value="releases">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Cloud className="h-5 w-5" />
-                CloudBase 广告文件
+                <Package className="h-5 w-5" />
+                应用文件
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -946,18 +882,18 @@ export default function FilesManagementPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <FileTable files={cloudbaseFiles} source="cloudbase" />
+                <ReleaseFileTable files={releaseFiles} source={releaseFiles[0]?.source || "supabase"} />
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="releases-supabase">
+        <TabsContent value="social">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Supabase 应用文件
+                <LinkIcon className="h-5 w-5" />
+                社交链接图标
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -966,67 +902,7 @@ export default function FilesManagementPage() {
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <ReleaseFileTable files={supabaseReleaseFiles} source="supabase" />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="releases-cloudbase">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Cloud className="h-5 w-5" />
-                CloudBase 应用文件
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <ReleaseFileTable files={cloudbaseReleaseFiles} source="cloudbase" />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="social-supabase">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Supabase 社交链接图标
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <SocialIconFileTable files={supabaseSocialFiles} source="supabase" />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="social-cloudbase">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Cloud className="h-5 w-5" />
-                CloudBase 社交链接图标
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <SocialIconFileTable files={cloudbaseSocialFiles} source="cloudbase" />
+                <SocialIconFileTable files={socialFiles} source={socialFiles[0]?.source || "supabase"} />
               )}
             </CardContent>
           </Card>

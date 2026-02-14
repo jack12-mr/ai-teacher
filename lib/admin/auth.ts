@@ -260,19 +260,14 @@ export async function changePassword(
   }
 
   try {
-    // 只使用 Supabase（单数据库架构，与模板项目一致）
-    const { getSupabaseAdmin } = await import("@/lib/integrations/supabase-admin");
-    const supabase = getSupabaseAdmin();
+    // 使用数据库适配器（支持双数据库）
+    const db = await getDatabaseAdapter();
 
     // 获取当前管理员
-    const { data: admin, error: fetchError } = await supabase
-      .from("admin_users")
-      .select("id, username, password_hash")
-      .eq("id", adminId)
-      .single();
+    const admin = await db.getAdminById(adminId);
 
-    if (fetchError || !admin) {
-      console.error("[changePassword] Fetch admin failed:", fetchError);
+    if (!admin) {
+      console.error("[changePassword] Admin not found:", adminId);
       return {
         success: false,
         error: "管理员不存在",
@@ -293,25 +288,16 @@ export async function changePassword(
     const newHash = await hashPassword(newPassword);
 
     // 更新密码
-    const { error: updateError } = await supabase
-      .from("admin_users")
-      .update({ password_hash: newHash })
-      .eq("id", adminId);
-
-    if (updateError) {
-      console.error("[changePassword] Supabase update failed:", updateError);
-      return {
-        success: false,
-        error: "修改密码失败",
-      };
-    }
+    await db.updateAdmin(adminId, {
+      password_hash: newHash,
+      updated_at: new Date().toISOString(),
+    });
 
     console.log("[changePassword] 密码更新成功");
 
     // 记录日志
-    const { error: logError } = await supabase
-      .from("admin_logs")
-      .insert({
+    try {
+      await db.createLog({
         admin_id: adminId,
         admin_username: admin.username,
         action: "admin.update",
@@ -320,8 +306,7 @@ export async function changePassword(
         details: { action: "change_password" },
         status: "success",
       });
-
-    if (logError) {
+    } catch (logError) {
       console.error("[changePassword] Log creation failed:", logError);
     }
 

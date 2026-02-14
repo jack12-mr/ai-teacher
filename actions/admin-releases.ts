@@ -217,40 +217,21 @@ export async function createRelease(
 
     // 根据当前环境选择数据库
     if (RegionConfig.region === "INTL") {
-      // 国际版：需要从CloudBase下载文件再上传到Supabase
+      // 国际版：文件已经在 /api/upload/release 中上传到 Supabase Storage
+      // cloudbaseFileId 实际上是 Supabase 的公开 URL
+      console.log("[createRelease] 国际版：直接使用 Supabase URL");
+
+      if (!supabaseAdmin) {
+        return { success: false, error: "Supabase 未配置" };
+      }
+
       try {
-        const { app } = await getCloudBase();
-        const downloadResult = await app.downloadFile({
-          fileID: cloudbaseFileId,
-        });
-
-        if (!downloadResult.fileContent) {
-          return { success: false, error: "文件处理失败" };
-        }
-
-        // 创建File对象用于上传到Supabase
-        const buffer = Buffer.from(downloadResult.fileContent);
-        const blob = new Blob([buffer]);
-        const file = new File([blob], fileName || "release-file", {
-          type: "application/octet-stream",
-        });
-
-        const supabaseUrl = await uploadToSupabase(file, fileName || `${platform}-${version}-${Date.now()}`);
-        if (!supabaseUrl) {
-          return { success: false, error: "上传到 Supabase 失败" };
-        }
-
-        // 保存到Supabase数据库
-        if (!supabaseAdmin) {
-          return { success: false, error: "Supabase 未配置" };
-        }
-
         const { error } = await supabaseAdmin.from("releases").insert({
           id,
           version,
           platform,
           variant: variant || null,
-          file_url: supabaseUrl,
+          file_url: cloudbaseFileId, // 这里是 Supabase Storage 的公开 URL
           file_size: fileSize,
           release_notes: releaseNotes || null,
           is_active: isActive,
@@ -258,7 +239,7 @@ export async function createRelease(
         });
 
         if (error) {
-          console.error("Supabase insert error:", error);
+          console.error("[createRelease] Supabase insert error:", error);
           return { success: false, error: "保存到 Supabase 失败" };
         }
 
@@ -271,7 +252,7 @@ export async function createRelease(
             version,
             platform,
             variant,
-            file_url: supabaseUrl,
+            file_url: cloudbaseFileId,
             file_size: fileSize,
             release_notes: releaseNotes || undefined,
             is_active: isActive,
@@ -280,7 +261,7 @@ export async function createRelease(
           },
         };
       } catch (err) {
-        console.error("[createRelease] 国际版上传失败:", err);
+        console.error("[createRelease] 国际版保存失败:", err);
         return { success: false, error: "创建发布版本失败" };
       }
     } else {

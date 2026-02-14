@@ -92,36 +92,72 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      try {
-        const filePath = `releases/${fileName}`;
-        console.log("[release upload] 上传到 Supabase:", filePath);
+      const filePath = `releases/${fileName}`;
+      console.log("[release upload] 上传到 Supabase:", filePath);
+      console.log("[release upload] 文件大小:", (buffer.length / 1024 / 1024).toFixed(2), "MB");
 
-        const { error } = await supabaseAdmin.storage
-          .from("releases")
-          .upload(filePath, buffer, {
-            contentType: file.type,
-            upsert: true,
+      // 重试逻辑：最多尝试3次
+      let lastError: any = null;
+      const maxRetries = 3;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`[release upload] 尝试上传 (${attempt}/${maxRetries})...`);
+
+          const { error } = await supabaseAdmin.storage
+            .from("releases")
+            .upload(filePath, buffer, {
+              contentType: file.type,
+              upsert: true,
+            });
+
+          if (error) {
+            console.error(`[release upload] 尝试 ${attempt} 失败:`, error);
+            lastError = error;
+
+            // 如果不是最后一次尝试，等待后重试
+            if (attempt < maxRetries) {
+              const waitTime = attempt * 2000; // 2秒、4秒
+              console.log(`[release upload] 等待 ${waitTime}ms 后重试...`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+              continue;
+            }
+          } else {
+            // 上传成功
+            const { data: urlData } = supabaseAdmin.storage
+              .from("releases")
+              .getPublicUrl(filePath);
+
+            fileUrl = urlData.publicUrl;
+            console.log("[release upload] Supabase 上传成功:", fileUrl);
+            break; // 跳出重试循环
+          }
+        } catch (uploadError: any) {
+          console.error(`[release upload] 尝试 ${attempt} 异常:`, {
+            message: uploadError.message,
+            code: uploadError.code,
+            cause: uploadError.cause?.message,
           });
+          lastError = uploadError;
 
-        if (error) {
-          console.error("[release upload] Supabase 上传失败:", error);
-          return NextResponse.json(
-            { error: `Supabase 上传失败: ${error.message}` },
-            { status: 500 }
-          );
+          // 如果不是最后一次尝试，等待后重试
+          if (attempt < maxRetries) {
+            const waitTime = attempt * 2000;
+            console.log(`[release upload] 等待 ${waitTime}ms 后重试...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          }
         }
+      }
 
-        // 获取公开 URL
-        const { data: urlData } = supabaseAdmin.storage
-          .from("releases")
-          .getPublicUrl(filePath);
-
-        fileUrl = urlData.publicUrl;
-        console.log("[release upload] Supabase 上传成功:", fileUrl);
-      } catch (uploadError) {
-        console.error("[release upload] Supabase 上传异常:", uploadError);
+      // 如果所有尝试都失败了
+      if (lastError) {
+        console.error("[release upload] 所有上传尝试均失败");
         return NextResponse.json(
-          { error: uploadError instanceof Error ? uploadError.message : "Supabase 上传失败" },
+          {
+            error: `Supabase 上传失败（已重试${maxRetries}次）: ${lastError.message || '网络连接错误'}`,
+            details: lastError.code || lastError.name
+          },
           { status: 500 }
         );
       }

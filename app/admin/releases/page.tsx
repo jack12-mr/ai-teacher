@@ -228,27 +228,76 @@ export default function ReleasesManagementPage() {
 
       // 关键修复: 无论上传目标是什么,都先通过API路由上传文件
       // 这样可以避免Next.js Server Actions的FormData大小限制
-      console.log("[handleCreate] 开始上传文件到API路由");
+      console.log("[handleCreate] ========== 开始上传流程 ==========");
+      console.log("[handleCreate] 文件信息:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        sizeInMB: (file.size / 1024 / 1024).toFixed(2) + "MB"
+      });
+      console.log("[handleCreate] 目标文件名:", fileName);
 
       const uploadFormData = new FormData();
       uploadFormData.append("file", file);
       uploadFormData.append("fileName", fileName);
 
-      const uploadResponse = await fetch("/api/upload/release", {
-        method: "POST",
-        body: uploadFormData,
-      });
+      console.log("[handleCreate] 开始调用 /api/upload/release...");
 
-      if (!uploadResponse.ok) {
-        const error = await uploadResponse.json();
-        setError(error.error || "文件上传失败");
+      let uploadResponse;
+      try {
+        uploadResponse = await fetch("/api/upload/release", {
+          method: "POST",
+          body: uploadFormData,
+        });
+        console.log("[handleCreate] API 响应状态:", uploadResponse.status, uploadResponse.statusText);
+      } catch (fetchError) {
+        console.error("[handleCreate] Fetch 请求失败:", fetchError);
+        setError(`网络请求失败: ${fetchError instanceof Error ? fetchError.message : "未知错误"}`);
         setCreating(false);
         return;
       }
 
-      const uploadResult = await uploadResponse.json();
-      const cloudbaseFileId = uploadResult.fileID;
-      console.log("[handleCreate] 文件上传成功:", cloudbaseFileId);
+      if (!uploadResponse.ok) {
+        console.error("[handleCreate] API 返回错误状态:", uploadResponse.status);
+
+        // 尝试解析响应
+        let errorMessage = "文件上传失败";
+        try {
+          const contentType = uploadResponse.headers.get("content-type");
+          console.log("[handleCreate] 响应 Content-Type:", contentType);
+
+          if (contentType && contentType.includes("application/json")) {
+            const error = await uploadResponse.json();
+            console.error("[handleCreate] 错误详情 (JSON):", error);
+            errorMessage = error.error || errorMessage;
+          } else {
+            const textError = await uploadResponse.text();
+            console.error("[handleCreate] 错误详情 (Text):", textError.substring(0, 500));
+            errorMessage = `服务器返回非JSON响应 (${uploadResponse.status}): ${textError.substring(0, 100)}`;
+          }
+        } catch (parseError) {
+          console.error("[handleCreate] 解析错误响应失败:", parseError);
+          errorMessage = `上传失败 (${uploadResponse.status}): 无法解析错误信息`;
+        }
+
+        setError(errorMessage);
+        setCreating(false);
+        return;
+      }
+
+      let uploadResult;
+      try {
+        uploadResult = await uploadResponse.json();
+        console.log("[handleCreate] 上传成功，响应数据:", uploadResult);
+      } catch (jsonError) {
+        console.error("[handleCreate] 解析成功响应失败:", jsonError);
+        setError("上传成功但无法解析响应数据");
+        setCreating(false);
+        return;
+      }
+
+      const cloudbaseFileId = uploadResult.fileID || uploadResult.fileUrl;
+      console.log("[handleCreate] ✅ 文件上传成功:", cloudbaseFileId);
 
       // 移除文件,只传递fileID和其他元数据
       formData.delete("file");

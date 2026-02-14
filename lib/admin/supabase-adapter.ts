@@ -97,6 +97,7 @@ export class SupabaseAdminAdapter implements AdminDatabaseAdapter {
     return {
       id: doc.id,
       username: doc.username,
+      password_hash: doc.password_hash,
       role: doc.role,
       status: doc.status,
       created_at: doc.created_at,

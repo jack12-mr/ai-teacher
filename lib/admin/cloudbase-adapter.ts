@@ -123,6 +123,7 @@ export class CloudBaseAdminAdapter implements AdminDatabaseAdapter {
     };
 
     if (user.username !== undefined) data.username = user.username;
+    if (user.password_hash !== undefined) data.password_hash = user.password_hash;
     if (user.role !== undefined) data.role = user.role;
     if (user.status !== undefined) data.status = user.status;
     if (user.last_login_at !== undefined) data.last_login_at = user.last_login_at;

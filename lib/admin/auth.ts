@@ -57,10 +57,15 @@ export async function adminLogin(
 
   try {
     // 使用数据库适配器获取管理员信息
-    console.log("[adminLogin] 开始登录流程, username:", username);
+    console.log("[adminLogin] ========== 开始登录流程 ==========");
+    console.log("[adminLogin] 用户名:", username);
+    console.log("[adminLogin] 环境变量 NEXT_PUBLIC_DEPLOYMENT_REGION:", process.env.NEXT_PUBLIC_DEPLOYMENT_REGION);
+
     const { getDatabaseAdapter } = await import("@/lib/admin/database");
+    console.log("[adminLogin] getDatabaseAdapter 函数已导入");
+
     const db = await getDatabaseAdapter();
-    console.log("[adminLogin] 数据库适配器已获取");
+    console.log("[adminLogin] 数据库适配器已获取, 类型:", db.constructor.name);
 
     const admin = await db.getAdminByUsername(username);
     console.log("[adminLogin] 查询管理员结果:", admin ? {
@@ -145,7 +150,12 @@ export async function adminLogin(
       },
     };
   } catch (error: any) {
-    console.error("管理员登录失败:", error);
+    console.error("========== 管理员登录失败 ==========");
+    console.error("错误类型:", error?.constructor?.name);
+    console.error("错误消息:", error?.message);
+    console.error("错误代码:", error?.code);
+    console.error("错误堆栈:", error?.stack);
+    console.error("完整错误对象:", JSON.stringify(error, null, 2));
     return {
       success: false,
       error: "登录过程中发生错误，请稍后重试",

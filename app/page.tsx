@@ -48,26 +48,28 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-b from-white to-neutral-50 dark:from-black dark:to-neutral-950">
       {/* Header */}
       <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
-          <div className="text-xl md:text-2xl font-bold text-neutral-950 dark:text-white">
+        <div className="container mx-auto px-3 md:px-4 py-2 md:py-4 flex items-center justify-between gap-2">
+          <div className="text-base md:text-2xl font-bold text-neutral-950 dark:text-white truncate flex-shrink min-w-0">
             {t.common.appName}
           </div>
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1 md:gap-3 flex-shrink-0">
             <LanguageSwitcher />
             <ModeToggle />
             <Button
               variant="outline"
               onClick={() => setShowRunbookVideoModal(true)}
-              className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-sm md:text-base px-3 py-2 md:px-4 md:py-3 min-h-[44px]"
+              className="border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 px-2 py-2 md:px-4 md:py-3 min-h-[40px] md:min-h-[44px]"
+              title={t.home.viewDemo}
             >
-              <PlayCircle className="w-4 h-4 mr-1 md:mr-2" />
-              {t.home.viewDemo}
+              <PlayCircle className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline text-sm md:text-base">{t.home.viewDemo}</span>
             </Button>
             <Button
               onClick={handleLogin}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm md:text-base px-4 py-2 md:px-6 md:py-3 min-h-[44px]"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 md:px-6 md:py-3 min-h-[40px] md:min-h-[44px] text-xs md:text-base whitespace-nowrap"
             >
-              {t.common.login}/{t.common.register}
+              <span className="md:hidden">{t.common.login}</span>
+              <span className="hidden md:inline">{t.common.login}/{t.common.register}</span>
             </Button>
           </div>
         </div>

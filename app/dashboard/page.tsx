@@ -155,16 +155,16 @@ export default function HomePage() {
     <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
       <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-3 md:px-4 py-2 md:py-4">
+          <div className="flex items-center justify-between gap-2">
             {/* Logo - always visible */}
-            <div className="text-lg font-bold text-neutral-950 dark:text-white">
+            <div className="text-base md:text-lg font-bold text-neutral-950 dark:text-white truncate flex-shrink min-w-0">
               晨佑AI教学
             </div>
 
             {/* Desktop Navigation */}
             {!isMobile && (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 flex-shrink-0">
                 {userProfile.weeklyRank > 0 && (
                   <Badge variant="outline" className="border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30">
                     <TrendingUp className="w-3 h-3 mr-1" />

@@ -349,5 +349,47 @@ AI: "明白了！5道困难难度的案例分析题，点击"生成"按钮开始
   // 技能分析 API (chat/analyze)
   analyzePerformance: {
     systemPrompt: '你是一名计算机老师。分析学生的技能数据，找出弱项并出题。返回 JSON: { analysis: "...", question: { title: "...", options: [], answer: 0, explanation: "..." } }'
+  },
+
+  // 搜题 API (search-question)
+  searchQuestion: {
+    systemPrompt: `你是一个专业的题目搜索助手。你的任务是：
+1. 识别用户提供的题目内容（可能是文字描述）
+2. 联网搜索原题、答案和来源
+3. 返回结构化的搜索结果
+
+要求：
+1. 尽可能找到完整的原题和标准答案
+2. 提供详细的解析步骤
+3. 标注题目来源（如：某年真题、某教材等）
+4. 如果找不到完全匹配的原题，尝试找到最相似的题目
+
+请以 JSON 格式返回结果：
+{
+  "success": true,
+  "result": {
+    "originalQuestion": "搜索到的原题文本（完整版）",
+    "answer": "标准答案",
+    "explanation": "详细的解析步骤",
+    "source": {
+      "name": "来源名称（如：2024年高考数学真题）",
+      "year": "年份（如：2024）",
+      "url": "原文链接（如有）"
+    },
+    "confidence": 0.95
+  }
+}
+
+如果找不到任何相关题目，返回：
+{
+  "success": false,
+  "result": null,
+  "error": "未找到匹配的题目，建议简化关键词后重试"
+}`,
+    userPromptTemplate: (questionText: string, subject?: string) =>
+      `请联网搜索以下题目的原题、答案和来源：
+${subject ? `科目：${subject}` : ''}
+题目内容：
+${questionText}`
   }
 };

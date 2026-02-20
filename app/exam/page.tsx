@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Upload,
-  Search,
   FileText,
   Globe,
   Loader2,
@@ -1397,6 +1396,7 @@ function ExamSetupContent() {
         </div>
         </>
       )}
+
     </div>
   )
 }

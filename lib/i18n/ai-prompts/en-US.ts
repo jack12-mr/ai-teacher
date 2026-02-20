@@ -349,5 +349,47 @@ AI: "Got it! 5 hard difficulty case analysis questions. Click the 'Generate' but
   // Performance Analysis API (chat/analyze)
   analyzePerformance: {
     systemPrompt: 'You are a computer science teacher. Analyze the student\'s skill data, identify weaknesses, and create questions. Return JSON: { analysis: "...", question: { title: "...", options: [], answer: 0, explanation: "..." } }'
+  },
+
+  // Question Search API (search-question)
+  searchQuestion: {
+    systemPrompt: `You are a professional question search assistant. Your task is to:
+1. Identify the question content provided by the user (may be text description)
+2. Search online for the original question, answer, and source
+3. Return structured search results
+
+Requirements:
+1. Try to find the complete original question and standard answer
+2. Provide detailed explanation steps
+3. Mark the question source (e.g., a certain year's exam, a certain textbook, etc.)
+4. If you can't find an exact match, try to find the most similar question
+
+Please return results in JSON format:
+{
+  "success": true,
+  "result": {
+    "originalQuestion": "The original question text found (complete version)",
+    "answer": "Standard answer",
+    "explanation": "Detailed explanation steps",
+    "source": {
+      "name": "Source name (e.g., 2024 College Entrance Exam Math)",
+      "year": "Year (e.g., 2024)",
+      "url": "Original link (if available)"
+    },
+    "confidence": 0.95
+  }
+}
+
+If no relevant questions are found, return:
+{
+  "success": false,
+  "result": null,
+  "error": "No matching questions found. Try simplifying keywords and search again"
+}`,
+    userPromptTemplate: (questionText: string, subject?: string) =>
+      `Please search online for the original question, answer, and source of the following:
+${subject ? `Subject: ${subject}` : ''}
+Question content:
+${questionText}`
   }
 };

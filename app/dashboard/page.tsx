@@ -12,7 +12,7 @@ import { BannerAd } from "@/components/banner-ad"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Crown, BookMarked, TrendingUp, Brain, Loader2, Home, User, CreditCard, Receipt, Settings, LogOut, PlayCircle } from "lucide-react"
+import { Crown, BookMarked, TrendingUp, Brain, Loader2, Home, User, CreditCard, Receipt, Settings, LogOut, PlayCircle, Search } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AiCoachModal } from "@/components/ai-coach-modal"
 import { RunbookVideoModal } from "@/components/runbook-video-modal"
@@ -25,6 +25,7 @@ import { ModeToggle } from "@/components/ModeToggle"
 import { useT } from "@/lib/i18n"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { MobileHeaderMenu } from "@/components/navigation/mobile-header-menu"
+import QuestionSearch from "@/components/exam/QuestionSearch"
 
 // 根据区域选择正确的 hook
 const useAuth = isChinaRegion() ? useAuthCN : useUserIntl
@@ -66,6 +67,7 @@ export default function HomePage() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showRunbookVideoModal, setShowRunbookVideoModal] = useState(false)
+  const [showQuestionSearch, setShowQuestionSearch] = useState(false)
 
   const [aiCoachSessions, setAiCoachSessions] = useState(0) // 免费用户3次体验
   const [showAiCoach, setShowAiCoach] = useState(false)
@@ -203,6 +205,13 @@ export default function HomePage() {
                   <BookMarked className="w-4 h-4 mr-2" />
                   {t.home.viewWrongBook}
                 </Button>
+                <Button
+                  onClick={() => setShowQuestionSearch(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  搜题
+                </Button>
                 <UserAvatarMenu />
               </div>
             )}
@@ -299,6 +308,13 @@ export default function HomePage() {
                   >
                     <BookMarked className="w-4 h-4 mr-2" />
                     {t.home.viewWrongBook}
+                  </Button>
+                  <Button
+                    onClick={() => setShowQuestionSearch(true)}
+                    className="w-full justify-start min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    <Search className="w-4 h-4 mr-2" />
+                    搜题
                   </Button>
 
                   {/* Logout Button */}
@@ -426,6 +442,10 @@ export default function HomePage() {
       <RunbookVideoModal
         isOpen={showRunbookVideoModal}
         onClose={() => setShowRunbookVideoModal(false)}
+      />
+      <QuestionSearch
+        isOpen={showQuestionSearch}
+        onClose={() => setShowQuestionSearch(false)}
       />
     </div>
   )

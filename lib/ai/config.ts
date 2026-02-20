@@ -11,6 +11,7 @@ interface AIConfig {
   baseURL: string;
   modelName: string;
   searchModelName?: string;
+  vlModelName?: string;  // 多模态模型名称（用于图片识别）
 }
 
 /**
@@ -35,5 +36,6 @@ export function getAIConfig(): AIConfig {
     baseURL: process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     modelName: process.env.AI_MODEL_NAME || 'qwen-max',
     searchModelName: process.env.AI_SEARCH_MODEL_NAME || 'qwen-turbo',
+    vlModelName: process.env.AI_VL_MODEL_NAME || 'qwen-vl-max',  // 多模态模型
   };
 }

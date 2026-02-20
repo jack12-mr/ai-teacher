@@ -75,6 +75,13 @@ export function getAnalyzePerformancePrompts() {
   return getAIPrompts().analyzePerformance;
 }
 
+/**
+ * Get prompts for question search API
+ */
+export function getSearchQuestionPrompts() {
+  return getAIPrompts().searchQuestion;
+}
+
 // Export types for TypeScript support
 export type DeploymentRegion = 'CN' | 'INTL';
 export type AIPrompts = typeof zhCNPrompts;

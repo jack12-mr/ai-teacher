@@ -18,11 +18,14 @@ if (typeof window !== 'undefined') {
 // 动态导入 mammoth - 移除顶层导入，改为在使用时加载
 let mammoth: any = null
 
-// 文件大小限制 (10MB)
-export const MAX_FILE_SIZE = 10 * 1024 * 1024
+// 文件大小限制 (50MB) - 支持更大的教材上传
+export const MAX_FILE_SIZE = 50 * 1024 * 1024
 
-// 文本长度限制 (约 8000 字)
-export const MAX_TEXT_LENGTH = 8000
+// 文本长度限制 (约 50000 字) - 支持完整章节
+export const MAX_TEXT_LENGTH = 50000
+
+// 分段大小 (每段约 5000 字) - 用于 AI 分批处理
+export const CHUNK_SIZE = 5000
 
 // 支持的文件类型
 export const SUPPORTED_FILE_TYPES = [
@@ -259,5 +262,110 @@ export async function parseFile(file: File): Promise<ParseResult> {
     success: false,
     text: '',
     error: '不支持的文件格式'
+  }
+}
+
+/**
+ * 分段结果
+ */
+export interface ChunkResult {
+  chunks: string[]       // 分段后的文本数组
+  totalChunks: number    // 总段数
+  originalLength: number // 原始文本长度
+}
+
+/**
+ * 智能分段函数
+ * 将长文本按段落边界分割成多个较小的段，保持语义完整性
+ * @param text 要分割的文本
+ * @param maxChunkSize 每段最大字符数，默认 5000
+ * @returns 分段结果
+ */
+export function splitTextIntoChunks(
+  text: string,
+  maxChunkSize: number = CHUNK_SIZE
+): ChunkResult {
+  const originalLength = text.length
+
+  // 如果文本不长，直接返回
+  if (originalLength <= maxChunkSize) {
+    return {
+      chunks: [text],
+      totalChunks: 1,
+      originalLength
+    }
+  }
+
+  const chunks: string[] = []
+
+  // 按双换行符分割段落（保持段落完整性）
+  const paragraphs = text.split(/\n\n+/)
+  let currentChunk = ''
+
+  for (const paragraph of paragraphs) {
+    // 如果当前段落本身就超过限制，需要进一步分割
+    if (paragraph.length > maxChunkSize) {
+      // 先保存当前累积的内容
+      if (currentChunk.trim()) {
+        chunks.push(currentChunk.trim())
+        currentChunk = ''
+      }
+
+      // 按句子分割大段落
+      const sentences = paragraph.split(/(?<=[。！？.!?])\s*/)
+      let sentenceChunk = ''
+
+      for (const sentence of sentences) {
+        if (sentenceChunk.length + sentence.length > maxChunkSize) {
+          if (sentenceChunk.trim()) {
+            chunks.push(sentenceChunk.trim())
+          }
+          sentenceChunk = sentence
+        } else {
+          sentenceChunk += sentence
+        }
+      }
+
+      if (sentenceChunk.trim()) {
+        currentChunk = sentenceChunk
+      }
+    } else {
+      // 正常段落处理
+      if (currentChunk.length + paragraph.length + 2 > maxChunkSize) {
+        // 当前块已满，保存并开始新块
+        if (currentChunk.trim()) {
+          chunks.push(currentChunk.trim())
+        }
+        currentChunk = paragraph
+      } else {
+        // 添加到当前块
+        currentChunk += (currentChunk ? '\n\n' : '') + paragraph
+      }
+    }
+  }
+
+  // 保存最后一块
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim())
+  }
+
+  return {
+    chunks,
+    totalChunks: chunks.length,
+    originalLength
+  }
+}
+
+/**
+ * 获取分段处理的进度信息
+ */
+export function getChunkProgress(currentIndex: number, total: number): {
+  percentage: number
+  message: string
+} {
+  const percentage = Math.round((currentIndex / total) * 100)
+  return {
+    percentage,
+    message: `正在处理第 ${currentIndex}/${total} 段 (${percentage}%)`
   }
 }

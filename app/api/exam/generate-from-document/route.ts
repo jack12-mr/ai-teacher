@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDocumentQuestionsPrompts } from '@/lib/i18n/ai-prompts';
 import { getAIConfig } from '@/lib/ai/config';
+import { splitTextIntoChunks, CHUNK_SIZE } from '@/lib/file-parser';
 
 /**
  * 基于文档内容生成题目 API
@@ -44,101 +45,38 @@ export async function POST(request: NextRequest) {
     // 获取区域适配的 AI 提示词
     const prompts = getDocumentQuestionsPrompts();
 
-    // 构建出题提示词
-    const prompt = buildDocumentQuestionPrompt(documentContent, examName, count, requirements);
+    // 检查是否需要分段处理
+    const { chunks, totalChunks } = splitTextIntoChunks(documentContent);
 
-    // 调用 AI API 生成题目
-    const aiConfig = getAIConfig();
-    const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${aiConfig.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: aiConfig.modelName,
-        messages: [
-          {
-            role: 'system',
-            content: prompts.systemPrompt
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.7,
-        max_tokens: 8000
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('通义千问 API 错误:', errorData);
-      return NextResponse.json(
-        { error: 'AI 出题失败，请稍后重试', details: errorData },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    const aiContent = data.choices?.[0]?.message?.content;
-
-    if (!aiContent) {
-      return NextResponse.json(
-        { error: 'AI 返回内容为空' },
-        { status: 500 }
-      );
-    }
-
-    // 解析 AI 返回的 JSON
     let questions: GeneratedQuestion[];
-    try {
-      const parsed = JSON.parse(aiContent);
-      questions = Array.isArray(parsed) ? parsed : (parsed.questions || []);
 
-      // 验证并修复题目数据
-      questions = questions.map((q, index) => {
-        const baseQuestion = {
-          id: q.id || `doc-${Date.now()}-${index}`,
-          type: validateQuestionType(q.type),
-          content: q.content || '题目加载失败',
-          explanation: q.explanation || '暂无解析',
-          difficulty: validateDifficulty(q.difficulty),
-          knowledgePoint: q.knowledgePoint || '综合'
-        };
+    if (totalChunks > 1) {
+      // 分段处理：并行调用 AI 生成题目
+      console.log(`文档过长，分成 ${totalChunks} 段处理`);
 
-        if (baseQuestion.type === 'fill') {
-          // 填空题
-          const blanksCount = (q.content?.match(/____/g) || []).length || 1;
-          return {
-            ...baseQuestion,
-            correctAnswer: Array.isArray(q.correctAnswer)
-              ? q.correctAnswer.map(String)
-              : [String(q.correctAnswer)],
-            blanksCount
-          };
-        } else {
-          // 选择题（单选或多选）
-          return {
-            ...baseQuestion,
-            options: Array.isArray(q.options) && q.options.length === 4
-              ? q.options
-              : ['选项A', '选项B', '选项C', '选项D'],
-            correctAnswer: baseQuestion.type === 'multiple'
-              ? validateMultipleAnswer(q.correctAnswer)
-              : validateSingleAnswer(q.correctAnswer)
-          };
-        }
-      });
+      // 计算每段应生成的题目数量
+      const questionsPerChunk = Math.ceil(count / totalChunks);
 
-    } catch (parseError) {
-      console.error('解析 AI 返回内容失败:', parseError);
-      return NextResponse.json(
-        { error: '题目格式解析失败', rawContent: aiContent },
-        { status: 500 }
+      // 并行处理所有分段
+      const allQuestions = await Promise.all(
+        chunks.map((chunk, index) =>
+          generateQuestionsFromChunk(chunk, examName, questionsPerChunk, requirements, prompts, index)
+        )
       );
+
+      // 合并所有题目
+      questions = allQuestions.flat();
+
+      // 如果题目数量超过要求，随机选取
+      if (questions.length > count) {
+        questions = shuffleArray(questions).slice(0, count);
+      }
+
+      console.log(`分段处理完成，共生成 ${questions.length} 道题目`);
+    } else {
+      // 单段处理：直接调用 AI
+      const prompt = buildDocumentQuestionPrompt(documentContent, examName, count, requirements);
+      questions = await callAIGenerateQuestions(prompt, prompts.systemPrompt);
     }
 
     return NextResponse.json({
@@ -146,8 +84,8 @@ export async function POST(request: NextRequest) {
       questions,
       count: questions.length,
       examName,
-      model: data.model,
-      usage: data.usage
+      processedInChunks: totalChunks > 1,
+      totalChunks
     });
 
   } catch (error) {
@@ -267,6 +205,117 @@ function validateMultipleAnswer(answer: unknown): number[] {
     }
   }
   return [0, 1];
+}
+
+/**
+ * 从单个分段生成题目
+ */
+async function generateQuestionsFromChunk(
+  chunk: string,
+  examName: string,
+  count: number,
+  requirements: any[],
+  prompts: any,
+  chunkIndex: number
+): Promise<GeneratedQuestion[]> {
+  const prompt = buildDocumentQuestionPrompt(chunk, examName, count, requirements);
+  const questions = await callAIGenerateQuestions(prompt, prompts.systemPrompt);
+
+  // 为题目 ID 添加分段标识，避免重复
+  return questions.map((q, index) => ({
+    ...q,
+    id: `chunk${chunkIndex}-${q.id || index}`
+  }));
+}
+
+/**
+ * 调用 AI 生成题目
+ */
+async function callAIGenerateQuestions(
+  prompt: string,
+  systemPrompt: string
+): Promise<GeneratedQuestion[]> {
+  const aiConfig = getAIConfig();
+
+  const response = await fetch(`${aiConfig.baseURL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${aiConfig.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: aiConfig.modelName,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.7,
+      max_tokens: 8000
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.text();
+    console.error('AI API 错误:', errorData);
+    throw new Error(`AI 出题失败: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const aiContent = data.choices?.[0]?.message?.content;
+
+  if (!aiContent) {
+    throw new Error('AI 返回内容为空');
+  }
+
+  // 解析 AI 返回的 JSON
+  const parsed = JSON.parse(aiContent);
+  const rawQuestions = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+
+  // 验证并修复题目数据
+  return rawQuestions.map((q: any, index: number) => {
+    const baseQuestion = {
+      id: q.id || `doc-${Date.now()}-${index}`,
+      type: validateQuestionType(q.type),
+      content: q.content || '题目加载失败',
+      explanation: q.explanation || '暂无解析',
+      difficulty: validateDifficulty(q.difficulty),
+      knowledgePoint: q.knowledgePoint || '综合'
+    };
+
+    if (baseQuestion.type === 'fill') {
+      const blanksCount = (q.content?.match(/____/g) || []).length || 1;
+      return {
+        ...baseQuestion,
+        correctAnswer: Array.isArray(q.correctAnswer)
+          ? q.correctAnswer.map(String)
+          : [String(q.correctAnswer)],
+        blanksCount
+      };
+    } else {
+      return {
+        ...baseQuestion,
+        options: Array.isArray(q.options) && q.options.length === 4
+          ? q.options
+          : ['选项A', '选项B', '选项C', '选项D'],
+        correctAnswer: baseQuestion.type === 'multiple'
+          ? validateMultipleAnswer(q.correctAnswer)
+          : validateSingleAnswer(q.correctAnswer)
+      };
+    }
+  });
+}
+
+/**
+ * 随机打乱数组（Fisher-Yates 算法）
+ */
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 /**

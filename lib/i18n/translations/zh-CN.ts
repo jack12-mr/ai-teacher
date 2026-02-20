@@ -225,7 +225,7 @@ export const zhCN = {
     aiSearchDesc: "AI 自动搜索考试大纲，生成题库",
     aiGuidedGeneration: "智能引导出题",
     clickOrDrag: "点击或拖拽上传文件",
-    supportFormats: "支持 PDF、Word 格式（最大 10MB）",
+    supportFormats: "支持 PDF、Word 格式（最大 50MB，5万字）",
     dragFromApps: "可从文件夹、QQ、微信直接拖入",
     dropToUpload: "松开鼠标上传文件",
     aiWillSearch: "AI 将为你搜索以下内容：",

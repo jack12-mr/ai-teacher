@@ -227,7 +227,7 @@ export const enUS: Translations = {
     aiSearchDesc: "AI automatically searches exam syllabus and generates questions",
     aiGuidedGeneration: "AI-Guided Question Generation",
     clickOrDrag: "Click or drag to upload file",
-    supportFormats: "Supports PDF, Word formats (max 10MB)",
+    supportFormats: "Supports PDF, Word formats (max 50MB, 50k chars)",
     dragFromApps: "Drag from folders or apps directly",
     dropToUpload: "Release to upload file",
     aiWillSearch: "AI will search for:",

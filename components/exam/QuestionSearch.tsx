@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Search, X, PenLine, Camera, Loader2 } from 'lucide-react';
+import { Search, X, PenLine, Camera, Loader2, CheckCircle2 } from 'lucide-react';
 import SearchResultCard from './SearchResultCard';
 
 // 搜索结果类型
@@ -15,6 +15,13 @@ interface SearchResult {
     url?: string;
   };
   confidence: number;
+}
+
+// 进度步骤类型
+interface ProgressStep {
+  step: string;
+  message: string;
+  status: 'pending' | 'current' | 'done';
 }
 
 interface QuestionSearchProps {
@@ -31,6 +38,7 @@ export default function QuestionSearch({ isOpen, onClose }: QuestionSearchProps)
   const [isSearching, setIsSearching] = useState(false);
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -79,6 +87,19 @@ export default function QuestionSearch({ isOpen, onClose }: QuestionSearchProps)
     setError(null);
     setSearchResult(null);
 
+    // 初始化进度步骤
+    const initialSteps: ProgressStep[] = mode === 'camera'
+      ? [
+          { step: 'ocr', message: '识别图片中的题目', status: 'pending' },
+          { step: 'searching', message: '联网搜索原题', status: 'pending' },
+          { step: 'found', message: '获取答案和解析', status: 'pending' },
+        ]
+      : [
+          { step: 'searching', message: '联网搜索原题', status: 'pending' },
+          { step: 'found', message: '获取答案和解析', status: 'pending' },
+        ];
+    setProgressSteps(initialSteps);
+
     try {
       const response = await fetch('/api/exam/search-question', {
         method: 'POST',
@@ -91,14 +112,69 @@ export default function QuestionSearch({ isOpen, onClose }: QuestionSearchProps)
         }),
       });
 
-      const data = await response.json();
+      // 处理流式响应
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      if (!data.success) {
-        setError(data.error || '搜索失败，请重试');
-        return;
+      if (!reader) {
+        throw new Error('无法读取响应流');
       }
 
-      setSearchResult(data.result);
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // 解析 SSE 消息
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === 'progress') {
+                // 更新进度步骤状态
+                setProgressSteps(prev => prev.map(step => {
+                  if (step.step === data.step) {
+                    return { ...step, status: 'current', message: data.message };
+                  }
+                  // 将之前的步骤标记为完成
+                  const stepIndex = prev.findIndex(s => s.step === data.step);
+                  const currentIndex = prev.findIndex(s => s.step === step.step);
+                  if (currentIndex < stepIndex && step.status === 'pending') {
+                    return { ...step, status: 'done' };
+                  }
+                  return step;
+                }));
+
+                // 短暂延迟后将当前步骤标记为完成
+                setTimeout(() => {
+                  setProgressSteps(prev => prev.map(step =>
+                    step.step === data.step && step.status === 'current'
+                      ? { ...step, status: 'done' }
+                      : step
+                  ));
+                }, 300);
+              } else if (data.type === 'result') {
+                if (!data.success) {
+                  setError(data.error || '搜索失败，请重试');
+                } else {
+                  setSearchResult(data.result);
+                  // 将所有步骤标记为完成
+                  setProgressSteps(prev => prev.map(step => ({ ...step, status: 'done' })));
+                }
+              }
+            } catch {
+              // 忽略解析错误
+            }
+          }
+        }
+      }
 
     } catch (err) {
       console.error('搜题失败:', err);
@@ -113,6 +189,7 @@ export default function QuestionSearch({ isOpen, onClose }: QuestionSearchProps)
     setCapturedImage(null);
     setSearchResult(null);
     setError(null);
+    setProgressSteps([]);
   };
 
   const handleClose = () => {
@@ -273,6 +350,36 @@ export default function QuestionSearch({ isOpen, onClose }: QuestionSearchProps)
               </>
             )}
           </button>
+
+          {/* 搜索进度显示 */}
+          {progressSteps.length > 0 && (
+            <div className="mt-4 p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700">
+              <div className="space-y-3">
+                {progressSteps.map((step, index) => (
+                  <div key={step.step} className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {step.status === 'done' && (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      )}
+                      {step.status === 'current' && (
+                        <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
+                      )}
+                      {step.status === 'pending' && (
+                        <div className="w-5 h-5 rounded-full border-2 border-neutral-300 dark:border-neutral-600" />
+                      )}
+                    </div>
+                    <span className={`text-sm ${
+                      step.status === 'done' ? 'text-green-600 dark:text-green-400' :
+                      step.status === 'current' ? 'text-indigo-600 dark:text-indigo-400 font-medium' :
+                      'text-neutral-400 dark:text-neutral-500'
+                    }`}>
+                      {step.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 搜索结果 */}
           {searchResult && (

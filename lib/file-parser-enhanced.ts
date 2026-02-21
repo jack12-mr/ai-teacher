@@ -88,11 +88,11 @@ export async function validateFileEnhanced(file: File): Promise<{
     }
   }
 
-  if (file.size > 10 * 1024 * 1024) {
+  if (file.size > 50 * 1024 * 1024) {
     issues.push(`文件过大: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
     return {
       valid: false,
-      error: '文件大小超过 10MB 限制',
+      error: '文件大小超过 50MB 限制',
       diagnostics
     }
   }

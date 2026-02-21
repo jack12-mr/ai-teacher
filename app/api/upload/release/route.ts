@@ -8,8 +8,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5分钟超时
 
-// Next.js App Router 使用这个配置来设置请求体大小限制
-export const preferredRegion = 'auto';
 // 注意: App Router 的 API 路由请求体大小限制需要在 next.config.mjs 中配置
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB

@@ -27,10 +27,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local env files (但不要忽略生产环境的配置)
-.env*.local
-.env.development
-.env.test
+# 环境变量文件 - 全部排除，运行时通过云托管控制台配置
+.env
+.env.*
+!.env.example
 
 # Vercel
 .vercel

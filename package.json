@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "dev": "set NODE_OPTIONS=--openssl-legacy-provider && next dev",
+    "build": "set \"TEMP=D:\\newcode\\ai teacher\\fuben2-project\\mvp_25-main\\mvp_25-main\\.tmp\" && set \"TMP=D:\\newcode\\ai teacher\\fuben2-project\\mvp_25-main\\mvp_25-main\\.tmp\" && next build",
+    "dev": "set \"NODE_OPTIONS=--openssl-legacy-provider\" && set \"TEMP=D:\\newcode\\ai teacher\\fuben2-project\\mvp_25-main\\mvp_25-main\\.tmp\" && set \"TMP=D:\\newcode\\ai teacher\\fuben2-project\\mvp_25-main\\mvp_25-main\\.tmp\" && next dev",
     "lint": "next lint",
     "start": "NODE_OPTIONS='--openssl-legacy-provider' next start",
     "create-admin": "tsx scripts/create-admin.ts",

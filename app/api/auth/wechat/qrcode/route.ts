@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isChinaRegion } from "@/lib/config/region";
+import { logError, logInfo } from "@/lib/utils/logger";
 
 /**
  * GET /api/auth/wechat/qrcode
@@ -8,8 +9,13 @@ import { isChinaRegion } from "@/lib/config/region";
  */
 export async function GET(request: NextRequest) {
   try {
+    const regionOk = isChinaRegion();
+    logInfo("WeChat QRCode request received", {
+      regionOk,
+      url: request.url,
+    });
     // 版本隔离：仅中国区域支持微信扫码登录
-    if (!isChinaRegion()) {
+    if (!regionOk) {
       return NextResponse.json(
         { error: "WeChat QR code login only available in China region", code: "REGION_NOT_SUPPORTED" },
         { status: 400 }
@@ -18,6 +24,12 @@ export async function GET(request: NextRequest) {
 
     const appId = process.env.WECHAT_OPEN_APPID || process.env.WECHAT_APP_ID;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    logInfo("WeChat QRCode config", {
+      hasAppId: Boolean(appId),
+      hasAppUrl: Boolean(appUrl),
+      appUrl,
+    });
 
     if (!appId || !appUrl) {
       return NextResponse.json(
@@ -35,6 +47,11 @@ export async function GET(request: NextRequest) {
       redirectUri
     )}&response_type=code&scope=snsapi_login&state=${state}#wechat_redirect`;
 
+    logInfo("WeChat QRCode generated", {
+      redirectUri,
+      stateLength: state.length,
+    });
+
     return NextResponse.json({
       success: true,
       qrcodeUrl,
@@ -42,10 +59,11 @@ export async function GET(request: NextRequest) {
       state,
     });
   } catch (error) {
-    console.error("[auth/wechat/qrcode] error", error);
+    logError("WeChat QRCode error", error as Error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }
 }
+

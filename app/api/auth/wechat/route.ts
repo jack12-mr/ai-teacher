@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isChinaRegion } from "@/lib/config/region";
-import { logSecurityEvent, logInfo } from "@/lib/utils/logger";
+import { logError, logSecurityEvent, logInfo } from "@/lib/utils/logger";
 import { getWechatUserByCode } from "@/lib/wechat/token-exchange";
 import { createRefreshToken } from "@/lib/auth/refresh-token-manager";
 import { getCloudBaseApp } from "@/lib/cloudbase/init";
@@ -52,8 +52,14 @@ export async function POST(request: NextRequest) {
 
     const { code } = validationResult.data;
 
+    const regionOk = isChinaRegion();
+    logInfo("WeChat OAuth request received", {
+      codeLength: code.length,
+      regionOk,
+    });
+
     // 检查是否是中国区域
-    if (!isChinaRegion()) {
+    if (!regionOk) {
       return NextResponse.json(
         {
           success: false,
@@ -69,6 +75,11 @@ export async function POST(request: NextRequest) {
 
     const appId = process.env.WECHAT_OPEN_APPID;
     const appSecret = process.env.WECHAT_OPEN_SECRET;
+
+    logInfo("WeChat OAuth config", {
+      hasAppId: Boolean(appId),
+      hasAppSecret: Boolean(appSecret),
+    });
 
     if (!appId || !appSecret) {
       logSecurityEvent("wechat_missing_config", undefined, clientIP, {
@@ -231,6 +242,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
+    logError("WeChat login error", error as Error);
     console.error("WeChat login error:", errorMessage);
     logSecurityEvent(
       "wechat_login_error",
@@ -265,6 +277,12 @@ export async function GET(request: NextRequest) {
 
     const appId = process.env.WECHAT_OPEN_APPID;
 
+    logInfo("WeChat OAuth redirect requested", {
+      hasAppId: Boolean(appId),
+      callback,
+      state,
+    });
+
     if (!appId) {
       return NextResponse.json(
         {
@@ -294,3 +312,13 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+

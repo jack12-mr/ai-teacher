@@ -56,7 +56,15 @@ function WechatCallbackContent() {
         console.log("[CALLBACK PAGE] API响应数据:", data);
 
         if (!response.ok || !data.success) {
-          setError(data.error || "微信登录失败");
+          console.error("[CALLBACK PAGE] WeChat login failed:", {
+            status: response.status,
+            error: data.error,
+            code: data.code,
+            details: data.details,
+          });
+          const codeTag = data?.code ? ` [${data.code}]` : "";
+          const detail = data?.details ? ` (${data.details})` : "";
+          setError(`${data.error || "微信登录失败"}${codeTag}${detail}`);
           setIsProcessing(false);
           return;
         }
@@ -147,3 +155,9 @@ export default function WechatCallbackPage() {
     </div>
   );
 }
+
+
+
+
+
+

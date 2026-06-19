@@ -111,11 +111,15 @@ export async function loginUser(
           const now = new Date().toISOString();
 
           // 更新用户的 pro 状态
-          await usersCollection.doc(user._id).update({
-            pro: false,
-            subscription_status: "expired",
-            updated_at: now,
-          });
+          try {
+            await usersCollection.doc(user._id).update({
+              pro: false,
+              subscription_status: "expired",
+              updated_at: now,
+            });
+          } catch (updateErr) {
+            console.error("[CloudBase Service] Failed to update expired pro status:", updateErr);
+          }
 
           user.pro = false;
           user.subscription_status = "expired";
@@ -153,14 +157,15 @@ export async function loginUser(
     }
 
     // 更新用户登录信息
-    const updateResult = await usersCollection.doc(user._id).update({
-      last_login_at: new Date().toISOString(),
-      last_login_ip: options?.ipAddress,
-      login_count: (user.login_count || 0) + 1,
-    });
-
-    console.log("[CloudBase Service] ✅ 登录信息更新结果:", updateResult);
-    console.log("[CloudBase Service] 用户ID:", user._id, "| last_login_at:", new Date().toISOString());
+    try {
+      await usersCollection.doc(user._id).update({
+        last_login_at: new Date().toISOString(),
+        last_login_ip: options?.ipAddress,
+        login_count: (user.login_count || 0) + 1,
+      });
+    } catch (loginUpdateErr) {
+      console.error("[CloudBase Service] Failed to update login info:", loginUpdateErr);
+    }
 
     return {
       success: true,
@@ -339,25 +344,21 @@ export function verifyJwtToken(token: string): { valid: boolean; payload?: any; 
 
 /**
  * 根据用户 ID 获取用户信息
+ * @throws {Error} When the database query fails (propagates to caller)
  */
 export async function getUserById(userId: string) {
-  try {
-    const db = getCloudBaseApp().database();
-    const result = await db
-      .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
-      .doc(userId)
-      .get();
+  const db = getCloudBaseApp().database();
+  const result = await db
+    .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
+    .doc(userId)
+    .get();
 
-    if (!result.data || result.data.length === 0) {
-      return null;
-    }
-
-    const user = result.data[0] || result.data;
-    // 不返回密码
-    const { password, ...safeUser } = user;
-    return safeUser;
-  } catch (error) {
-    console.error("[CloudBase Service] 获取用户信息失败:", error);
+  if (!result.data || result.data.length === 0) {
     return null;
   }
+
+  const user = result.data[0] || result.data;
+  // 不返回密码
+  const { password, ...safeUser } = user;
+  return safeUser;
 }

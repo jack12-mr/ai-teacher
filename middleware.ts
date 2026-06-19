@@ -224,7 +224,7 @@ export async function middleware(request: NextRequest) {
           );
         }
       } catch (error) {
-        // Ignore URL parsing errors
+        console.warn("[Middleware] Failed to parse referer URL:", error instanceof Error ? error.message : error);
       }
     }
   }

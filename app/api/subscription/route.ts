@@ -59,23 +59,31 @@ export async function GET(request: NextRequest) {
       const now = new Date().toISOString();
 
       // 更新订阅记录状态
-      await db
-        .collection(CLOUDBASE_COLLECTIONS.SUBSCRIPTIONS)
-        .doc(sub._id)
-        .update({
-          status: "expired",
-          updated_at: now,
-        });
+      try {
+        await db
+          .collection(CLOUDBASE_COLLECTIONS.SUBSCRIPTIONS)
+          .doc(sub._id)
+          .update({
+            status: "expired",
+            updated_at: now,
+          });
+      } catch (subUpdateErr) {
+        logError("Failed to update expired subscription status", subUpdateErr instanceof Error ? subUpdateErr : new Error(String(subUpdateErr)));
+      }
 
       // 更新用户的 pro 状态
-      await db
-        .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
-        .doc(userId)
-        .update({
-          pro: false,
-          subscription_status: "expired",
-          updated_at: now,
-        });
+      try {
+        await db
+          .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
+          .doc(userId)
+          .update({
+            pro: false,
+            subscription_status: "expired",
+            updated_at: now,
+          });
+      } catch (userUpdateErr) {
+        logError("Failed to update user pro status on expiry", userUpdateErr instanceof Error ? userUpdateErr : new Error(String(userUpdateErr)));
+      }
 
       logInfo("Subscription expired and updated", {
         userId,

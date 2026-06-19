@@ -110,16 +110,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 更新订单状态
-    await db
-      .collection(CLOUDBASE_COLLECTIONS.PAYMENTS)
-      .doc(order._id)
-      .update({
-        status: "paid",
-        transaction_id: transactionId,
-        paid_at: now,
-        updated_at: now,
-        webhook_data: paymentResult,
-      });
+    try {
+      await db
+        .collection(CLOUDBASE_COLLECTIONS.PAYMENTS)
+        .doc(order._id)
+        .update({
+          status: "paid",
+          transaction_id: transactionId,
+          paid_at: now,
+          updated_at: now,
+          webhook_data: paymentResult,
+        });
+    } catch (paymentUpdateErr) {
+      logError("Failed to update payment status", paymentUpdateErr instanceof Error ? paymentUpdateErr : new Error(String(paymentUpdateErr)));
+    }
 
     // 创建或更新订阅记录
     const subscriptionEndDate = new Date();
@@ -139,38 +143,58 @@ export async function POST(request: NextRequest) {
         ? new Date(currentEndDate.getTime() + order.days * 24 * 60 * 60 * 1000)
         : subscriptionEndDate;
 
-      await db
-        .collection(CLOUDBASE_COLLECTIONS.SUBSCRIPTIONS)
-        .doc(existingSub._id)
-        .update({
-          status: "active",
-          end_date: newEndDate.toISOString(),
-          updated_at: now,
-        });
+      try {
+        await db
+          .collection(CLOUDBASE_COLLECTIONS.SUBSCRIPTIONS)
+          .doc(existingSub._id)
+          .update({
+            status: "active",
+            end_date: newEndDate.toISOString(),
+            updated_at: now,
+          });
+      } catch (subUpdateErr) {
+        logError("Failed to update existing subscription", subUpdateErr instanceof Error ? subUpdateErr : new Error(String(subUpdateErr)));
+        return NextResponse.json(
+          { code: "FAIL", message: "更新订阅失败" },
+          { status: 500 }
+        );
+      }
     } else {
       // 创建新订阅
-      await db.collection(CLOUDBASE_COLLECTIONS.SUBSCRIPTIONS).add({
-        user_id: order.user_id,
-        plan: order.billing_cycle === "yearly" ? "yearly" : "monthly",
-        status: "active",
-        start_date: now,
-        end_date: subscriptionEndDate.toISOString(),
-        payment_id: order._id,
-        created_at: now,
-        updated_at: now,
-      });
+      try {
+        await db.collection(CLOUDBASE_COLLECTIONS.SUBSCRIPTIONS).add({
+          user_id: order.user_id,
+          plan: order.billing_cycle === "yearly" ? "yearly" : "monthly",
+          status: "active",
+          start_date: now,
+          end_date: subscriptionEndDate.toISOString(),
+          payment_id: order._id,
+          created_at: now,
+          updated_at: now,
+        });
+      } catch (subCreateErr) {
+        logError("Failed to create subscription", subCreateErr instanceof Error ? subCreateErr : new Error(String(subCreateErr)));
+        return NextResponse.json(
+          { code: "FAIL", message: "创建订阅失败" },
+          { status: 500 }
+        );
+      }
     }
 
     // 更新用户的 pro 状态
-    await db
-      .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
-      .doc(order.user_id)
-      .update({
-        pro: true,
-        subscription_plan: order.billing_cycle === "yearly" ? "yearly" : "monthly",
-        subscription_status: "active",
-        updated_at: now,
-      });
+    try {
+      await db
+        .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
+        .doc(order.user_id)
+        .update({
+          pro: true,
+          subscription_plan: order.billing_cycle === "yearly" ? "yearly" : "monthly",
+          subscription_status: "active",
+          updated_at: now,
+        });
+    } catch (userUpdateErr) {
+      logError("Failed to update user pro status", userUpdateErr instanceof Error ? userUpdateErr : new Error(String(userUpdateErr)));
+    }
 
     logSecurityEvent("payment_completed", order.user_id, clientIP, {
       orderId,

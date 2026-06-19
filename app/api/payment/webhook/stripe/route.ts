@@ -31,16 +31,20 @@ export async function POST(request: NextRequest) {
 
       if (userId && days > 0) {
         // 更新支付状态
-        await supabase
+        const { error: paymentUpdateError } = await supabase
           .from("payments")
           .update({ status: "paid" })
           .eq("payment_id", session.id);
+
+        if (paymentUpdateError) {
+          console.error(`[Stripe Webhook] Failed to update payment status for session ${session.id}:`, paymentUpdateError);
+        }
 
         // 延长订阅
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + days);
 
-        await supabase.from("subscriptions").upsert({
+        const { error: subscriptionError } = await supabase.from("subscriptions").upsert({
           user_id: userId,
           start_date: new Date().toISOString(),
           end_date: endDate.toISOString(),
@@ -48,14 +52,23 @@ export async function POST(request: NextRequest) {
           plan_type: session.metadata?.paymentType,
         });
 
+        if (subscriptionError) {
+          console.error(`[Stripe Webhook] Failed to upsert subscription for user ${userId}:`, subscriptionError);
+          return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
+        }
+
         // Update Supabase auth user metadata so session refresh picks up subscription
-        await supabase.auth.admin.updateUserById(userId, {
+        const { error: metadataError } = await supabase.auth.admin.updateUserById(userId, {
           user_metadata: {
             subscription_plan: session.metadata?.paymentType || "premium",
             subscription_status: "active",
             membership_expires_at: endDate.toISOString(),
           },
         });
+
+        if (metadataError) {
+          console.error(`[Stripe Webhook] Failed to update user metadata for user ${userId}:`, metadataError);
+        }
 
         // Update web_users table to sync subscription_plan
         const { error: updateError } = await supabase
@@ -68,9 +81,9 @@ export async function POST(request: NextRequest) {
           .eq("id", userId);
 
         if (updateError) {
-          console.error(`❌ [Stripe Webhook] Failed to update web_users for user ${userId}:`, updateError);
+          console.error(`[Stripe Webhook] Failed to update web_users for user ${userId}:`, updateError);
         } else {
-          console.log(`✅ [Stripe Webhook] Updated subscription, user metadata, and web_users for user ${userId}`);
+          console.log(`[Stripe Webhook] Updated subscription, user metadata, and web_users for user ${userId}`);
         }
       }
     }

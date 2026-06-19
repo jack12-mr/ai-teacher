@@ -47,12 +47,16 @@ export async function POST(request: NextRequest) {
     }
 
     // 记录事件
-    await supabase.from("webhook_events").insert({
+    const { error: insertEventError } = await supabase.from("webhook_events").insert({
       provider: "paypal",
       event_id: transmissionId,
       event_type: body.event_type,
       processed: true,
     });
+
+    if (insertEventError) {
+      console.error(`[PayPal Webhook] Failed to record webhook event ${transmissionId}:`, insertEventError);
+    }
 
     // 处理事件
     if (body.event_type === "PAYMENT.CAPTURE.COMPLETED") {
@@ -61,15 +65,19 @@ export async function POST(request: NextRequest) {
       const days = customId.days || 0;
 
       if (userId && days > 0) {
-        await supabase
+        const { error: paymentUpdateError } = await supabase
           .from("payments")
           .update({ status: "paid" })
           .eq("payment_id", body.resource.id);
 
+        if (paymentUpdateError) {
+          console.error(`[PayPal Webhook] Failed to update payment status for ${body.resource.id}:`, paymentUpdateError);
+        }
+
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + days);
 
-        await supabase.from("subscriptions").upsert({
+        const { error: subscriptionError } = await supabase.from("subscriptions").upsert({
           user_id: userId,
           start_date: new Date().toISOString(),
           end_date: endDate.toISOString(),
@@ -77,14 +85,23 @@ export async function POST(request: NextRequest) {
           plan_type: customId.paymentType,
         });
 
+        if (subscriptionError) {
+          console.error(`[PayPal Webhook] Failed to upsert subscription for user ${userId}:`, subscriptionError);
+          return NextResponse.json({ error: "Failed to update subscription" }, { status: 500 });
+        }
+
         // Update Supabase auth user metadata so session refresh picks up subscription
-        await supabase.auth.admin.updateUserById(userId, {
+        const { error: metadataError } = await supabase.auth.admin.updateUserById(userId, {
           user_metadata: {
             subscription_plan: customId.paymentType || "premium",
             subscription_status: "active",
             membership_expires_at: endDate.toISOString(),
           },
         });
+
+        if (metadataError) {
+          console.error(`[PayPal Webhook] Failed to update user metadata for user ${userId}:`, metadataError);
+        }
 
         // Update web_users table to sync subscription_plan
         const { error: updateError } = await supabase
@@ -97,9 +114,9 @@ export async function POST(request: NextRequest) {
           .eq("id", userId);
 
         if (updateError) {
-          console.error(`❌ [PayPal Webhook] Failed to update web_users for user ${userId}:`, updateError);
+          console.error(`[PayPal Webhook] Failed to update web_users for user ${userId}:`, updateError);
         } else {
-          console.log(`✅ [PayPal Webhook] Updated subscription, user metadata, and web_users for user ${userId}`);
+          console.log(`[PayPal Webhook] Updated subscription, user metadata, and web_users for user ${userId}`);
         }
       }
     }

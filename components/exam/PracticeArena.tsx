@@ -460,49 +460,45 @@ export function PracticeArena({ examName = "考研数学" }: PracticeArenaProps)
     try {
       // 调用 API 保存到数据库
       const { saveWrongQuestion } = await import('@/lib/services/wrong-questions')
-      const success = await saveWrongQuestion({
+      await saveWrongQuestion({
         questionId: currentQuestion.id,
         question: currentQuestion,
         userAnswer: lastAnswer.userAnswer
       })
 
-      if (success) {
-        // 同时更新本地状态和 localStorage（作为缓存）
-        setWrongQuestions(prev => {
-          const existing = prev.find(w => w.questionId === currentQuestion.id)
-          let newWrongQuestions: WrongQuestion[]
+      // 同时更新本地状态和 localStorage（作为缓存）
+      setWrongQuestions(prev => {
+        const existing = prev.find(w => w.questionId === currentQuestion.id)
+        let newWrongQuestions: WrongQuestion[]
 
-          if (existing) {
-            newWrongQuestions = prev.map(w =>
-              w.questionId === currentQuestion.id
-                ? {
-                    ...w,
-                    wrongCount: w.wrongCount + 1,
-                    lastWrongAt: new Date(),
-                    userAnswers: [...w.userAnswers, lastAnswer.userAnswer]
-                  }
-                : w
-            )
-          } else {
-            newWrongQuestions = [...prev, {
-              questionId: currentQuestion.id,
-              question: currentQuestion,
-              wrongCount: 1,
-              lastWrongAt: new Date(),
-              mastered: false,
-              userAnswers: [lastAnswer.userAnswer]
-            }]
-          }
+        if (existing) {
+          newWrongQuestions = prev.map(w =>
+            w.questionId === currentQuestion.id
+              ? {
+                  ...w,
+                  wrongCount: w.wrongCount + 1,
+                  lastWrongAt: new Date(),
+                  userAnswers: [...w.userAnswers, lastAnswer.userAnswer]
+                }
+              : w
+          )
+        } else {
+          newWrongQuestions = [...prev, {
+            questionId: currentQuestion.id,
+            question: currentQuestion,
+            wrongCount: 1,
+            lastWrongAt: new Date(),
+            mastered: false,
+            userAnswers: [lastAnswer.userAnswer]
+          }]
+        }
 
-          saveToStorage('examWrongQuestions', newWrongQuestions)
-          console.log('Added to wrong book, total:', newWrongQuestions.length)
-          return newWrongQuestions
-        })
+        saveToStorage('examWrongQuestions', newWrongQuestions)
+        console.log('Added to wrong book, total:', newWrongQuestions.length)
+        return newWrongQuestions
+      })
 
-        toast.success('已加入错题本')
-      } else {
-        toast.error('保存错题失败，请重试')
-      }
+      toast.success('已加入错题本')
     } catch (error) {
       console.error('保存错题失败:', error)
       toast.error('保存错题失败，请重试')

@@ -45,6 +45,12 @@ export async function getPayPalAccessToken(): Promise<string | null> {
       body: "grant_type=client_credentials",
     });
 
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(`Failed to get PayPal access token: HTTP ${response.status}`, errorBody);
+      return null;
+    }
+
     const data = await response.json();
     return data.access_token || null;
   } catch (error) {

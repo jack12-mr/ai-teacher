@@ -74,14 +74,18 @@ export async function GET(request: NextRequest) {
           const now = new Date().toISOString();
 
           // 更新用户的 pro 状态
-          await db
-            .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
-            .doc(userId)
-            .update({
-              pro: false,
-              subscription_status: "expired",
-              updated_at: now,
-            });
+          try {
+            await db
+              .collection(CLOUDBASE_COLLECTIONS.WEB_USERS)
+              .doc(userId)
+              .update({
+                pro: false,
+                subscription_status: "expired",
+                updated_at: now,
+              });
+          } catch (updateErr) {
+            console.error(`[/api/auth/me] Failed to update expired pro status for user ${userId}:`, updateErr);
+          }
 
           user.pro = false;
           user.subscription_status = "expired";

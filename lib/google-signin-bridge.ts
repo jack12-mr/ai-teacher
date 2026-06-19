@@ -97,14 +97,15 @@ export function getCurrentUser(): GoogleSignInResult | null {
     return null;
   }
 
-  try {
-    const userJson = window.GoogleSignIn!.getCurrentUser();
-    if (userJson) {
-      return JSON.parse(userJson);
-    }
-  } catch (error) {
-    console.error('Failed to get current user:', error);
+  const userJson = window.GoogleSignIn!.getCurrentUser();
+  if (!userJson) {
+    return null;
   }
 
-  return null;
+  try {
+    return JSON.parse(userJson);
+  } catch (error) {
+    console.error('Failed to parse Google Sign-In user data:', error);
+    return null;
+  }
 }
